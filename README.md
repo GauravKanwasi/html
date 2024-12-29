@@ -13,18 +13,28 @@ This repository contains a variety of **web development projects** built using *
 
 The following languages are used in this repository:
 
-- **HTML**: 40%
-- **CSS**: 30%
-- **JavaScript**: 30%
+- **HTML**
+- **CSS**
+- **JavaScript**
 
 ### Language Usage Graph
 
 ![Language Usage](https://img.shields.io/github/languages/top/GauravKanwasi/html)
 
-*(Note: The graph automatically updates as the code changes and will reflect the current language distribution.)*
+
 
 ## Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/GauravKanwasi/html.git
+
+
+
+
+This file now includes:
+- A description of your various projects.
+- A dynamically updated **language usage graph**.
+- Instructions for installation and contribution.
+
+So, you should simply replace or add the "Key Updates" section into your existing **README.md**.
