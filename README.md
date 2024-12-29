@@ -1,17 +1,27 @@
 # HTML, JavaScript, and CSS Projects
 
-This repository contains various **web development projects** using **HTML**, **CSS**, and **JavaScript**. It includes interactive web applications like a weather dashboard, along with static websites.
+This repository contains a variety of **web development projects** built using **HTML**, **CSS**, and **JavaScript**. The projects include interactive applications such as a weather dashboard, games, form validation systems, and more.
 
 ## Projects Included
 
-- **Weather Dashboard**: An interactive weather dashboard that fetches weather data using the OpenWeather API.
-- **Other Web Apps**: A collection of interactive websites built with HTML, CSS, and JavaScript.
+- **Weather Dashboard**: An interactive weather dashboard fetching data via the OpenWeather API.
+- **Interactive Forms**: A variety of dynamic and user-friendly forms built using HTML, CSS, and JavaScript.
+- **Games**: Simple browser-based games like Tic-Tac-Toe and memory games.
+- **Other Web Apps**: Various other interactive websites and applications.
 
 ## Languages Used
+
+The following languages are used in this repository:
 
 - **HTML**: 40%
 - **CSS**: 30%
 - **JavaScript**: 30%
+
+### Language Usage Graph
+
+![Language Usage](https://img.shields.io/github/languages/top/GauravKanwasi/html)
+
+*(Note: The graph automatically updates as the code changes and will reflect the current language distribution.)*
 
 ## Installation
 
