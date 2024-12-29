@@ -22,7 +22,6 @@ The following languages are used in this repository:
 ![Language Usage](https://img.shields.io/github/languages/top/GauravKanwasi/html)
 
 
-
 ## Installation
 
 1. Clone the repository:
@@ -32,9 +31,3 @@ The following languages are used in this repository:
 
 
 
-This file now includes:
-- A description of your various projects.
-- A dynamically updated **language usage graph**.
-- Instructions for installation and contribution.
-
-So, you should simply replace or add the "Key Updates" section into your existing **README.md**.
