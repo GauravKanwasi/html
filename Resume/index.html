@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Resume Builder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Interactive Resume Builder</h1>
+        <p>Drag and Drop sections to customize your resume layout!</p>
+    </header>
+
+    <div class="container">
+        <!-- Form Section -->
+        <div class="input-section">
+            <label for="photo">Profile Picture:</label>
+            <input type="file" id="photo" accept="image/*">
+            <div class="input-field">
+                <label for="name">Full Name:</label>
+                <input type="text" id="name" placeholder="Enter your full name">
+            </div>
+
+            <div class="input-field">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter your email">
+            </div>
+
+            <div class="input-field">
+                <label for="phone">Phone Number:</label>
+                <input type="text" id="phone" placeholder="Enter your phone number">
+            </div>
+
+            <div class="input-field">
+                <label for="title">Job Title:</label>
+                <input type="text" id="title" placeholder="Enter your job title">
+            </div>
+
+            <div class="input-field">
+                <label for="skills">Skills:</label>
+                <div id="skills-section">
+                    <input type="text" class="skills-input" placeholder="Enter a skill">
+                    <button type="button" onclick="addSkill()">Add Skill</button>
+                    <ul id="skills-list"></ul>
+                </div>
+            </div>
+
+            <div class="input-field">
+                <label for="experience">Experience:</label>
+                <div id="experience-section">
+                    <input type="text" class="experience-input" placeholder="Enter experience details">
+                    <button type="button" onclick="addExperience()">Add Experience</button>
+                    <ul id="experience-list"></ul>
+                </div>
+            </div>
+
+            <div class="input-field">
+                <label for="education">Education:</label>
+                <div id="education-section">
+                    <input type="text" class="education-input" placeholder="Enter education details">
+                    <button type="button" onclick="addEducation()">Add Education</button>
+                    <ul id="education-list"></ul>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generateResume()">Generate Resume</button>
+        </div>
+
+        <!-- Resume Preview Section -->
+        <div class="resume-preview" id="resumePreview" style="display:none;" draggable="true">
+            <h2>Resume Preview</h2>
+            <div id="profile-photo-container">
+                <img id="profile-photo" src="" alt="Profile Photo" style="width: 150px; height: 150px; border-radius: 50%;">
+            </div>
+            <div id="resumeContainer" class="resume-container">
+                <div class="draggable-section" id="nameSection" draggable="true">
+                    <p><strong>Name:</strong> <span id="resumeName"></span></p>
+                </div>
+
+                <div class="draggable-section" id="emailSection" draggable="true">
+                    <p><strong>Email:</strong> <span id="resumeEmail"></span></p>
+                </div>
+
+                <div class="draggable-section" id="phoneSection" draggable="true">
+                    <p><strong>Phone:</strong> <span id="resumePhone"></span></p>
+                </div>
+
+                <div class="draggable-section" id="titleSection" draggable="true">
+                    <p><strong>Job Title:</strong> <span id="resumeTitle"></span></p>
+                </div>
+
+                <div class="draggable-section" id="skillsSection" draggable="true">
+                    <p><strong>Skills:</strong> <ul id="resumeSkills"></ul></p>
+                </div>
+
+                <div class="draggable-section" id="experienceSection" draggable="true">
+                    <p><strong>Experience:</strong> <ul id="resumeExperience"></ul></p>
+                </div>
+
+                <div class="draggable-section" id="educationSection" draggable="true">
+                    <p><strong>Education:</strong> <ul id="resumeEducation"></ul></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
