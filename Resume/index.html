@@ -13,7 +13,6 @@
     </header>
 
     <div class="container">
-        <!-- Form Section -->
         <div class="input-section">
             <label for="photo">Profile Picture:</label>
             <input type="file" id="photo" accept="image/*">
@@ -67,11 +66,10 @@
             <button class="generate-btn" onclick="generateResume()">Generate Resume</button>
         </div>
 
-        <!-- Resume Preview Section -->
-        <div class="resume-preview" id="resumePreview" style="display:none;" draggable="true">
+        <div class="resume-preview" id="resumePreview" style="display:none;">
             <h2>Resume Preview</h2>
             <div id="profile-photo-container">
-                <img id="profile-photo" src="" alt="Profile Photo" style="width: 150px; height: 150px; border-radius: 50%;">
+                <img id="profile-photo" src="" alt="Profile Photo" class="profile-photo">
             </div>
             <div id="resumeContainer" class="resume-container">
                 <div class="draggable-section" id="nameSection" draggable="true">
