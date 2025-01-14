@@ -3,6 +3,7 @@ document
   .addEventListener("click", function () {
     var surpriseMessage = document.getElementById("surpriseMessage");
     surpriseMessage.style.display = "block";
+    surpriseMessage.classList.add("fade-in");
   });
 
 // Form submission handler
@@ -16,7 +17,14 @@ document
     var message = document.getElementById("message").value;
 
     if (name && email && message) {
-      document.getElementById("formFeedback").style.display = "block"; // Show success message
-      document.getElementById("contactForm").reset(); // Reset the form
+      var formFeedback = document.getElementById("formFeedback");
+      formFeedback.style.display = "block"; // Show success message
+      formFeedback.classList.add("fade-in");
+
+      // Reset the form after 3 seconds
+      setTimeout(function () {
+        formFeedback.style.display = "none";
+        document.getElementById("contactForm").reset();
+      }, 3000); // Hide feedback after 3 seconds
     }
   });
