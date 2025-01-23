@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Falling Objects</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #87CEEB;
+            position: relative;
+        }
+        .basket {
+            width: 80px;
+            height: 50px;
+            background-color: brown;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .falling-object {
+            width: 30px;
+            height: 30px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">Score: 0</div>
+        <div class="basket" id="basket"></div>
+    </div>
+    <script>
+        const basket = document.getElementById('basket');
+        const gameContainer = document.getElementById('game-container');
+        const scoreDisplay = document.getElementById('score');
+        let score = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            let x = e.clientX - basket.offsetWidth / 2;
+            x = Math.max(0, Math.min(gameContainer.offsetWidth - basket.offsetWidth, x));
+            basket.style.left = x + 'px';
+        });
+
+        function createFallingObject() {
+            const object = document.createElement('div');
+            object.classList.add('falling-object');
+            object.style.left = Math.random() * (gameContainer.offsetWidth - 30) + 'px';
+            gameContainer.appendChild(object);
+
+            let fallInterval = setInterval(() => {
+                object.style.top = object.offsetTop + 5 + 'px';
+                if (object.offsetTop + object.offsetHeight >= gameContainer.offsetHeight - basket.offsetHeight &&
+                    object.offsetLeft + object.offsetWidth > basket.offsetLeft &&
+                    object.offsetLeft < basket.offsetLeft + basket.offsetWidth) {
+                    score++;
+                    scoreDisplay.innerText = 'Score: ' + score;
+                    object.remove();
+                    clearInterval(fallInterval);
+                }
+                if (object.offsetTop > gameContainer.offsetHeight) {
+                    object.remove();
+                    clearInterval(fallInterval);
+                }
+            }, 30);
+        }
+
+        setInterval(createFallingObject, 1000);
+    </script>
+</body>
+</html>
