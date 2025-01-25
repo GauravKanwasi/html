@@ -3,86 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catch the Falling Objects</title>
+    <title>Market Collector</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            background: linear-gradient(45deg, #87CEEB, #98FB98);
+            touch-action: none;
         }
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            background-color: #87CEEB;
-            position: relative;
+
+        .screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            z-index: 2;
         }
+
+        .difficulty-choices {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .shop {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 400px;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
         .basket {
-            width: 80px;
-            height: 50px;
-            background-color: brown;
             position: absolute;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            transition: left 0.1s;
+            font-size: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
+
         .falling-object {
-            width: 30px;
-            height: 30px;
-            background-color: red;
-            border-radius: 50%;
             position: absolute;
-            top: 0;
+            font-size: 30px;
+            animation: fall linear forwards;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        #score {
-            position: absolute;
+
+        #hud {
+            position: fixed;
             top: 10px;
             left: 10px;
             font-size: 24px;
             color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh); }
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="score">Score: 0</div>
-        <div class="basket" id="basket"></div>
+    <!-- Start Screen -->
+    <div class="screen" id="start-screen">
+        <h1>Market Collector!</h1>
+        <div class="difficulty-choices">
+            <button class="difficulty-btn" style="background: #4CAF50" data-difficulty="easy">🌱 Easy</button>
+            <button class="difficulty-btn" style="background: #FF9800" data-difficulty="medium">🔥 Medium</button>
+            <button class="difficulty-btn" style="background: #F44336" data-difficulty="hard">💀 Hard</button>
+        </div>
+        
+        <div class="shop">
+            <h3>Shop 🛒</h3>
+            <div class="shop-item">
+                <div>🛒 Basic Cart (Free)</div>
+                <button onclick="selectCart('basic')">Equip</button>
+            </div>
+            <div class="shop-item">
+                <div>🚚 Truck Cart (50 coins)</div>
+                <button onclick="buyItem('truck', 50)">Buy</button>
+            </div>
+            <div class="shop-item">
+                <div>🌈 Colorful BG (30 coins)</div>
+                <button onclick="buyItem('colorful', 30)">Buy</button>
+            </div>
+            <div class="shop-item">
+                <div>🌃 Night BG (50 coins)</div>
+                <button onclick="buyItem('night', 50)">Buy</button>
+            </div>
+            <div>Your Coins: <span id="shop-coins">0</span> 🪙</div>
+        </div>
     </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <div id="hud">
+            <div>Score: <span id="score">0</span></div>
+            <div>Coins: <span id="coins">0</span> 🪙</div>
+            <div>Lives: <span id="lives">3</span> ❤️</div>
+        </div>
+        <div class="basket" id="basket">🛒</div>
+    </div>
+
     <script>
-        const basket = document.getElementById('basket');
-        const gameContainer = document.getElementById('game-container');
-        const scoreDisplay = document.getElementById('score');
-        let score = 0;
+        const DIFFICULTY = {
+            easy: { speed: 1, spawnRate: 1500, lives: 5 },
+            medium: { speed: 1.5, spawnRate: 1000, lives: 3 },
+            hard: { speed: 2, spawnRate: 700, lives: 2 }
+        };
 
-        document.addEventListener('mousemove', (e) => {
-            let x = e.clientX - basket.offsetWidth / 2;
-            x = Math.max(0, Math.min(gameContainer.offsetWidth - basket.offsetWidth, x));
-            basket.style.left = x + 'px';
-        });
+        let gameState = {
+            score: 0,
+            coins: Number(localStorage.getItem('coins')) || 0,
+            lives: 3,
+            difficulty: null,
+            activeObjects: new Set(),
+            unlockedItems: JSON.parse(localStorage.getItem('unlocked')) || ['basic'],
+            currentCart: 'basic',
+            currentBg: 'default',
+            isGameActive: false
+        };
 
-        function createFallingObject() {
-            const object = document.createElement('div');
-            object.classList.add('falling-object');
-            object.style.left = Math.random() * (gameContainer.offsetWidth - 30) + 'px';
-            gameContainer.appendChild(object);
+        function startGame(difficulty) {
+            gameState = {
+                ...gameState,
+                score: 0,
+                lives: DIFFICULTY[difficulty].lives,
+                difficulty: DIFFICULTY[difficulty],
+                isGameActive: true
+            };
 
-            let fallInterval = setInterval(() => {
-                object.style.top = object.offsetTop + 5 + 'px';
-                if (object.offsetTop + object.offsetHeight >= gameContainer.offsetHeight - basket.offsetHeight &&
-                    object.offsetLeft + object.offsetWidth > basket.offsetLeft &&
-                    object.offsetLeft < basket.offsetLeft + basket.offsetWidth) {
-                    score++;
-                    scoreDisplay.innerText = 'Score: ' + score;
-                    object.remove();
-                    clearInterval(fallInterval);
-                }
-                if (object.offsetTop > gameContainer.offsetHeight) {
-                    object.remove();
-                    clearInterval(fallInterval);
-                }
-            }, 30);
+            document.getElementById('start-screen').style.display = 'none';
+            updateHUD();
+            applyPurchases();
+            startSpawning();
+            gameLoop();
         }
 
-        setInterval(createFallingObject, 1000);
+        function buyItem(item, price) {
+            if (gameState.coins >= price && !gameState.unlockedItems.includes(item)) {
+                gameState.coins -= price;
+                gameState.unlockedItems.push(item);
+                localStorage.setItem('unlocked', JSON.stringify(gameState.unlockedItems));
+                localStorage.setItem('coins', gameState.coins);
+                updateShop();
+            }
+        }
+
+        function selectCart(cartType) {
+            if (gameState.unlockedItems.includes(cartType)) {
+                gameState.currentCart = cartType;
+                document.getElementById('basket').textContent = 
+                    cartType === 'truck' ? '🚚' : '🛒';
+            }
+        }
+
+        function applyPurchases() {
+            if (gameState.unlockedItems.includes('colorful')) {
+                document.body.style.background = 'linear-gradient(45deg, #FFB6C1, #87CEFA)';
+            } else if (gameState.unlockedItems.includes('night')) {
+                document.body.style.background = 'linear-gradient(45deg, #2c3e50, #3498db)';
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('coins').textContent = gameState.coins;
+            document.getElementById('lives').textContent = gameState.lives;
+        }
+
+        function updateShop() {
+            document.getElementById('shop-coins').textContent = gameState.coins;
+            document.querySelectorAll('.shop-item button').forEach(btn => {
+                const price = Number(btn.onclick.toString().match(/ (\d+)/)[1]);
+                btn.disabled = gameState.coins < price && 
+                    !gameState.unlockedItems.includes(btn.parentElement.querySelector('div').textContent.split(' ')[1]);
+            });
+        }
+
+        function createObject() {
+            const object = document.createElement('div');
+            object.className = 'falling-object';
+            object.textContent = Math.random() > 0.2 ? '🍎' : '💣';
+            object.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
+            
+            const animation = object.animate(
+                [{ transform: 'translateY(-100px)' }, { transform: 'translateY(110vh)' }],
+                { duration: 3000 / gameState.difficulty.speed }
+            );
+
+            animation.onfinish = () => {
+                if (!object.collected) {
+                    if (object.textContent === '💣') {
+                        gameState.lives--;
+                        updateHUD();
+                    }
+                }
+                object.remove();
+            };
+
+            document.getElementById('game-container').appendChild(object);
+        }
+
+        function checkCollisions() {
+            const basket = document.getElementById('basket');
+            const basketRect = basket.getBoundingClientRect();
+
+            document.querySelectorAll('.falling-object').forEach(object => {
+                const objectRect = object.getBoundingClientRect();
+                if (objectRect.top < basketRect.bottom &&
+                    objectRect.bottom > basketRect.top &&
+                    objectRect.left < basketRect.right &&
+                    objectRect.right > basketRect.left) {
+                    
+                    if (object.textContent === '🍎') {
+                        gameState.score += 10;
+                        gameState.coins += 1;
+                        localStorage.setItem('coins', gameState.coins);
+                    } else {
+                        gameState.lives--;
+                    }
+                    
+                    object.collected = true;
+                    object.remove();
+                    updateHUD();
+                }
+            });
+        }
+
+        function gameLoop() {
+            if (!gameState.isGameActive) return;
+            checkCollisions();
+            
+            if (gameState.lives <= 0) {
+                document.getElementById('start-screen').style.display = 'flex';
+                gameState.isGameActive = false;
+                return;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startSpawning() {
+            setInterval(() => {
+                if (gameState.isGameActive) createObject();
+            }, gameState.difficulty.spawnRate);
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => startGame(btn.dataset.difficulty));
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!gameState.isGameActive) return;
+            const basket = document.getElementById('basket');
+            basket.style.left = `${Math.max(0, Math.min(e.clientX - 50, window.innerWidth - 100))}px`;
+        });
+
+        // Initialize
+        updateShop();
     </script>
 </body>
 </html>
