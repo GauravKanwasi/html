@@ -1,0 +1,11 @@
+/* Simple reset */
+body {
+    margin: 0;
+    background-color: #000; /* Black background for space */
+    overflow: hidden;       /* Hide scrollbars */
+}
+
+#gameCanvas {
+    display: block;
+    margin: 0 auto; /* Center the canvas */
+}
