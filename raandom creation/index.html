@@ -3,69 +3,210 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="A simple, minimalistic, and user-friendly webpage." />
+    <meta
+      name="description"
+      content="A modern, interactive, and user-friendly webpage."
+    />
     <meta name="author" content="Your Name" />
-    <title>Simple & Sweet Page</title>
+    <title>Modern Web Experience</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <h1>Welcome to My Simple & Sweet Page</h1>
-        <p>
-          This page is designed to be clean, minimal, and user-friendly. Explore
-          and enjoy!
-        </p>
-      </header>
-
-      <section id="about">
-        <h2>About Us</h2>
-        <p>
-          We are passionate about creating simple yet elegant web pages. Our
-          goal is to keep things minimal while ensuring maximum impact.
-        </p>
-      </section>
-
-      <section id="features">
-        <h2>Features</h2>
-        <ul>
-          <li>Simple, clean design</li>
-          <li>Responsive layout for all devices</li>
-          <li>Interactive elements for better user engagement</li>
-        </ul>
-      </section>
-
-      <section id="contact">
-        <h2>Contact Us</h2>
-        <form id="contactForm">
-          <input type="text" id="name" placeholder="Your Name" required /><br />
-          <input
-            type="email"
-            id="email"
-            placeholder="Your Email"
-            required
-          /><br />
-          <textarea id="message" placeholder="Your Message" required></textarea
-          ><br />
-          <button type="submit">Send Message</button>
-        </form>
-        <p id="formFeedback" class="fade-in" style="display: none; color: green">
-          Your message has been sent! Thank you!
-        </p>
-      </section>
-
-      <section id="surprise">
-        <button id="surpriseButton">Click me for a surprise!</button>
-        <p id="surpriseMessage" class="fade-in" style="display: none; color: #ff6347">
-          Surprise! 🎉
-        </p>
-      </section>
+    <!-- Animated Background -->
+    <div class="animated-background">
+      <div class="gradient-sphere"></div>
+      <div class="gradient-sphere"></div>
+      <div class="gradient-sphere"></div>
     </div>
 
-    <footer>
-      <p>&copy; 2024 Simple & Sweet Page. All rights reserved.</p>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-brand">
+        <span class="gradient-text">WebExp</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#portfolio">Portfolio</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-controls">
+        <div class="theme-toggle">
+          <i class="fas fa-moon"></i>
+        </div>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+      <div class="hero-content">
+        <h1 class="gradient-text" data-aos="fade-up">Welcome to the Future</h1>
+        <p data-aos="fade-up" data-aos-delay="200">
+          Creating extraordinary digital experiences
+        </p>
+        <div class="cta-buttons" data-aos="fade-up" data-aos-delay="400">
+          <a href="#features" class="btn btn-primary">Explore Features</a>
+          <a href="#contact" class="btn btn-secondary">Get Started</a>
+        </div>
+      </div>
+      <div class="hero-animation" data-aos="zoom-in">
+        <div class="cube-container">
+          <div class="cube">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+          </div>
+        </div>
+        <div class="floating-elements">
+          <div class="element"></div>
+          <div class="element"></div>
+          <div class="element"></div>
+          <div class="element"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <h2 class="section-title gradient-text" data-aos="fade-up">
+        Our Features
+      </h2>
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up">
+          <div class="feature-icon">
+            <i class="fas fa-paint-brush"></i>
+          </div>
+          <h3>Modern Design</h3>
+          <p>Clean and contemporary interface that engages users</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="feature-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Responsive</h3>
+          <p>Perfect experience across all devices</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>Fast Performance</h3>
+          <p>Optimized for speed and efficiency</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="portfolio">
+      <h2 class="section-title gradient-text" data-aos="fade-up">Our Work</h2>
+      <div class="portfolio-grid">
+        <div class="portfolio-item" data-aos="zoom-in">
+          <img src="https://via.placeholder.com/400" alt="Project 1" />
+          <div class="portfolio-overlay">
+            <h3>Project Name</h3>
+            <p>Category</p>
+          </div>
+        </div>
+        <!-- Add more portfolio items -->
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <h2 class="section-title gradient-text" data-aos="fade-up">
+        Get in Touch
+      </h2>
+      <div class="contact-container">
+        <form id="contactForm" class="contact-form" data-aos="fade-right">
+          <div class="form-group">
+            <input type="text" id="name" placeholder="Your Name" required />
+          </div>
+          <div class="form-group">
+            <input type="email" id="email" placeholder="Your Email" required />
+          </div>
+          <div class="form-group">
+            <textarea
+              id="message"
+              placeholder="Your Message"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <div id="formFeedback" class="feedback"></div>
+        </form>
+        <div class="contact-info" data-aos="fade-left">
+          <div class="info-card">
+            <i class="fas fa-map-marker-alt"></i>
+            <h3>Location</h3>
+            <p>123 Web Street, Digital City</p>
+          </div>
+          <div class="info-card">
+            <i class="fas fa-envelope"></i>
+            <h3>Email</h3>
+            <p>contact@webexp.com</p>
+          </div>
+          <div class="info-card">
+            <i class="fas fa-phone"></i>
+            <h3>Phone</h3>
+            <p>+1 234 567 890</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3 class="gradient-text">WebExp</h3>
+          <p>Creating modern web experiences</p>
+        </div>
+        <div class="footer-links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-social">
+          <h4>Connect With Us</h4>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 WebExp. All rights reserved.</p>
+      </div>
     </footer>
 
+    <!-- Scroll Progress -->
+    <div class="scroll-progress"></div>
+
+    <!-- Back to Top -->
+    <button class="back-to-top hidden">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
