@@ -1,296 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Market Collector</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(45deg, #87CEEB, #98FB98);
-            touch-action: none;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        .screen {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            z-index: 2;
-        }
+      body {
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(45deg, #87ceeb, #98fb98);
+        touch-action: none;
+      }
 
-        .difficulty-choices {
-            display: flex;
-            gap: 20px;
-            margin: 20px 0;
-        }
+      #game-container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
 
-        .difficulty-btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+      .screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        z-index: 100;
+        text-align: center;
+      }
 
-        .shop {
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            max-width: 400px;
-        }
+      .difficulty-choices {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 10px;
+      }
 
-        .shop-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-        }
+      .difficulty-btn {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
 
-        .basket {
-            position: absolute;
-            bottom: 20px;
-            transition: left 0.1s;
-            font-size: 40px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
+      .difficulty-btn:hover {
+        transform: scale(1.1);
+      }
 
-        .falling-object {
-            position: absolute;
-            font-size: 30px;
-            animation: fall linear forwards;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
+      .shop {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px;
+        max-width: 400px;
+        width: 90%;
+      }
 
-        #hud {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 24px;
-            color: white;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
-            z-index: 1;
-        }
+      .shop-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+      }
 
-        @keyframes fall {
-            to { transform: translateY(110vh); }
-        }
+      .shop-item button {
+        padding: 5px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #4caf50;
+        color: white;
+      }
+
+      .shop-item button:disabled {
+        background: #666;
+        cursor: not-allowed;
+      }
+
+      #player {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 40px;
+        user-select: none;
+        z-index: 10;
+      }
+
+      .item {
+        position: absolute;
+        font-size: 30px;
+        user-select: none;
+      }
+
+      #hud {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        font-size: 24px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 10px;
+        z-index: 50;
+      }
+
+      #game-over {
+        display: none;
+      }
+
+      .tutorial {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        z-index: 1000;
+        max-width: 90%;
+        width: 400px;
+      }
+
+      .tutorial-btn {
+        background: #4caf50;
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 5px;
+        margin-top: 10px;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
-    <!-- Start Screen -->
-    <div class="screen" id="start-screen">
-        <h1>Market Collector!</h1>
-        <div class="difficulty-choices">
-            <button class="difficulty-btn" style="background: #4CAF50" data-difficulty="easy">🌱 Easy</button>
-            <button class="difficulty-btn" style="background: #FF9800" data-difficulty="medium">🔥 Medium</button>
-            <button class="difficulty-btn" style="background: #F44336" data-difficulty="hard">💀 Hard</button>
-        </div>
-        
-        <div class="shop">
-            <h3>Shop 🛒</h3>
-            <div class="shop-item">
-                <div>🛒 Basic Cart (Free)</div>
-                <button onclick="selectCart('basic')">Equip</button>
-            </div>
-            <div class="shop-item">
-                <div>🚚 Truck Cart (50 coins)</div>
-                <button onclick="buyItem('truck', 50)">Buy</button>
-            </div>
-            <div class="shop-item">
-                <div>🌈 Colorful BG (30 coins)</div>
-                <button onclick="buyItem('colorful', 30)">Buy</button>
-            </div>
-            <div class="shop-item">
-                <div>🌃 Night BG (50 coins)</div>
-                <button onclick="buyItem('night', 50)">Buy</button>
-            </div>
-            <div>Your Coins: <span id="shop-coins">0</span> 🪙</div>
-        </div>
+  </head>
+  <body>
+    <div id="start-screen" class="screen">
+      <h1>Market Collector!</h1>
+      <div class="difficulty-choices">
+        <button
+          class="difficulty-btn"
+          style="background: #4caf50"
+          onclick="startGame('easy')"
+        >
+          🌱 Easy
+        </button>
+        <button
+          class="difficulty-btn"
+          style="background: #ff9800"
+          onclick="startGame('medium')"
+        >
+          🔥 Medium
+        </button>
+        <button
+          class="difficulty-btn"
+          style="background: #f44336"
+          onclick="startGame('hard')"
+        >
+          💀 Hard
+        </button>
+      </div>
+
+      <div class="shop">
+        <h3>Shop 🛒</h3>
+        <div id="shop-items"></div>
+        <div>Your Coins: <span id="shop-coins">0</span> 🪙</div>
+      </div>
     </div>
 
-    <!-- Game Container -->
+    <div id="game-over" class="screen">
+      <h1>Game Over!</h1>
+      <h2>Score: <span id="final-score">0</span></h2>
+      <button
+        class="difficulty-btn"
+        style="background: #4caf50"
+        onclick="showStartScreen()"
+      >
+        Play Again
+      </button>
+    </div>
+
     <div id="game-container">
-        <div id="hud">
-            <div>Score: <span id="score">0</span></div>
-            <div>Coins: <span id="coins">0</span> 🪙</div>
-            <div>Lives: <span id="lives">3</span> ❤️</div>
-        </div>
-        <div class="basket" id="basket">🛒</div>
+      <div id="hud">
+        <div>Score: <span id="score">0</span></div>
+        <div>Coins: <span id="coins">0</span> 🪙</div>
+        <div>Lives: <span id="lives">3</span> ❤️</div>
+      </div>
+      <div id="player">🛒</div>
+    </div>
+
+    <div id="tutorial" class="tutorial" style="display: none">
+      <h3>How to Play</h3>
+      <p>🍎 Collect apples for points and coins</p>
+      <p>�� Avoid bombs - they cost lives!</p>
+      <p>🛒 Move cart with mouse or touch</p>
+      <p>🪙 Use coins to buy new carts and backgrounds in the shop</p>
+      <button class="tutorial-btn" onclick="closeTutorial()">Got it!</button>
     </div>
 
     <script>
-        const DIFFICULTY = {
-            easy: { speed: 1, spawnRate: 1500, lives: 5 },
-            medium: { speed: 1.5, spawnRate: 1000, lives: 3 },
-            hard: { speed: 2, spawnRate: 700, lives: 2 }
+      const GAME_CONFIG = {
+        easy: { speed: 2, spawnRate: 1500, lives: 5 },
+        medium: { speed: 3, spawnRate: 1000, lives: 3 },
+        hard: { speed: 4, spawnRate: 700, lives: 2 },
+      };
+
+      const ITEMS = {
+        good: ["🍎", "🍐", "🍊", "🍌", "🥝"],
+        bad: ["💣", "⚡", "☠️"],
+      };
+
+      const SHOP_ITEMS = {
+        truck: { name: "🚚 Truck Cart", price: 50, type: "cart" },
+        robot: { name: "🤖 Robot Cart", price: 75, type: "cart" },
+        colorful: { name: "🌈 Colorful BG", price: 30, type: "background" },
+        night: { name: "🌃 Night BG", price: 50, type: "background" },
+      };
+
+      let game = {
+        isActive: false,
+        score: 0,
+        coins: parseInt(localStorage.getItem("coins")) || 0,
+        lives: 3,
+        items: [],
+        config: null,
+        unlockedItems: JSON.parse(localStorage.getItem("unlockedItems")) || [
+          "basic",
+        ],
+        currentCart: "🛒",
+        spawnInterval: null,
+        tutorialShown: localStorage.getItem("tutorialShown") === "true",
+      };
+
+      function initShop() {
+        const shopContainer = document.getElementById("shop-items");
+        shopContainer.innerHTML = `
+                <div class="shop-item">
+                    <div>
+                        🛒 Basic Cart (Free)
+                        <br>
+                        <small>The classic shopping cart</small>
+                    </div>
+                    <button onclick="selectCart('🛒')">${
+                      game.currentCart === "🛒" ? "Equipped" : "Equip"
+                    }</button>
+                </div>
+            `;
+
+        Object.entries(SHOP_ITEMS).forEach(([id, item]) => {
+          const isUnlocked = game.unlockedItems.includes(id);
+          let description = "";
+          if (item.type === "cart") {
+            description = "A faster cart for collecting";
+          } else if (item.type === "background") {
+            description = "Change the game background";
+          }
+
+          const isEquipped =
+            item.type === "cart"
+              ? game.currentCart === item.name.split(" ")[0]
+              : id === game.currentBackground;
+
+          shopContainer.innerHTML += `
+                    <div class="shop-item">
+                        <div>
+                            ${item.name} (${item.price} coins)
+                            <br>
+                            <small>${description}</small>
+                        </div>
+                        <button onclick="${
+                          isUnlocked
+                            ? `selectItem('${id}')`
+                            : `buyItem('${id}')`
+                        }"
+                                ${
+                                  !isUnlocked && game.coins < item.price
+                                    ? "disabled"
+                                    : ""
+                                }>
+                            ${
+                              isUnlocked
+                                ? isEquipped
+                                  ? "Equipped"
+                                  : "Equip"
+                                : "Buy"
+                            }
+                        </button>
+                    </div>
+                `;
+        });
+        updateCoins();
+      }
+
+      function buyItem(id) {
+        const item = SHOP_ITEMS[id];
+        if (game.coins >= item.price && !game.unlockedItems.includes(id)) {
+          game.coins -= item.price;
+          game.unlockedItems.push(id);
+          localStorage.setItem("coins", game.coins);
+          localStorage.setItem(
+            "unlockedItems",
+            JSON.stringify(game.unlockedItems)
+          );
+          initShop();
+        }
+      }
+
+      function selectCart(cart) {
+        game.currentCart = cart;
+        document.getElementById("player").textContent = cart;
+        showEquippedMessage("Cart equipped!");
+      }
+
+      function selectItem(id) {
+        const item = SHOP_ITEMS[id];
+        if (item.type === "cart") {
+          selectCart(item.name.split(" ")[0]);
+        } else if (item.type === "background") {
+          document.body.style.background =
+            id === "night"
+              ? "linear-gradient(45deg, #2c3e50, #3498db)"
+              : "linear-gradient(45deg, #FFB6C1, #87CEFA)";
+          showEquippedMessage("Background equipped!");
+        }
+      }
+
+      function spawnItem() {
+        if (!game.isActive) return;
+
+        const item = document.createElement("div");
+        item.className = "item";
+        const isGood = Math.random() > 0.2;
+        const itemArray = isGood ? ITEMS.good : ITEMS.bad;
+        item.textContent =
+          itemArray[Math.floor(Math.random() * itemArray.length)];
+        item.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
+        item.style.top = "-50px";
+        item.collected = false;
+
+        document.getElementById("game-container").appendChild(item);
+        game.items.push(item);
+
+        const speed = game.config.speed;
+        let pos = -50;
+
+        function fall() {
+          if (!game.isActive) {
+            item.remove();
+            return;
+          }
+
+          pos += speed;
+          item.style.top = `${pos}px`;
+
+          if (pos > window.innerHeight) {
+            if (ITEMS.good.includes(item.textContent) && !item.collected) {
+              decrementLives();
+            }
+            removeItem(item);
+          } else {
+            checkCollision(item);
+            requestAnimationFrame(fall);
+          }
+        }
+
+        requestAnimationFrame(fall);
+      }
+
+      function checkCollision(item) {
+        if (item.collected) return;
+
+        const player = document.getElementById("player");
+        const playerRect = player.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+
+        if (
+          itemRect.bottom >= playerRect.top &&
+          itemRect.top <= playerRect.bottom &&
+          itemRect.right >= playerRect.left &&
+          itemRect.left <= playerRect.right
+        ) {
+          item.collected = true;
+
+          if (ITEMS.good.includes(item.textContent)) {
+            game.score += 10;
+            game.coins++;
+            localStorage.setItem("coins", game.coins);
+          } else {
+            decrementLives();
+          }
+
+          updateHUD();
+          removeItem(item);
+        }
+      }
+
+      function removeItem(item) {
+        game.items = game.items.filter((i) => i !== item);
+        item.remove();
+      }
+
+      function decrementLives() {
+        game.lives--;
+        updateHUD();
+        if (game.lives <= 0) {
+          endGame();
+        }
+      }
+
+      function updateHUD() {
+        document.getElementById("score").textContent = game.score;
+        document.getElementById("coins").textContent = game.coins;
+        document.getElementById("lives").textContent = game.lives;
+      }
+
+      function updateCoins() {
+        document.getElementById("shop-coins").textContent = game.coins;
+      }
+
+      function showTutorial() {
+        if (!game.tutorialShown) {
+          document.getElementById("tutorial").style.display = "block";
+        }
+      }
+
+      function closeTutorial() {
+        document.getElementById("tutorial").style.display = "none";
+        game.tutorialShown = true;
+        localStorage.setItem("tutorialShown", "true");
+      }
+
+      function startGame(difficulty) {
+        game = {
+          ...game,
+          isActive: true,
+          score: 0,
+          lives: GAME_CONFIG[difficulty].lives,
+          items: [],
+          config: GAME_CONFIG[difficulty],
         };
 
-        let gameState = {
-            score: 0,
-            coins: Number(localStorage.getItem('coins')) || 0,
-            lives: 3,
-            difficulty: null,
-            activeObjects: new Set(),
-            unlockedItems: JSON.parse(localStorage.getItem('unlocked')) || ['basic'],
-            currentCart: 'basic',
-            currentBg: 'default',
-            isGameActive: false
-        };
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("game-over").style.display = "none";
+        updateHUD();
 
-        function startGame(difficulty) {
-            gameState = {
-                ...gameState,
-                score: 0,
-                lives: DIFFICULTY[difficulty].lives,
-                difficulty: DIFFICULTY[difficulty],
-                isGameActive: true
-            };
+        if (game.spawnInterval) clearInterval(game.spawnInterval);
+        game.spawnInterval = setInterval(spawnItem, game.config.spawnRate);
 
-            document.getElementById('start-screen').style.display = 'none';
-            updateHUD();
-            applyPurchases();
-            startSpawning();
-            gameLoop();
+        showTutorial();
+      }
+
+      function endGame() {
+        game.isActive = false;
+        clearInterval(game.spawnInterval);
+        document.getElementById("final-score").textContent = game.score;
+        document.getElementById("game-over").style.display = "flex";
+        game.items.forEach((item) => item.remove());
+        game.items = [];
+      }
+
+      function showStartScreen() {
+        document.getElementById("game-over").style.display = "none";
+        document.getElementById("start-screen").style.display = "flex";
+        initShop();
+      }
+
+      function handleMovement(x) {
+        if (!game.isActive) return;
+        const player = document.getElementById("player");
+        const playerWidth = player.offsetWidth;
+        const maxX = window.innerWidth - playerWidth;
+        player.style.left = `${Math.max(
+          0,
+          Math.min(x - playerWidth / 2, maxX)
+        )}px`;
+      }
+
+      function showEquippedMessage(message) {
+        let equippedMsg = document.getElementById("equipped-message");
+        if (!equippedMsg) {
+          equippedMsg = document.createElement("div");
+          equippedMsg.id = "equipped-message";
+          equippedMsg.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            transition: opacity 0.5s;
+          `;
+          document.body.appendChild(equippedMsg);
         }
+        equippedMsg.textContent = message;
+        equippedMsg.style.opacity = "1";
 
-        function buyItem(item, price) {
-            if (gameState.coins >= price && !gameState.unlockedItems.includes(item)) {
-                gameState.coins -= price;
-                gameState.unlockedItems.push(item);
-                localStorage.setItem('unlocked', JSON.stringify(gameState.unlockedItems));
-                localStorage.setItem('coins', gameState.coins);
-                updateShop();
-            }
-        }
+        setTimeout(() => {
+          equippedMsg.style.opacity = "0";
+          setTimeout(() => equippedMsg.remove(), 500);
+        }, 2000);
+      }
 
-        function selectCart(cartType) {
-            if (gameState.unlockedItems.includes(cartType)) {
-                gameState.currentCart = cartType;
-                document.getElementById('basket').textContent = 
-                    cartType === 'truck' ? '🚚' : '🛒';
-            }
-        }
+      document.addEventListener("mousemove", (e) => handleMovement(e.clientX));
+      document.addEventListener(
+        "touchmove",
+        (e) => {
+          e.preventDefault();
+          handleMovement(e.touches[0].clientX);
+        },
+        { passive: false }
+      );
 
-        function applyPurchases() {
-            if (gameState.unlockedItems.includes('colorful')) {
-                document.body.style.background = 'linear-gradient(45deg, #FFB6C1, #87CEFA)';
-            } else if (gameState.unlockedItems.includes('night')) {
-                document.body.style.background = 'linear-gradient(45deg, #2c3e50, #3498db)';
-            }
-        }
-
-        function updateHUD() {
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('coins').textContent = gameState.coins;
-            document.getElementById('lives').textContent = gameState.lives;
-        }
-
-        function updateShop() {
-            document.getElementById('shop-coins').textContent = gameState.coins;
-            document.querySelectorAll('.shop-item button').forEach(btn => {
-                const price = Number(btn.onclick.toString().match(/ (\d+)/)[1]);
-                btn.disabled = gameState.coins < price && 
-                    !gameState.unlockedItems.includes(btn.parentElement.querySelector('div').textContent.split(' ')[1]);
-            });
-        }
-
-        function createObject() {
-            const object = document.createElement('div');
-            object.className = 'falling-object';
-            object.textContent = Math.random() > 0.2 ? '🍎' : '💣';
-            object.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
-            
-            const animation = object.animate(
-                [{ transform: 'translateY(-100px)' }, { transform: 'translateY(110vh)' }],
-                { duration: 3000 / gameState.difficulty.speed }
-            );
-
-            animation.onfinish = () => {
-                if (!object.collected) {
-                    if (object.textContent === '💣') {
-                        gameState.lives--;
-                        updateHUD();
-                    }
-                }
-                object.remove();
-            };
-
-            document.getElementById('game-container').appendChild(object);
-        }
-
-        function checkCollisions() {
-            const basket = document.getElementById('basket');
-            const basketRect = basket.getBoundingClientRect();
-
-            document.querySelectorAll('.falling-object').forEach(object => {
-                const objectRect = object.getBoundingClientRect();
-                if (objectRect.top < basketRect.bottom &&
-                    objectRect.bottom > basketRect.top &&
-                    objectRect.left < basketRect.right &&
-                    objectRect.right > basketRect.left) {
-                    
-                    if (object.textContent === '🍎') {
-                        gameState.score += 10;
-                        gameState.coins += 1;
-                        localStorage.setItem('coins', gameState.coins);
-                    } else {
-                        gameState.lives--;
-                    }
-                    
-                    object.collected = true;
-                    object.remove();
-                    updateHUD();
-                }
-            });
-        }
-
-        function gameLoop() {
-            if (!gameState.isGameActive) return;
-            checkCollisions();
-            
-            if (gameState.lives <= 0) {
-                document.getElementById('start-screen').style.display = 'flex';
-                gameState.isGameActive = false;
-                return;
-            }
-            
-            requestAnimationFrame(gameLoop);
-        }
-
-        function startSpawning() {
-            setInterval(() => {
-                if (gameState.isGameActive) createObject();
-            }, gameState.difficulty.spawnRate);
-        }
-
-        // Event Listeners
-        document.querySelectorAll('.difficulty-btn').forEach(btn => {
-            btn.addEventListener('click', () => startGame(btn.dataset.difficulty));
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!gameState.isGameActive) return;
-            const basket = document.getElementById('basket');
-            basket.style.left = `${Math.max(0, Math.min(e.clientX - 50, window.innerWidth - 100))}px`;
-        });
-
-        // Initialize
-        updateShop();
+      initShop();
     </script>
-</body>
+  </body>
 </html>
