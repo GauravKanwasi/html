@@ -1,180 +1,337 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Sports Car Racing</title>
+  <head>
+    <title>3-Lane Car Racing</title>
     <style>
-        /* Previous CSS remains, added new styles below */
-        
-        #difficultyMenu {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            z-index: 3;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        .difficulty-btn {
-            margin: 10px;
-            padding: 15px 30px;
-            background: #444;
-            border: 2px solid #666;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #1a1a1a;
+        font-family: Arial, sans-serif;
+      }
 
-        .difficulty-btn:hover {
-            background: #666;
-            transform: scale(1.05);
-        }
+      #gameContainer {
+        position: relative;
+        width: 400px;
+        height: 600px;
+        background: #2a2a2a;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+      }
 
-        .control-btn {
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
+      #road {
+        position: relative;
+        width: 300px;
+        height: 600px;
+        margin: 0 auto;
+        background: #404040;
+        overflow: hidden;
+        border-left: 5px solid #ffd700;
+        border-right: 5px solid #ffd700;
+      }
 
-        .control-btn:active {
-            opacity: 1;
-        }
+      .lane-marker {
+        position: absolute;
+        width: 8px;
+        height: 40px;
+        background: #ffd700;
+        opacity: 0.7;
+      }
 
-        #playerCar {
-            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+      #playerCar {
+        position: absolute;
+        width: 50px;
+        height: 90px;
+        bottom: 20px;
+        left: 25px;
+        z-index: 2;
+        transition: left 0.15s ease-out;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmMDAwMCIgZD0iTTUsMTNMMTAsMkgxNEwxOSwxM0wyMiwyMkgyTDUsMTNNNi41LDE2QzcuOSwxNiA5LDE0LjkgOSwxMy41QzksMTIuMSA3LjksMTEgNi41LDExQzUuMSwxMSA0LDEyLjEgNCwxMy41QzQsMTQuOSA1LjEsMTYgNi41LDE2TTExLjUsMTZDMTIuOSwxNiAxNCwxNC45IDE0LDEzLjVDMTQsMTIuMSAxMi45LDExIDExLjUsMTFDMTAuMSwxMSA5LDEyLjEgOSwxMy41QzksMTQuOSAxMC4xLDE2IDExLjUsMTZNMTYuNSwxNkMxNy45LDE2IDE5LDE0LjkgMTksMTMuNUMxOSwxMi4xIDE3LjksMTEgMTYuNSwxMUMxNS4xLDExIDE0LDEyLjEgMTQsMTMuNUMxNCwxNC45IDE1LjEsMTYgMTYuNSwxNloiLz48L3N2Zz4=");
+        background-size: cover;
+        background-position: center;
+        filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+      }
 
-        .obstacle {
-            transition: transform 0.1s linear;
-        }
+      .obstacle {
+        position: absolute;
+        width: 50px;
+        height: 90px;
+        z-index: 1;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzRiNGI0YiIgZD0iTTUsMTNMMTAsMkgxNEwxOSwxM0wyMiwyMkgyTDUsMTNNNi41LDE2QzcuOSwxNiA5LDE0LjkgOSwxMy41QzksMTIuMSA3LjksMTEgNi41LDExQzUuMSwxMSA0LDEyLjEgNCwxMy41QzQsMTQuOSA1LjEsMTYgNi41LDE2TTExLjUsMTZDMTIuOSwxNiAxNCwxNC45IDE0LDEzLjVDMTQsMTIuMSAxMi45LDExIDExLjUsMTFDMTAuMSwxMSA5LDEyLjEgOSwxMy41QzksMTQuOSAxMC4xLDE2IDExLjUsMTZNMTYuNSwxNkMxNy45LDE2IDE5LDE0LjkgMTksMTMuNUMxOSwxMi4xIDE3LjksMTEgMTYuNSwxMUMxNS4xLDExIDE0LDEyLjEgMTQsMTMuNUMxNCwxNC45IDE1LjEsMTYgMTYuNSwxNloiLz48L3N2Zz4=");
+        background-size: cover;
+        background-position: center;
+        filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+      }
+
+      #score {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        color: white;
+        font-size: 24px;
+        padding: 10px 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        z-index: 3;
+      }
+
+      #difficultyMenu,
+      #gameOver {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        color: white;
+        z-index: 4;
+      }
+
+      .menu-btn {
+        margin: 10px;
+        padding: 15px 30px;
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        background: #4caf50;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .menu-btn:hover {
+        transform: scale(1.05);
+        background: #45a049;
+      }
+
+      #gameOver {
+        display: none;
+      }
+
+      .controls-hint {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 14px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 3;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="gameContainer">
-        <div id="difficultyMenu">
-            <h2>Choose Difficulty</h2>
-            <button class="difficulty-btn" onclick="startGame('easy')">Easy</button>
-            <button class="difficulty-btn" onclick="startGame('medium')">Medium</button>
-            <button class="difficulty-btn" onclick="startGame('hard')">Hard</button>
-        </div>
-        <!-- Rest of the previous HTML remains -->
+      <div id="road"></div>
+      <div id="playerCar"></div>
+      <div id="score">Score: <span id="scoreValue">0</span></div>
+
+      <div id="difficultyMenu">
+        <h2>3-Lane Car Racing</h2>
+        <p style="margin: 20px 0">Choose Difficulty:</p>
+        <button class="menu-btn" onclick="startGame('easy')">Easy</button>
+        <button class="menu-btn" onclick="startGame('medium')">Medium</button>
+        <button class="menu-btn" onclick="startGame('hard')">Hard</button>
+      </div>
+
+      <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p style="margin: 20px 0">Score: <span id="finalScore">0</span></p>
+        <button class="menu-btn" onclick="showDifficultyMenu()">
+          Play Again
+        </button>
+      </div>
+
+      <div class="controls-hint">Use ← → arrow keys to change lanes</div>
     </div>
 
     <script>
-        // Added difficulty parameters
-        const difficultySettings = {
-            easy: {
-                initialSpeed: 5,
-                spawnRate: 0.02,
-                speedIncrease: 0.001,
-                playerSpeed: 7
-            },
-            medium: {
-                initialSpeed: 6,
-                spawnRate: 0.03,
-                speedIncrease: 0.002,
-                playerSpeed: 8
-            },
-            hard: {
-                initialSpeed: 7,
-                spawnRate: 0.04,
-                speedIncrease: 0.003,
-                playerSpeed: 9
-            }
-        };
+      // Update lane positions to exactly match the spaces between markers
+      const lanePositions = [50, 146, 242]; // Precisely adjusted left, center, and right lanes
+      let playerX = lanePositions[1]; // Start in center lane
+      let currentLane = 1;
+      let gameActive = false;
+      let score = 0;
+      let speed = 5;
+      let obstacles = [];
+      const carWidth = 50;
 
-        let currentDifficulty = difficultySettings.medium;
+      // DOM elements
+      const road = document.getElementById("road");
+      const playerCar = document.getElementById("playerCar");
+      const scoreElement = document.getElementById("scoreValue");
+      const gameOverScreen = document.getElementById("gameOver");
+      const difficultyMenu = document.getElementById("difficultyMenu");
 
-        function startGame(difficulty) {
-            // Set difficulty
-            currentDifficulty = difficultySettings[difficulty] || difficultySettings.medium;
-            
-            // Hide difficulty menu
-            document.getElementById('difficultyMenu').style.display = 'none';
-            
-            // Reset game state
-            obstacles.forEach(obstacle => road.removeChild(obstacle.element));
-            obstacles = [];
-            playerX = 150;
-            score = 0;
-            speed = currentDifficulty.initialSpeed;
-            gameActive = true;
-            playerCar.style.transform = `translateX(${playerX - 150}px)`;
-            scoreElement.textContent = '0';
-            gameOverScreen.style.display = 'none';
+      // Create lane markers with exact spacing
+      function createLaneMarkers() {
+        const markerContainer = document.createElement("div");
+        markerContainer.style.position = "absolute";
+        markerContainer.style.width = "100%";
+        markerContainer.style.height = "100%";
 
-            // Update control parameters
-            playerSpeed = currentDifficulty.playerSpeed;
-
-            // Start game loop
-            gameLoop();
+        for (let i = 0; i < 15; i++) {
+          const marker1 = document.createElement("div");
+          const marker2 = document.createElement("div");
+          marker1.className = "lane-marker";
+          marker2.className = "lane-marker";
+          marker1.style.left = "100px";
+          marker2.style.left = "192px";
+          marker1.style.top = `${i * 80}px`;
+          marker2.style.top = `${i * 80}px`;
+          markerContainer.appendChild(marker1);
+          markerContainer.appendChild(marker2);
         }
 
-        // Modified game loop with difficulty parameters
-        function gameLoop() {
-            if (!gameActive) return;
+        road.appendChild(markerContainer);
+        return markerContainer;
+      }
 
-            updatePlayerPosition();
-            moveObstacles();
+      const laneMarkers = createLaneMarkers();
 
-            if (Math.random() < currentDifficulty.spawnRate) {
-                createObstacle();
-            }
+      // Difficulty settings
+      const difficultySettings = {
+        easy: { initialSpeed: 3, spawnRate: 0.015, speedIncrease: 0.0001 },
+        medium: { initialSpeed: 4, spawnRate: 0.02, speedIncrease: 0.0002 },
+        hard: { initialSpeed: 5, spawnRate: 0.025, speedIncrease: 0.0003 },
+      };
 
-            speed += currentDifficulty.speedIncrease;
-            requestAnimationFrame(gameLoop);
-        }
+      let currentDifficulty = difficultySettings.medium;
 
-        // Smoother player movement using transforms
-        function updatePlayerPosition() {
-            if (moveLeft && playerX > 60) {
-                playerX -= playerSpeed;
-            }
-            if (moveRight && playerX < 60 + roadWidth - carWidth) {
-                playerX += playerSpeed;
-            }
-            playerCar.style.transform = `translateX(${playerX - 150}px)`;
-        }
+      // Update obstacle creation to use exact lane positions
+      function createObstacle() {
+        const obstacle = document.createElement("div");
+        obstacle.className = "obstacle";
+        const randomLane = Math.floor(Math.random() * 3);
+        const xPosition = lanePositions[randomLane];
+        obstacle.style.left = `${xPosition}px`;
+        obstacle.style.top = "-90px";
+        road.appendChild(obstacle);
 
-        // Smoother obstacle movement using transforms
-        function moveObstacles() {
-            obstacles.forEach((obstacle, index) => {
-                obstacle.y += speed;
-                obstacle.element.style.transform = `translate3d(0, ${obstacle.y}px, 0)`;
-
-                // Improved collision detection
-                const playerRect = playerCar.getBoundingClientRect();
-                const obstacleRect = obstacle.element.getBoundingClientRect();
-
-                if (!(playerRect.right < obstacleRect.left || 
-                      playerRect.left > obstacleRect.right ||
-                      playerRect.bottom < obstacleRect.top || 
-                      playerRect.top > obstacleRect.bottom)) {
-                    gameOver();
-                }
-
-                if (obstacle.y > 640) {
-                    road.removeChild(obstacle.element);
-                    obstacles.splice(index, 1);
-                    score += 10;
-                    scoreElement.textContent = score;
-                }
-            });
-        }
-
-        // Initialize with difficulty menu visible
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('difficultyMenu').style.display = 'block';
+        obstacles.push({
+          element: obstacle,
+          lane: randomLane,
+          y: -90,
         });
+      }
 
-        // Previous code remains with following adjustments:
-        // - Removed automatic startGame() call
-        // - Added playerSpeed variable
-        // - Updated collision detection to use transforms
+      // Update keyboard controls with exact positions
+      document.addEventListener("keydown", (e) => {
+        if (!gameActive) return;
+
+        if (e.key === "ArrowLeft" && currentLane > 0) {
+          currentLane--;
+          playerX = lanePositions[currentLane];
+          playerCar.style.left = `${playerX}px`;
+        }
+        if (e.key === "ArrowRight" && currentLane < 2) {
+          currentLane++;
+          playerX = lanePositions[currentLane];
+          playerCar.style.left = `${playerX}px`;
+        }
+      });
+
+      function checkCollision(obstacle) {
+        if (obstacle.y > 450 && obstacle.y < 570) {
+          const playerBounds = playerCar.getBoundingClientRect();
+          const obstacleBounds = obstacle.element.getBoundingClientRect();
+
+          return !(
+            playerBounds.right < obstacleBounds.left ||
+            playerBounds.left > obstacleBounds.right ||
+            playerBounds.bottom < obstacleBounds.top ||
+            playerBounds.top > obstacleBounds.bottom
+          );
+        }
+        return false;
+      }
+
+      function moveObstacles() {
+        laneMarkers.style.transform = `translateY(${
+          ((speed * score) / 100) % 80
+        }px)`;
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          const obstacle = obstacles[i];
+          obstacle.y += speed;
+          obstacle.element.style.top = `${obstacle.y}px`;
+
+          if (checkCollision(obstacle)) {
+            gameOver();
+            return;
+          }
+
+          if (obstacle.y > 600) {
+            obstacle.element.remove();
+            obstacles.splice(i, 1);
+            score += 10;
+            scoreElement.textContent = score;
+          }
+        }
+      }
+
+      function startGame(difficulty) {
+        obstacles.forEach((obstacle) => obstacle.element.remove());
+        obstacles = [];
+        currentLane = 1;
+        playerX = lanePositions[currentLane];
+        score = 0;
+        currentDifficulty = difficultySettings[difficulty];
+        speed = currentDifficulty.initialSpeed;
+        gameActive = true;
+
+        difficultyMenu.style.display = "none";
+        playerCar.style.left = `${playerX}px`;
+        scoreElement.textContent = "0";
+        gameOverScreen.style.display = "none";
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      function gameLoop() {
+        if (!gameActive) return;
+
+        moveObstacles();
+
+        if (Math.random() < currentDifficulty.spawnRate) {
+          createObstacle();
+        }
+
+        speed += currentDifficulty.speedIncrease;
+        requestAnimationFrame(gameLoop);
+      }
+
+      function gameOver() {
+        gameActive = false;
+        document.getElementById("finalScore").textContent = score;
+        gameOverScreen.style.display = "block";
+      }
+
+      function showDifficultyMenu() {
+        difficultyMenu.style.display = "block";
+        gameOverScreen.style.display = "none";
+      }
+
+      // Initialize game with exact positioning
+      document.addEventListener("DOMContentLoaded", () => {
+        difficultyMenu.style.display = "block";
+        gameOverScreen.style.display = "none";
+        playerCar.style.left = `${playerX}px`;
+      });
     </script>
-</body>
+  </body>
 </html>
