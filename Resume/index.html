@@ -1,108 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Resume Builder</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Interactive Resume Builder</h1>
-        <p>Drag and Drop sections to customize your resume layout!</p>
-    </header>
-
-    <div class="container">
-        <div class="input-section">
-            <label for="photo">Profile Picture:</label>
-            <input type="file" id="photo" accept="image/*">
-            <div class="input-field">
-                <label for="name">Full Name:</label>
-                <input type="text" id="name" placeholder="Enter your full name">
-            </div>
-
-            <div class="input-field">
-                <label for="email">Email:</label>
-                <input type="email" id="email" placeholder="Enter your email">
-            </div>
-
-            <div class="input-field">
-                <label for="phone">Phone Number:</label>
-                <input type="text" id="phone" placeholder="Enter your phone number">
-            </div>
-
-            <div class="input-field">
-                <label for="title">Job Title:</label>
-                <input type="text" id="title" placeholder="Enter your job title">
-            </div>
-
-            <div class="input-field">
-                <label for="skills">Skills:</label>
-                <div id="skills-section">
-                    <input type="text" class="skills-input" placeholder="Enter a skill">
-                    <button type="button" onclick="addSkill()">Add Skill</button>
-                    <ul id="skills-list"></ul>
-                </div>
-            </div>
-
-            <div class="input-field">
-                <label for="experience">Experience:</label>
-                <div id="experience-section">
-                    <input type="text" class="experience-input" placeholder="Enter experience details">
-                    <button type="button" onclick="addExperience()">Add Experience</button>
-                    <ul id="experience-list"></ul>
-                </div>
-            </div>
-
-            <div class="input-field">
-                <label for="education">Education:</label>
-                <div id="education-section">
-                    <input type="text" class="education-input" placeholder="Enter education details">
-                    <button type="button" onclick="addEducation()">Add Education</button>
-                    <ul id="education-list"></ul>
-                </div>
-            </div>
-
-            <button class="generate-btn" onclick="generateResume()">Generate Resume</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Resume Builder</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Add GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Add html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Navigation Bar -->
+      <nav class="navbar">
+        <div class="logo">
+          <i class="fas fa-file-alt"></i>
+          <span>Resume Builder</span>
         </div>
-
-        <div class="resume-preview" id="resumePreview" style="display:none;">
-            <h2>Resume Preview</h2>
-            <div id="profile-photo-container">
-                <img id="profile-photo" src="" alt="Profile Photo" class="profile-photo">
+        <div class="nav-controls">
+          <button class="btn-primary save-btn">
+            <i class="fas fa-save"></i>
+            <span>Save</span>
+          </button>
+          <div class="export-dropdown">
+            <button class="btn-primary export-btn">
+              <i class="fas fa-download"></i>
+              <span>Export</span>
+            </button>
+            <div class="export-menu">
+              <button data-format="pdf">
+                <i class="fas fa-file-pdf"></i> PDF
+              </button>
+              <button data-format="docx">
+                <i class="fas fa-file-word"></i> DOCX
+              </button>
+              <button data-format="png">
+                <i class="fas fa-file-image"></i> PNG
+              </button>
+              <button data-format="print">
+                <i class="fas fa-print"></i> Print
+              </button>
             </div>
-            <div id="resumeContainer" class="resume-container">
-                <div class="draggable-section" id="nameSection" draggable="true">
-                    <p><strong>Name:</strong> <span id="resumeName"></span></p>
-                </div>
-
-                <div class="draggable-section" id="emailSection" draggable="true">
-                    <p><strong>Email:</strong> <span id="resumeEmail"></span></p>
-                </div>
-
-                <div class="draggable-section" id="phoneSection" draggable="true">
-                    <p><strong>Phone:</strong> <span id="resumePhone"></span></p>
-                </div>
-
-                <div class="draggable-section" id="titleSection" draggable="true">
-                    <p><strong>Job Title:</strong> <span id="resumeTitle"></span></p>
-                </div>
-
-                <div class="draggable-section" id="skillsSection" draggable="true">
-                    <p><strong>Skills:</strong> <ul id="resumeSkills"></ul></p>
-                </div>
-
-                <div class="draggable-section" id="experienceSection" draggable="true">
-                    <p><strong>Experience:</strong> <ul id="resumeExperience"></ul></p>
-                </div>
-
-                <div class="draggable-section" id="educationSection" draggable="true">
-                    <p><strong>Education:</strong> <ul id="resumeEducation"></ul></p>
-                </div>
-            </div>
+          </div>
+          <button class="theme-toggle">
+            <i class="fas fa-moon"></i>
+          </button>
         </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <h3>Templates</h3>
+            <div class="template-list">
+              <div class="template-item active" data-template="modern">
+                <img src="templates/modern.png" alt="Modern Template" />
+                <span>Modern</span>
+              </div>
+              <div class="template-item" data-template="professional">
+                <img
+                  src="templates/professional.png"
+                  alt="Professional Template"
+                />
+                <span>Professional</span>
+              </div>
+              <div class="template-item" data-template="creative">
+                <img src="templates/creative.png" alt="Creative Template" />
+                <span>Creative</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3>Sections</h3>
+            <div class="section-list">
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="personal"
+              >
+                <i class="fas fa-user"></i>
+                <span>Personal Info</span>
+              </div>
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="experience"
+              >
+                <i class="fas fa-briefcase"></i>
+                <span>Experience</span>
+              </div>
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="education"
+              >
+                <i class="fas fa-graduation-cap"></i>
+                <span>Education</span>
+              </div>
+              <div class="section-item" draggable="true" data-section="skills">
+                <i class="fas fa-tools"></i>
+                <span>Skills</span>
+              </div>
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="projects"
+              >
+                <i class="fas fa-project-diagram"></i>
+                <span>Projects</span>
+              </div>
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="certificates"
+              >
+                <i class="fas fa-certificate"></i>
+                <span>Certificates</span>
+              </div>
+              <div
+                class="section-item"
+                draggable="true"
+                data-section="languages"
+              >
+                <i class="fas fa-language"></i>
+                <span>Languages</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <h3>Customization</h3>
+            <div class="customization-options">
+              <div class="option-group">
+                <label>Font Family</label>
+                <select class="font-family-select">
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Poppins">Poppins</option>
+                </select>
+              </div>
+              <div class="option-group">
+                <label>Color Scheme</label>
+                <div class="color-picker">
+                  <input type="color" class="primary-color" value="#2563eb" />
+                  <input type="color" class="secondary-color" value="#1f2937" />
+                </div>
+              </div>
+              <div class="option-group">
+                <label>Spacing</label>
+                <input
+                  type="range"
+                  class="spacing-slider"
+                  min="0.8"
+                  max="1.5"
+                  step="0.1"
+                  value="1"
+                />
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Editor Area -->
+        <section class="editor-area">
+          <div class="resume-container">
+            <!-- Resume sections will be added here dynamically -->
+          </div>
+        </section>
+
+        <!-- Preview Area -->
+        <section class="preview-area">
+          <div class="preview-container">
+            <!-- Preview will be rendered here -->
+          </div>
+        </section>
+      </main>
     </div>
 
-    <script src="script.js"></script>
-</body>
+    <!-- Notification Component -->
+    <div class="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+  </body>
 </html>
