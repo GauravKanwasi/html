@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS-Only Rock, Paper, Scissors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 50px;
+    }
+    .game {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    /* Hide the default radio buttons */
+    .game input[type="radio"] {
+      display: none;
+    }
+    /* Style the labels as buttons */
+    .game label {
+      cursor: pointer;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    /* Highlight the selected option */
+    .game input[type="radio"]:checked + label {
+      background: #3498db;
+      color: #fff;
+      border-color: #2980b9;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #2ecc71;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #27ae60;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #333;
+      min-height: 1.2em;
+    }
+    /* Default message when no choice is made */
+    .result::before {
+      content: "Choose Rock, Paper, or Scissors and click Play!";
+    }
+    /* Display messages based on the selected radio button */
+    #rock:checked ~ button + .result::before {
+      content: "You chose Rock! (Imagine the computer chose Paper.)";
+    }
+    #paper:checked ~ button + .result::before {
+      content: "You chose Paper! (Imagine the computer chose Rock.)";
+    }
+    #scissors:checked ~ button + .result::before {
+      content: "You chose Scissors! (Imagine the computer chose Scissors.)";
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>Rock, Paper, Scissors</h1>
+    <div>
+      <input type="radio" id="rock" name="choice">
+      <label for="rock">Rock</label>
+
+      <input type="radio" id="paper" name="choice">
+      <label for="paper">Paper</label>
+
+      <input type="radio" id="scissors" name="choice">
+      <label for="scissors">Scissors</label>
+    </div>
+    <button onclick="void(0)">Play!</button>
+    <div class="result"></div>
+  </div>
+</body>
+</html>
