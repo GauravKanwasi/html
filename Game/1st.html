@@ -3,28 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Market Collector</title>
+    <title>Market Collector Deluxe</title>
     <style>
+      /* Base resets and styling */
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
         overflow: hidden;
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(45deg, #87ceeb, #98fb98);
         touch-action: none;
+        transition: background 0.5s ease;
       }
-
       #game-container {
         width: 100vw;
         height: 100vh;
         position: relative;
         overflow: hidden;
       }
-
       .screen {
         position: fixed;
         top: 0;
@@ -35,12 +34,26 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.85);
         color: white;
         z-index: 100;
         text-align: center;
+        transition: all 0.3s ease;
       }
-
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        animation: glow 2s infinite alternate;
+      }
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 5px #fff, 0 0 10px #ff0;
+        }
+        to {
+          text-shadow: 0 0 10px #fff, 0 0 20px #ff0, 0 0 30px #ff0;
+        }
+      }
       .difficulty-choices {
         display: flex;
         gap: 20px;
@@ -49,53 +62,112 @@
         justify-content: center;
         padding: 10px;
       }
-
       .difficulty-btn {
         padding: 15px 30px;
         border: none;
         border-radius: 10px;
         font-size: 18px;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
-
       .difficulty-btn:hover {
-        transform: scale(1.1);
+        transform: scale(1.05) translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
       }
-
+      .difficulty-btn:active {
+        transform: scale(0.98) translateY(1px);
+      }
       .shop {
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.7);
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 15px;
         margin: 20px;
-        max-width: 400px;
+        max-width: 450px;
         width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
-
+      .shop h3 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: #ffd700;
+      }
+      .shop-tabs {
+        display: flex;
+        margin-bottom: 15px;
+      }
+      .shop-tab {
+        flex: 1;
+        padding: 8px;
+        text-align: center;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.3);
+        transition: all 0.2s;
+      }
+      .shop-tab.active {
+        background: #4caf50;
+        font-weight: bold;
+      }
+      .shop-tab:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+      .shop-tab:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+      }
       .shop-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin: 10px 0;
-        padding: 10px;
+        padding: 15px;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 5px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
       }
-
+      .shop-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
       .shop-item button {
-        padding: 5px 15px;
+        padding: 8px 16px;
         border: none;
         border-radius: 5px;
         cursor: pointer;
         background: #4caf50;
         color: white;
+        font-weight: bold;
+        transition: all 0.2s;
       }
-
+      .shop-item button:hover:not(:disabled) {
+        background: #3d9140;
+        transform: scale(1.05);
+      }
       .shop-item button:disabled {
-        background: #666;
+        background: #555;
         cursor: not-allowed;
+        opacity: 0.7;
       }
-
+      .shop-coins-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15px;
+        font-size: 1.2rem;
+        padding: 10px;
+        background: rgba(255, 215, 0, 0.2);
+        border-radius: 8px;
+      }
+      .shop-coins-display span {
+        margin: 0 5px;
+        font-weight: bold;
+        color: #ffd700;
+      }
       #player {
         position: absolute;
         bottom: 20px;
@@ -104,437 +176,566 @@
         font-size: 40px;
         user-select: none;
         z-index: 10;
+        transition: all 0.1s;
+        filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
       }
-
       .item {
         position: absolute;
         font-size: 30px;
         user-select: none;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+        transition: transform 0.2s;
+        z-index: 5;
       }
-
+      .collected {
+        animation: collect 0.5s forwards;
+      }
+      @keyframes collect {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.5); opacity: 0.7; }
+        100% { transform: scale(0); opacity: 0; }
+      }
+      .bomb-collected {
+        animation: explode 0.5s forwards;
+      }
+      @keyframes explode {
+        0% { transform: scale(1); }
+        50% { transform: scale(2); opacity: 0.7; }
+        100% { transform: scale(0); opacity: 0; }
+      }
       #hud {
         position: fixed;
-        top: 10px;
-        left: 10px;
-        font-size: 24px;
+        top: 15px;
+        left: 15px;
+        font-size: 20px;
         color: white;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.6);
+        padding: 15px 25px;
+        border-radius: 15px;
+        z-index: 50;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      #level-indicator {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
         padding: 10px 20px;
         border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         z-index: 50;
       }
-
+      .level-progress {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+      .level-bar {
+        height: 100%;
+        background: #4caf50;
+        width: 0%;
+        transition: width 0.3s;
+      }
       #game-over {
         display: none;
       }
-
-      .tutorial {
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+        max-width: 400px;
+        width: 90%;
+      }
+      .stat-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-top: 5px;
+        color: #ffd700;
+      }
+      .pause-button {
+        position: fixed;
+        top: 15px;
+        right: 90px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 50;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .mute-button {
+        position: fixed;
+        top: 15px;
+        right: 145px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        z-index: 50;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      #pause-screen {
+        display: none;
+      }
+      #tutorial {
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(0, 0, 0, 0.8);
         color: white;
-        padding: 15px;
-        border-radius: 10px;
+        padding: 20px;
+        border-radius: 15px;
         text-align: center;
         z-index: 1000;
         max-width: 90%;
-        width: 400px;
+        width: 450px;
+        line-height: 1.5;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
       }
-
+      .tutorial h3 {
+        margin-bottom: 10px;
+        color: #ffd700;
+      }
       .tutorial-btn {
         background: #4caf50;
         border: none;
         color: white;
-        padding: 8px 16px;
-        border-radius: 5px;
-        margin-top: 10px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-top: 15px;
         cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+      }
+      .tutorial-btn:hover {
+        background: #3d9140;
+        transform: scale(1.05);
       }
     </style>
   </head>
   <body>
+    <!-- Start Screen -->
     <div id="start-screen" class="screen">
-      <h1>Market Collector!</h1>
+      <h1>Market Collector Deluxe!</h1>
       <div class="difficulty-choices">
         <button
           class="difficulty-btn"
-          style="background: #4caf50"
+          style="background: linear-gradient(to bottom, #4caf50, #3d9140)"
           onclick="startGame('easy')"
         >
           🌱 Easy
         </button>
         <button
           class="difficulty-btn"
-          style="background: #ff9800"
+          style="background: linear-gradient(to bottom, #ff9800, #e68a00)"
           onclick="startGame('medium')"
         >
           🔥 Medium
         </button>
         <button
           class="difficulty-btn"
-          style="background: #f44336"
+          style="background: linear-gradient(to bottom, #f44336, #d32f2f)"
           onclick="startGame('hard')"
         >
           💀 Hard
         </button>
+        <button
+          class="difficulty-btn"
+          style="background: linear-gradient(to bottom, #9c27b0, #7b1fa2)"
+          onclick="startGame('insane')"
+        >
+          ☠️ Insane
+        </button>
       </div>
-
       <div class="shop">
         <h3>Shop 🛒</h3>
-        <div id="shop-items"></div>
-        <div>Your Coins: <span id="shop-coins">0</span> 🪙</div>
+        <!-- For brevity, shop tabs and items would be dynamically populated -->
+        <div id="shop-items">[Shop items go here]</div>
+        <div class="shop-coins-display">
+          Your Coins: <span id="shop-coins">0</span> 🪙
+        </div>
       </div>
     </div>
 
+    <!-- Game Over Screen -->
     <div id="game-over" class="screen">
       <h1>Game Over!</h1>
       <h2>Score: <span id="final-score">0</span></h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div>Items Collected</div>
+          <div class="stat-value" id="items-collected">0</div>
+        </div>
+        <div class="stat-box">
+          <div>Coins Earned</div>
+          <div class="stat-value" id="coins-earned">0</div>
+        </div>
+        <div class="stat-box">
+          <div>Time Survived</div>
+          <div class="stat-value" id="time-survived">0s</div>
+        </div>
+        <div class="stat-box">
+          <div>Level Reached</div>
+          <div class="stat-value" id="level-reached">1</div>
+        </div>
+      </div>
+      <!-- Free Continue Button -->
       <button
         class="difficulty-btn"
-        style="background: #4caf50"
+        style="background: linear-gradient(to bottom, #2196f3, #1976d2); margin-bottom:15px;"
+        id="continue-btn"
+        onclick="continueGame()"
+      >
+        Continue for Free
+      </button>
+      <button
+        class="difficulty-btn"
+        style="background: linear-gradient(to bottom, #4caf50, #3d9140)"
         onclick="showStartScreen()"
       >
         Play Again
       </button>
     </div>
 
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="screen">
+      <h1>Game Paused</h1>
+      <button
+        class="difficulty-btn"
+        style="background: linear-gradient(to bottom, #4caf50, #3d9140); margin-bottom:15px;"
+        onclick="resumeGame()"
+      >
+        Resume Game
+      </button>
+      <button
+        class="difficulty-btn"
+        style="background: linear-gradient(to bottom, #f44336, #d32f2f)"
+        onclick="showStartScreen()"
+      >
+        Quit Game
+      </button>
+    </div>
+
+    <!-- Game Container -->
     <div id="game-container">
       <div id="hud">
         <div>Score: <span id="score">0</span></div>
         <div>Coins: <span id="coins">0</span> 🪙</div>
         <div>Lives: <span id="lives">3</span> ❤️</div>
+        <div>Combo: <span id="combo">x1</span></div>
+      </div>
+      <div id="level-indicator">
+        Level <span id="level">1</span>
+        <div class="level-progress">
+          <div class="level-bar" id="level-bar"></div>
+        </div>
       </div>
       <div id="player">🛒</div>
+      <div class="pause-button" onclick="togglePause()">⏸️</div>
+      <div class="mute-button" onclick="toggleMute()">🔊</div>
     </div>
 
+    <!-- Tutorial -->
     <div id="tutorial" class="tutorial" style="display: none">
       <h3>How to Play</h3>
-      <p>🍎 Collect apples for points and coins</p>
-      <p>�� Avoid bombs - they cost lives!</p>
+      <p>🍎 Collect fruits and vegetables for points and coins</p>
+      <p>💣 Avoid bombs and hazards – they cost lives!</p>
+      <p>⭐ Grab special powerups for temporary bonuses</p>
       <p>🛒 Move cart with mouse or touch</p>
-      <p>🪙 Use coins to buy new carts and backgrounds in the shop</p>
+      <p>🔄 Build combos by collecting items quickly</p>
+      <p>🪙 Use coins to buy new carts, backgrounds, and upgrades in the shop</p>
+      <p>📈 Level up by collecting items to increase difficulty and rewards</p>
       <button class="tutorial-btn" onclick="closeTutorial()">Got it!</button>
     </div>
 
     <script>
+      // Game Configuration for different difficulties
       const GAME_CONFIG = {
-        easy: { speed: 2, spawnRate: 1500, lives: 5 },
-        medium: { speed: 3, spawnRate: 1000, lives: 3 },
-        hard: { speed: 4, spawnRate: 700, lives: 2 },
+        easy:    { speed: 2, spawnRate: 1500, lives: 5, level_factor: 1 },
+        medium:  { speed: 3, spawnRate: 1000, lives: 3, level_factor: 1.5 },
+        hard:    { speed: 4, spawnRate: 700,  lives: 2, level_factor: 2 },
+        insane:  { speed: 5, spawnRate: 500,  lives: 1, level_factor: 3 }
       };
 
+      // Items (good and bad)
       const ITEMS = {
-        good: ["🍎", "🍐", "🍊", "🍌", "🥝"],
-        bad: ["💣", "⚡", "☠️"],
+        good: [
+          { emoji: "🍎", points: 10, chance: 30 },
+          { emoji: "🍐", points: 15, chance: 25 },
+          { emoji: "🍊", points: 20, chance: 20 },
+          { emoji: "🍌", points: 25, chance: 15 },
+          { emoji: "🥝", points: 30, chance: 10 }
+        ],
+        bad: [
+          { emoji: "💣", damage: 1, chance: 50 },
+          { emoji: "⚡", damage: 1, chance: 30 },
+          { emoji: "☠️", damage: 2, chance: 20 }
+        ]
       };
 
-      const SHOP_ITEMS = {
-        truck: { name: "🚚 Truck Cart", price: 50, type: "cart" },
-        robot: { name: "🤖 Robot Cart", price: 75, type: "cart" },
-        colorful: { name: "🌈 Colorful BG", price: 30, type: "background" },
-        night: { name: "🌃 Night BG", price: 50, type: "background" },
+      // Sound Effects URLs
+      const SOUND_EFFECTS = {
+        collect: [
+          { url: "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" },
+          { url: "https://assets.mixkit.co/sfx/preview/mixkit-bonus-earned-in-video-game-2058.mp3" }
+        ],
+        bomb: [
+          { url: "https://assets.mixkit.co/sfx/preview/mixkit-explosion-accent-1688.mp3" }
+        ],
+        gameOver: [
+          { url: "https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3" }
+        ]
       };
 
+      // Preload Audio Elements
+      const audioElements = {};
+      function preloadAudio() {
+        for (const [type, sounds] of Object.entries(SOUND_EFFECTS)) {
+          audioElements[type] = [];
+          sounds.forEach(sound => {
+            const audio = new Audio(sound.url);
+            audio.preload = "auto";
+            audioElements[type].push(audio);
+          });
+        }
+      }
+
+      // Play sound of a given type
+      function playSound(type) {
+        if (game.muted || !audioElements[type]) return;
+        const soundArray = audioElements[type];
+        const randomIndex = Math.floor(Math.random() * soundArray.length);
+        soundArray[randomIndex].play();
+      }
+
+      // Game state
       let game = {
         isActive: false,
+        isPaused: false,
         score: 0,
         coins: parseInt(localStorage.getItem("coins")) || 0,
         lives: 3,
         items: [],
         config: null,
-        unlockedItems: JSON.parse(localStorage.getItem("unlockedItems")) || [
-          "basic",
-        ],
-        currentCart: "🛒",
-        spawnInterval: null,
-        tutorialShown: localStorage.getItem("tutorialShown") === "true",
+        level: 1,
+        unlockedItems: JSON.parse(localStorage.getItem("unlockedItems")) || ["basic"],
+        currentCart: localStorage.getItem("currentCart") || "🛒",
+        currentBackground: localStorage.getItem("currentBackground") || "default",
+        freeContinueUsed: false,
+        muted: localStorage.getItem("muted") === "true" || false
       };
 
-      function initShop() {
-        const shopContainer = document.getElementById("shop-items");
-        shopContainer.innerHTML = `
-                <div class="shop-item">
-                    <div>
-                        🛒 Basic Cart (Free)
-                        <br>
-                        <small>The classic shopping cart</small>
-                    </div>
-                    <button onclick="selectCart('🛒')">${
-                      game.currentCart === "🛒" ? "Equipped" : "Equip"
-                    }</button>
-                </div>
-            `;
-
-        Object.entries(SHOP_ITEMS).forEach(([id, item]) => {
-          const isUnlocked = game.unlockedItems.includes(id);
-          let description = "";
-          if (item.type === "cart") {
-            description = "A faster cart for collecting";
-          } else if (item.type === "background") {
-            description = "Change the game background";
-          }
-
-          const isEquipped =
-            item.type === "cart"
-              ? game.currentCart === item.name.split(" ")[0]
-              : id === game.currentBackground;
-
-          shopContainer.innerHTML += `
-                    <div class="shop-item">
-                        <div>
-                            ${item.name} (${item.price} coins)
-                            <br>
-                            <small>${description}</small>
-                        </div>
-                        <button onclick="${
-                          isUnlocked
-                            ? `selectItem('${id}')`
-                            : `buyItem('${id}')`
-                        }"
-                                ${
-                                  !isUnlocked && game.coins < item.price
-                                    ? "disabled"
-                                    : ""
-                                }>
-                            ${
-                              isUnlocked
-                                ? isEquipped
-                                  ? "Equipped"
-                                  : "Equip"
-                                : "Buy"
-                            }
-                        </button>
-                    </div>
-                `;
-        });
-        updateCoins();
+      // Start Game Function
+      function startGame(difficulty) {
+        // Reset game state
+        game.isActive = true;
+        game.isPaused = false;
+        game.score = 0;
+        game.lives = GAME_CONFIG[difficulty].lives;
+        game.level = 1;
+        game.config = difficulty;
+        // Hide screens
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("game-over").style.display = "none";
+        // Update HUD
+        updateHUD();
+        // Preload audio
+        preloadAudio();
+        // Start spawning items
+        if (game.spawnInterval) clearInterval(game.spawnInterval);
+        game.spawnInterval = setInterval(spawnItem, GAME_CONFIG[difficulty].spawnRate);
       }
 
-      function buyItem(id) {
-        const item = SHOP_ITEMS[id];
-        if (game.coins >= item.price && !game.unlockedItems.includes(id)) {
-          game.coins -= item.price;
-          game.unlockedItems.push(id);
-          localStorage.setItem("coins", game.coins);
-          localStorage.setItem(
-            "unlockedItems",
-            JSON.stringify(game.unlockedItems)
-          );
-          initShop();
-        }
-      }
-
-      function selectCart(cart) {
-        game.currentCart = cart;
-        document.getElementById("player").textContent = cart;
-        showEquippedMessage("Cart equipped!");
-      }
-
-      function selectItem(id) {
-        const item = SHOP_ITEMS[id];
-        if (item.type === "cart") {
-          selectCart(item.name.split(" ")[0]);
-        } else if (item.type === "background") {
-          document.body.style.background =
-            id === "night"
-              ? "linear-gradient(45deg, #2c3e50, #3498db)"
-              : "linear-gradient(45deg, #FFB6C1, #87CEFA)";
-          showEquippedMessage("Background equipped!");
-        }
-      }
-
+      // Spawn item and animate its fall
       function spawnItem() {
-        if (!game.isActive) return;
-
+        if (!game.isActive || game.isPaused) return;
         const item = document.createElement("div");
         item.className = "item";
-        const isGood = Math.random() > 0.2;
-        const itemArray = isGood ? ITEMS.good : ITEMS.bad;
-        item.textContent =
-          itemArray[Math.floor(Math.random() * itemArray.length)];
-        item.style.left = `${Math.random() * (window.innerWidth - 50)}px`;
+        // Decide if the item is good or bad (70% chance for good)
+        const isGood = Math.random() < 0.7;
+        const itemList = isGood ? ITEMS.good : ITEMS.bad;
+        const randomItem = itemList[Math.floor(Math.random() * itemList.length)];
+        item.textContent = randomItem.emoji;
+        // Set a custom attribute for points/damage
+        item.dataset.value = isGood ? randomItem.points : -randomItem.damage * 10;
+        // Set initial position
+        item.style.left = Math.random() * (window.innerWidth - 50) + "px";
         item.style.top = "-50px";
-        item.collected = false;
-
         document.getElementById("game-container").appendChild(item);
         game.items.push(item);
 
-        const speed = game.config.speed;
         let pos = -50;
-
         function fall() {
-          if (!game.isActive) {
-            item.remove();
-            return;
-          }
-
-          pos += speed;
-          item.style.top = `${pos}px`;
-
+          if (!game.isActive || game.isPaused) return;
+          pos += GAME_CONFIG[game.config].speed;
+          item.style.top = pos + "px";
+          // Check for collision with player
+          checkCollision(item);
+          // Remove item if it goes off screen
           if (pos > window.innerHeight) {
-            if (ITEMS.good.includes(item.textContent) && !item.collected) {
-              decrementLives();
-            }
-            removeItem(item);
+            item.remove();
+            game.items = game.items.filter(i => i !== item);
           } else {
-            checkCollision(item);
             requestAnimationFrame(fall);
           }
         }
-
         requestAnimationFrame(fall);
       }
 
+      // Check collision between player and item
       function checkCollision(item) {
-        if (item.collected) return;
-
         const player = document.getElementById("player");
         const playerRect = player.getBoundingClientRect();
         const itemRect = item.getBoundingClientRect();
-
         if (
           itemRect.bottom >= playerRect.top &&
           itemRect.top <= playerRect.bottom &&
           itemRect.right >= playerRect.left &&
           itemRect.left <= playerRect.right
         ) {
-          item.collected = true;
-
-          if (ITEMS.good.includes(item.textContent)) {
-            game.score += 10;
+          // Collision detected
+          const value = parseInt(item.dataset.value);
+          if (value > 0) {
+            game.score += value;
             game.coins++;
-            localStorage.setItem("coins", game.coins);
+            playSound("collect");
+            item.classList.add("collected");
           } else {
-            decrementLives();
+            game.lives += value; // value is negative
+            playSound("bomb");
+            item.classList.add("bomb-collected");
           }
-
           updateHUD();
-          removeItem(item);
+          setTimeout(() => item.remove(), 500);
+          game.items = game.items.filter(i => i !== item);
+          // End game if no lives remain
+          if (game.lives <= 0) {
+            endGame();
+          }
         }
       }
 
-      function removeItem(item) {
-        game.items = game.items.filter((i) => i !== item);
-        item.remove();
-      }
-
-      function decrementLives() {
-        game.lives--;
-        updateHUD();
-        if (game.lives <= 0) {
-          endGame();
-        }
-      }
-
+      // Update HUD display
       function updateHUD() {
         document.getElementById("score").textContent = game.score;
         document.getElementById("coins").textContent = game.coins;
         document.getElementById("lives").textContent = game.lives;
+        document.getElementById("level").textContent = game.level;
       }
 
-      function updateCoins() {
-        document.getElementById("shop-coins").textContent = game.coins;
-      }
-
-      function showTutorial() {
-        if (!game.tutorialShown) {
-          document.getElementById("tutorial").style.display = "block";
-        }
-      }
-
-      function closeTutorial() {
-        document.getElementById("tutorial").style.display = "none";
-        game.tutorialShown = true;
-        localStorage.setItem("tutorialShown", "true");
-      }
-
-      function startGame(difficulty) {
-        game = {
-          ...game,
-          isActive: true,
-          score: 0,
-          lives: GAME_CONFIG[difficulty].lives,
-          items: [],
-          config: GAME_CONFIG[difficulty],
-        };
-
-        document.getElementById("start-screen").style.display = "none";
-        document.getElementById("game-over").style.display = "none";
-        updateHUD();
-
-        if (game.spawnInterval) clearInterval(game.spawnInterval);
-        game.spawnInterval = setInterval(spawnItem, game.config.spawnRate);
-
-        showTutorial();
-      }
-
+      // End Game function
       function endGame() {
         game.isActive = false;
         clearInterval(game.spawnInterval);
         document.getElementById("final-score").textContent = game.score;
         document.getElementById("game-over").style.display = "flex";
-        game.items.forEach((item) => item.remove());
+        // Remove any remaining items
+        game.items.forEach(item => item.remove());
         game.items = [];
+        playSound("gameOver");
       }
 
+      // Continue for free (only allowed once)
+      function continueGame() {
+        if (!game.freeContinueUsed) {
+          game.freeContinueUsed = true;
+          game.lives = 1;
+          updateHUD();
+          document.getElementById("game-over").style.display = "none";
+          game.isActive = true;
+          game.spawnInterval = setInterval(spawnItem, GAME_CONFIG[game.config].spawnRate);
+        }
+      }
+
+      // Show Start Screen (for Play Again)
       function showStartScreen() {
+        game.isActive = false;
+        clearInterval(game.spawnInterval);
         document.getElementById("game-over").style.display = "none";
         document.getElementById("start-screen").style.display = "flex";
-        initShop();
       }
 
-      function handleMovement(x) {
-        if (!game.isActive) return;
+      // Resume game from pause
+      function resumeGame() {
+        game.isPaused = false;
+        document.getElementById("pause-screen").style.display = "none";
+      }
+
+      // Toggle pause state
+      function togglePause() {
+        game.isPaused = !game.isPaused;
+        if (game.isPaused) {
+          document.getElementById("pause-screen").style.display = "flex";
+        } else {
+          document.getElementById("pause-screen").style.display = "none";
+          // Resume spawning items if necessary
+        }
+      }
+
+      // Toggle mute state
+      function toggleMute() {
+        game.muted = !game.muted;
+        localStorage.setItem("muted", game.muted);
+        document.querySelector(".mute-button").textContent = game.muted ? "🔇" : "🔊";
+      }
+
+      // Close tutorial
+      function closeTutorial() {
+        document.getElementById("tutorial").style.display = "none";
+        localStorage.setItem("tutorialShown", "true");
+      }
+
+      // Handle player movement (mouse)
+      document.addEventListener("mousemove", (e) => {
         const player = document.getElementById("player");
         const playerWidth = player.offsetWidth;
-        const maxX = window.innerWidth - playerWidth;
-        player.style.left = `${Math.max(
-          0,
-          Math.min(x - playerWidth / 2, maxX)
-        )}px`;
-      }
+        let x = e.clientX - playerWidth / 2;
+        x = Math.max(0, Math.min(x, window.innerWidth - playerWidth));
+        player.style.left = x + "px";
+      });
 
-      function showEquippedMessage(message) {
-        let equippedMsg = document.getElementById("equipped-message");
-        if (!equippedMsg) {
-          equippedMsg = document.createElement("div");
-          equippedMsg.id = "equipped-message";
-          equippedMsg.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 255, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 1000;
-            transition: opacity 0.5s;
-          `;
-          document.body.appendChild(equippedMsg);
+      // Initialize game on page load
+      window.onload = function() {
+        preloadAudio();
+        // Show tutorial if not shown before
+        if (localStorage.getItem("tutorialShown") !== "true") {
+          document.getElementById("tutorial").style.display = "block";
         }
-        equippedMsg.textContent = message;
-        equippedMsg.style.opacity = "1";
-
-        setTimeout(() => {
-          equippedMsg.style.opacity = "0";
-          setTimeout(() => equippedMsg.remove(), 500);
-        }, 2000);
-      }
-
-      document.addEventListener("mousemove", (e) => handleMovement(e.clientX));
-      document.addEventListener(
-        "touchmove",
-        (e) => {
-          e.preventDefault();
-          handleMovement(e.touches[0].clientX);
-        },
-        { passive: false }
-      );
-
-      initShop();
+      };
     </script>
   </body>
 </html>
