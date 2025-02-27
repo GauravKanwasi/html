@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Pong Game</title>
+    <title>Enhanced Pong Game</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
       rel="stylesheet"
@@ -53,7 +53,7 @@
         display: flex;
         gap: 20px;
       }
-      #game-over {
+      #game-over, #start-screen {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -61,8 +61,12 @@
         background-color: rgba(0, 0, 0, 0.9);
         padding: 20px;
         border-radius: 10px;
-        display: none;
         color: white;
+        text-align: center;
+        width: 400px;
+      }
+      #game-over {
+        display: none;
       }
       .menu-button {
         margin: 5px;
@@ -92,10 +96,57 @@
         transform: scale(1.1);
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
       }
+      #power-up {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: none;
+      }
+      #sound-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      .game-stat {
+        font-size: 16px;
+        margin: 5px 0;
+      }
+      #timer {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        font-size: 18px;
+      }
+      .power-up-indicator {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: white;
+        font-size: 16px;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+      }
+      /* Responsive design */
+      @media (max-width: 900px) {
+        canvas {
+          width: 90%;
+          height: auto;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="game-container">
+      <div id="timer">Time: 0:00</div>
       <canvas id="pong" width="800" height="400"></canvas>
       <div id="difficulty-select">
         <button
@@ -113,57 +164,137 @@
       </div>
       <div id="controls">
         <button onclick="restartGame()" class="menu-button">Restart</button>
-        <button onclick="togglePause()" class="menu-button">Pause</button>
+        <button onclick="togglePause()" id="pause-button" class="menu-button">Pause</button>
       </div>
       <div id="score-container">
         <div id="current-score">Score: 0</div>
         <div id="highscore">Highscore: 0</div>
       </div>
+      <div class="power-up-indicator" id="power-up-indicator">Power Up: <span id="power-up-name"></span></div>
     </div>
+    
+    <div id="start-screen">
+      <h1>PONG</h1>
+      <p>Move your paddle with the mouse or arrow keys</p>
+      <p>Hit the ball to score points</p>
+      <p>Collect power-ups for special abilities!</p>
+      <button onclick="startGame()" class="menu-button">Start Game</button>
+    </div>
+    
     <div id="game-over">
       <h2>Game Over!</h2>
       <p>Final Score: <span id="final-score">0</span></p>
       <p>Highscore: <span id="final-highscore">0</span></p>
+      <p>Time Played: <span id="final-time">0:00</span></p>
       <button onclick="restartGame()" class="menu-button">Play Again</button>
     </div>
+    
+    <button id="sound-toggle" onclick="toggleSound()">🔊</button>
+    
     <script>
       const canvas = document.getElementById("pong");
       const ctx = canvas.getContext("2d");
 
-      const paddleWidth = 10,
-        paddleHeight = 100;
+      // Game state
+      let paddleWidth = 10;
+      let paddleHeight = 100;
       let difficulty = "easy";
+      let leftPaddleY = (canvas.height - paddleHeight) / 2;
+      let rightPaddleY = (canvas.height - paddleHeight) / 2;
+      let ballX = canvas.width / 2;
+      let ballY = canvas.height / 2;
+      let ballSpeedX = 0;
+      let ballSpeedY = 0;
+      let score = 0;
+      let highscore = localStorage.getItem("pongHighscore") || 0;
+      let isPaused = false;
+      let gameActive = false;
+      let gameSpeed = 1;
+      let gameTime = 0;
+      let gameTimer;
+      let soundEnabled = true;
+      
+      // Power-up system
+      let activePowerUp = null;
+      let powerUpTimer = 0;
+      const powerUps = [
+        { 
+          name: "Wide Paddle", 
+          color: "#FF9900", 
+          duration: 10, 
+          effect: () => { paddleHeight = difficultySettings[difficulty].paddleHeight * 1.5; }
+        },
+        { 
+          name: "Slow Ball", 
+          color: "#3399FF", 
+          duration: 8, 
+          effect: () => { 
+            ballSpeedX *= 0.7; 
+            ballSpeedY *= 0.7; 
+          }
+        },
+        { 
+          name: "Double Points", 
+          color: "#FF33CC", 
+          duration: 10, 
+          effect: () => {} // Points handling in updateScore
+        }
+      ];
+      
+      // Power-up variables
+      let powerUpActive = false;
+      let powerUpX = 0;
+      let powerUpY = 0;
+      let powerUpType = null;
+      let powerUpSpawnTime = 0;
+
       const difficultySettings = {
         easy: {
           ballSpeed: 4,
           aiSpeed: 3,
           paddleHeight: 100,
           speedIncrease: 0.05,
+          powerUpFrequency: 15
         },
         medium: {
           ballSpeed: 6,
           aiSpeed: 4,
           paddleHeight: 80,
           speedIncrease: 0.1,
+          powerUpFrequency: 10
         },
         hard: {
           ballSpeed: 8,
           aiSpeed: 5,
           paddleHeight: 60,
           speedIncrease: 0.15,
+          powerUpFrequency: 7
         },
       };
 
-      let leftPaddleY = (canvas.height - paddleHeight) / 2;
-      let rightPaddleY = (canvas.height - paddleHeight) / 2;
-      let ballX = canvas.width / 2,
-        ballY = canvas.height / 2;
-      let ballSpeedX = difficultySettings.easy.ballSpeed,
-        ballSpeedY = difficultySettings.easy.ballSpeed;
-      let score = 0,
-        highscore = 0;
-      let isPaused = false;
-      let gameSpeed = 1;
+      // Load high score from localStorage
+      document.getElementById("highscore").innerText = "Highscore: " + highscore;
+      
+      // Sounds
+      const sounds = {
+        paddle: new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YRAAAAAAAAAAAP//8v/y//L/8v/y//I="),
+        wall: new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YRAAAAAA//8AAP//AAD//wAA//8AAA=="),
+        score: new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAADxAPEA8QD//wAA//8AAAAAAAD//wAAAAAAAAAA//8AAAAA//8AAAAAAAD//wAA//8AAA=="),
+        gameOver: new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAAAA7wDvAO8A7wDvAO8AAAAA//8AAAAAAAAAAPz/AAAAAPv/AAD//wAAAAD//wAA//8AAA=="),
+        powerUp: new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAAAA//8AAP//AAD//wAA//8AAAAAAAD//wAAAAAAAAAA//8AAAAA//8AAAAAAAD//wAA//8AAA==")
+      };
+
+      function playSound(sound) {
+        if (soundEnabled) {
+          sounds[sound].currentTime = 0;
+          sounds[sound].play().catch(e => console.log("Audio play error:", e));
+        }
+      }
+
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById("sound-toggle").textContent = soundEnabled ? "🔊" : "🔇";
+      }
 
       function drawRect(x, y, width, height, color) {
         ctx.fillStyle = color;
@@ -177,7 +308,14 @@
         ctx.fill();
       }
 
+      function drawText(text, x, y, size, color) {
+        ctx.fillStyle = color;
+        ctx.font = `${size}px 'Press Start 2P'`;
+        ctx.fillText(text, x, y);
+      }
+
       function draw() {
+        // Clear canvas
         drawRect(0, 0, canvas.width, canvas.height, "#222");
 
         // Draw center line
@@ -185,7 +323,16 @@
           drawRect(canvas.width / 2 - 1, i, 2, 20, "rgba(255,255,255,0.2)");
         }
 
-        drawRect(10, leftPaddleY, paddleWidth, paddleHeight, "white");
+        // Draw paddles with potential glow effect
+        let leftPaddleColor = "white";
+        if (activePowerUp && (activePowerUp.name === "Wide Paddle" || activePowerUp.name === "Double Points")) {
+          leftPaddleColor = activePowerUp.color;
+          // Add glow effect
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = activePowerUp.color;
+        }
+        
+        drawRect(10, leftPaddleY, paddleWidth, paddleHeight, leftPaddleColor);
         drawRect(
           canvas.width - paddleWidth - 10,
           rightPaddleY,
@@ -193,16 +340,55 @@
           paddleHeight,
           "white"
         );
-        drawCircle(ballX, ballY, 10, "white");
+        
+        // Reset shadow
+        ctx.shadowBlur = 0;
+        
+        // Draw ball with potential effect
+        let ballColor = "white";
+        if (activePowerUp && activePowerUp.name === "Slow Ball") {
+          ballColor = activePowerUp.color;
+          // Add glow effect
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = activePowerUp.color;
+        }
+        
+        drawCircle(ballX, ballY, 10, ballColor);
+        
+        // Reset shadow
+        ctx.shadowBlur = 0;
 
         // Draw level indicator
-        ctx.fillStyle = "white";
-        ctx.font = "16px 'Press Start 2P'";
-        ctx.fillText(`Level: ${difficulty}`, 20, 30);
+        drawText(`Level: ${difficulty}`, 20, 30, 16, "white");
+        
+        // Draw power-up if active
+        if (powerUpActive) {
+          drawCircle(powerUpX, powerUpY, 15, powerUps[powerUpType].color);
+          // Draw pulsing effect
+          const pulseSize = Math.sin(Date.now() / 200) * 5;
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(powerUpX, powerUpY, 15 + pulseSize, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        // Draw pause indicator if game is paused
+        if (isPaused && gameActive) {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          drawText("PAUSED", canvas.width / 2 - 80, canvas.height / 2, 24, "white");
+        }
       }
 
       function update() {
-        if (isPaused) return;
+        if (isPaused || !gameActive) return;
+
+        // Update game timer
+        updateTimer();
+        
+        // Check for power-up spawning
+        updatePowerUps();
 
         ballX += ballSpeedX * gameSpeed;
         ballY += ballSpeedY * gameSpeed;
@@ -210,6 +396,7 @@
         // Ball collision with top and bottom walls
         if (ballY <= 0 || ballY >= canvas.height) {
           ballSpeedY *= -1;
+          playSound("wall");
         }
 
         // Paddle collision
@@ -218,10 +405,17 @@
           ballY > leftPaddleY &&
           ballY < leftPaddleY + paddleHeight
         ) {
+          // Calculate angle based on where the ball hits the paddle
+          const relativeIntersectY = (leftPaddleY + (paddleHeight / 2)) - ballY;
+          const normalizedIntersectY = relativeIntersectY / (paddleHeight / 2);
+          const bounceAngle = normalizedIntersectY * (Math.PI / 4); // Max 45 degrees
+          
           ballSpeedX = Math.abs(ballSpeedX); // Ensure ball moves right
-          score++;
-          updateHighscore();
+          ballSpeedY = -ballSpeedX * Math.sin(bounceAngle);
+          
+          updateScore();
           increaseSpeed();
+          playSound("paddle");
         }
 
         if (
@@ -229,7 +423,15 @@
           ballY > rightPaddleY &&
           ballY < rightPaddleY + paddleHeight
         ) {
+          // Calculate angle based on where the ball hits the paddle
+          const relativeIntersectY = (rightPaddleY + (paddleHeight / 2)) - ballY;
+          const normalizedIntersectY = relativeIntersectY / (paddleHeight / 2);
+          const bounceAngle = normalizedIntersectY * (Math.PI / 4); // Max 45 degrees
+          
           ballSpeedX = -Math.abs(ballSpeedX); // Ensure ball moves left
+          ballSpeedY = -ballSpeedX * Math.sin(bounceAngle);
+          
+          playSound("paddle");
         }
 
         // Game over conditions - only when ball passes paddles
@@ -237,17 +439,22 @@
           gameOver();
         }
 
-        // AI movement with boundaries
-        const aiSpeed = difficultySettings[difficulty].aiSpeed * gameSpeed;
-        const targetY = rightPaddleY + paddleHeight / 2;
-        if (Math.abs(targetY - ballY) > aiSpeed) {
-          if (targetY < ballY) {
-            rightPaddleY += aiSpeed;
-          } else {
-            rightPaddleY -= aiSpeed;
+        // AI movement with improved logic and boundaries
+        updateAI();
+
+        // Check for powerup collision
+        if (powerUpActive) {
+          const distToPowerUp = Math.sqrt(
+            Math.pow(ballX - powerUpX, 2) + Math.pow(ballY - powerUpY, 2)
+          );
+          
+          if (distToPowerUp < 25) { // Ball radius + power-up radius
+            activatePowerUp(powerUpType);
+            powerUpActive = false;
+            playSound("powerUp");
           }
         }
-
+        
         // Keep paddles within canvas
         rightPaddleY = Math.max(
           0,
@@ -258,14 +465,87 @@
           Math.min(canvas.height - paddleHeight, leftPaddleY)
         );
       }
+      
+      function updateAI() {
+        const aiSpeed = difficultySettings[difficulty].aiSpeed * gameSpeed;
+        
+        // Prediction system - where will the ball be?
+        let targetY = rightPaddleY + paddleHeight / 2;
+        
+        // Only predict if ball is moving toward AI
+        if (ballSpeedX > 0) {
+          // Calculate time until ball reaches paddle
+          const distanceX = canvas.width - paddleWidth - 10 - ballX;
+          const timeToReach = distanceX / ballSpeedX;
+          
+          // Predict Y position
+          let predictedY = ballY + ballSpeedY * timeToReach;
+          
+          // Account for bounces
+          while (predictedY < 0 || predictedY > canvas.height) {
+            if (predictedY < 0) {
+              predictedY = -predictedY; // Reflect off top
+            } else if (predictedY > canvas.height) {
+              predictedY = 2 * canvas.height - predictedY; // Reflect off bottom
+            }
+          }
+          
+          // Add slight imperfection based on difficulty
+          const errorFactor = {
+            easy: 0.3,
+            medium: 0.15,
+            hard: 0.05
+          };
+          
+          const error = (Math.random() - 0.5) * canvas.height * errorFactor[difficulty];
+          predictedY += error;
+          
+          targetY = predictedY;
+        }
+        
+        // Move towards predicted position
+        if (Math.abs(targetY - (rightPaddleY + paddleHeight / 2)) > aiSpeed) {
+          if (rightPaddleY + paddleHeight / 2 < targetY) {
+            rightPaddleY += aiSpeed;
+          } else {
+            rightPaddleY -= aiSpeed;
+          }
+        }
+      }
+      
+      function updateScore() {
+        // Check for double points power-up
+        if (activePowerUp && activePowerUp.name === "Double Points") {
+          score += 2;
+        } else {
+          score++;
+        }
+        
+        updateHighscore();
+      }
 
       function updateHighscore() {
         if (score > highscore) {
           highscore = score;
-          document.getElementById("highscore").innerText =
-            "Highscore: " + highscore;
+          localStorage.setItem("pongHighscore", highscore);
+          document.getElementById("highscore").innerText = "Highscore: " + highscore;
         }
         document.getElementById("current-score").innerText = "Score: " + score;
+      }
+      
+      function startGame() {
+        document.getElementById("start-screen").style.display = "none";
+        gameActive = true;
+        restartGame();
+        
+        // Start the game timer
+        gameTime = 0;
+        gameTimer = setInterval(() => {
+          if (!isPaused && gameActive) {
+            gameTime++;
+            updateTimerDisplay();
+          }
+        }, 1000);
       }
 
       function restartGame() {
@@ -274,21 +554,50 @@
         gameSpeed = 1;
         ballX = canvas.width / 2;
         ballY = canvas.height / 2;
+        
+        // Reset paddle size
+        paddleHeight = difficultySettings[difficulty].paddleHeight;
 
         // Randomize initial ball direction
         const randomDirection = Math.random() > 0.5 ? 1 : -1;
         ballSpeedX = difficultySettings[difficulty].ballSpeed * randomDirection;
-        ballSpeedY =
-          (Math.random() * 2 - 1) * difficultySettings[difficulty].ballSpeed;
+        ballSpeedY = (Math.random() * 2 - 1) * difficultySettings[difficulty].ballSpeed;
 
         leftPaddleY = (canvas.height - paddleHeight) / 2;
         rightPaddleY = (canvas.height - paddleHeight) / 2;
+        
+        // Reset power-ups
+        clearActivePowerUp();
+        powerUpActive = false;
+        powerUpSpawnTime = gameTime + difficultySettings[difficulty].powerUpFrequency;
+        
+        if (!gameActive) {
+          gameActive = true;
+        }
+        
         isPaused = false;
+        document.getElementById("pause-button").innerText = "Pause";
         document.getElementById("current-score").innerText = "Score: " + score;
+        
+        // Reset timer if game wasn't already active
+        if (gameTimer) {
+          clearInterval(gameTimer);
+        }
+        
+        gameTime = 0;
+        updateTimerDisplay();
+        
+        gameTimer = setInterval(() => {
+          if (!isPaused && gameActive) {
+            gameTime++;
+            updateTimerDisplay();
+          }
+        }, 1000);
       }
 
       function togglePause() {
         isPaused = !isPaused;
+        document.getElementById("pause-button").innerText = isPaused ? "Resume" : "Pause";
         if (!isPaused) gameLoop();
       }
 
@@ -300,13 +609,17 @@
 
         // Update game settings
         paddleHeight = difficultySettings[level].paddleHeight;
-        ballSpeedX =
-          difficultySettings[level].ballSpeed * (ballSpeedX > 0 ? 1 : -1);
-        ballSpeedY =
-          difficultySettings[level].ballSpeed * (ballSpeedY > 0 ? 1 : -1);
+        
+        // Don't change speed if game is already in progress
+        if (!gameActive) {
+          ballSpeedX = difficultySettings[level].ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+          ballSpeedY = (Math.random() * 2 - 1) * difficultySettings[level].ballSpeed;
+        }
 
-        // Restart game with new settings
-        restartGame();
+        // Restart game with new settings if already active
+        if (gameActive) {
+          restartGame();
+        }
       }
 
       function increaseSpeed() {
@@ -314,29 +627,174 @@
           gameSpeed += difficultySettings[difficulty].speedIncrease;
         }
       }
+      
+      function updatePowerUps() {
+        // Check if it's time to spawn a power-up
+        if (!powerUpActive && gameTime >= powerUpSpawnTime) {
+          spawnPowerUp();
+        }
+        
+        // Update active power-up timer
+        if (activePowerUp) {
+          powerUpTimer--;
+          
+          if (powerUpTimer <= 0) {
+            clearActivePowerUp();
+          }
+        }
+      }
+      
+      function spawnPowerUp() {
+        // Make sure power-up doesn't spawn too close to edges
+        powerUpX = Math.random() * (canvas.width - 100) + 50;
+        powerUpY = Math.random() * (canvas.height - 100) + 50;
+        powerUpType = Math.floor(Math.random() * powerUps.length);
+        powerUpActive = true;
+        
+        // Set next spawn time
+        powerUpSpawnTime = gameTime + difficultySettings[difficulty].powerUpFrequency;
+      }
+      
+      function activatePowerUp(type) {
+        // Clear any existing power-up
+        clearActivePowerUp();
+        
+        // Set the new power-up
+        activePowerUp = powerUps[type];
+        
+        // Apply the power-up effect
+        activePowerUp.effect();
+        
+        // Set the timer
+        powerUpTimer = activePowerUp.duration;
+        
+        // Update UI
+        const indicator = document.getElementById("power-up-indicator");
+        const powerUpName = document.getElementById("power-up-name");
+        
+        indicator.style.display = "block";
+        indicator.style.backgroundColor = activePowerUp.color;
+        powerUpName.textContent = activePowerUp.name + " (" + powerUpTimer + "s)";
+        
+        // Update indicator every second
+        const updateInterval = setInterval(() => {
+          if (activePowerUp) {
+            powerUpName.textContent = activePowerUp.name + " (" + powerUpTimer + "s)";
+          } else {
+            clearInterval(updateInterval);
+          }
+        }, 1000);
+      }
+      
+      function clearActivePowerUp() {
+        if (activePowerUp) {
+          // Reset any changed values
+          paddleHeight = difficultySettings[difficulty].paddleHeight;
+          
+          // If we had slow ball, restore speed
+          if (activePowerUp.name === "Slow Ball") {
+            ballSpeedX /= 0.7;
+            ballSpeedY /= 0.7;
+          }
+          
+          // Clear power-up
+          activePowerUp = null;
+          
+          // Hide UI indicator
+          document.getElementById("power-up-indicator").style.display = "none";
+        }
+      }
+      
+      function updateTimer() {
+        if (!isPaused && gameActive) {
+          updateTimerDisplay();
+        }
+      }
+      
+      function updateTimerDisplay() {
+        const minutes = Math.floor(gameTime / 60);
+        const seconds = gameTime % 60;
+        const timeString = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+        document.getElementById("timer").textContent = `Time: ${timeString}`;
+      }
 
       function gameOver() {
         document.getElementById("game-over").style.display = "block";
         document.getElementById("final-score").textContent = score;
         document.getElementById("final-highscore").textContent = highscore;
+        
+        const minutes = Math.floor(gameTime / 60);
+        const seconds = gameTime % 60;
+        const timeString = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+        document.getElementById("final-time").textContent = timeString;
+        
+        clearInterval(gameTimer);
+        gameActive = false;
         isPaused = true;
+        
+        playSound("gameOver");
       }
 
+      // Keyboard controls
+      document.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+        
+        // Paddle movement
+        if (key === "arrowup" || key === "w") {
+          leftPaddleY -= 25;
+        } else if (key === "arrowdown" || key === "s") {
+          leftPaddleY += 25;
+        }
+        
+        // Keep paddle within boundaries
+        leftPaddleY = Math.max(0, Math.min(canvas.height - paddleHeight, leftPaddleY));
+        
+        // Pause with space or P
+        if ((key === " " || key === "p") && gameActive) {
+          togglePause();
+        }
+      });
+
+      // Mouse controls
       document.addEventListener("mousemove", (e) => {
-        let mouseY = e.clientY - canvas.offsetTop;
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.height / rect.height;
+        let mouseY = (e.clientY - rect.top) * scale;
+        
         leftPaddleY = Math.max(
           0,
           Math.min(canvas.height - paddleHeight, mouseY - paddleHeight / 2)
         );
       });
+      
+      // Touch controls for mobile
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.height / rect.height;
+        let touchY = (e.touches[0].clientY - rect.top) * scale;
+        
+        leftPaddleY = Math.max(
+          0,
+          Math.min(canvas.height - paddleHeight, touchY - paddleHeight / 2)
+        );
+      }, { passive: false });
 
       function gameLoop() {
         draw();
         update();
-        requestAnimationFrame(gameLoop);
+        if (!isPaused) {
+          requestAnimationFrame(gameLoop);
+        }
       }
 
-      gameLoop();
+      // Initial load - don't start game automatically
+      draw();
+      
+      // Set high score from localStorage
+      if (highscore) {
+        document.getElementById("highscore").innerText = "Highscore: " + highscore;
+      }
     </script>
   </body>
 </html>
