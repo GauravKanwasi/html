@@ -1,11 +1,61 @@
-/* Simple reset */
+/* Simple reset and base styling */
 body {
-    margin: 0;
-    background-color: #000; /* Black background for space */
-    overflow: hidden;       /* Hide scrollbars */
+  margin: 0;
+  background-color: #000;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
 }
 
 #gameCanvas {
-    display: block;
-    margin: 0 auto; /* Center the canvas */
+  display: block;
+  margin: 0 auto;
+  background-color: #000;
+}
+
+/* Overlay styling for menus and screens */
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 600px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+#overlay h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+
+#overlay p {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 1.2em;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #00ff00;
+  color: #000;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #66ff66;
+}
+
+/* Utility class to hide elements */
+.hidden {
+  display: none;
 }
