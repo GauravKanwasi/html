@@ -1,36 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Dashboard</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
     <div class="container">
-      <h1>Weather Dashboard</h1>
-
-      <label for="city">Select City: </label>
-      <select id="city">
-        <option value="London">London</option>
-        <option value="New York">New York</option>
-        <option value="Tokyo">Tokyo</option>
-        <option value="Paris">Paris</option>
-        <option value="Sydney">Sydney</option>
-      </select>
-
-      <br />
-
-      <label for="area">Or enter specific area: </label>
-      <input type="text" id="area" placeholder="Enter city or area" />
-
-      <br /><br />
-
-      <button id="getWeatherBtn">Get Weather</button>
-
-      <div class="weather-info" id="weather-info"></div>
+        <h1>Weather Dashboard</h1>
+        <select id="city-select">
+            <option value="New York">New York</option>
+            <option value="Los Angeles">Los Angeles</option>
+            <option value="Chicago">Chicago</option>
+            <option value="Houston">Houston</option>
+            <option value="Phoenix">Phoenix</option>
+        </select>
+        <div class="weather-display">
+            <div class="current-weather">
+                <div id="weather-animation"></div>
+                <h2>Current Weather</h2>
+                <div class="temperature" id="temperature">--°C</div>
+                <div class="weather-icon" id="weather-icon">☀️</div>
+                <div class="date-time" id="date-time">--</div>
+            </div>
+            <div class="history">
+                <h2>Temperature History</h2>
+                <div id="history-list">
+                    <!-- History items will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+        <div class="buttons">
+            <button id="refresh-btn">Refresh Weather</button>
+            <button id="clear-history">Clear History</button>
+        </div>
+        <div class="weather-conditions">
+            <div class="condition">
+                <div class="condition-label">Humidity</div>
+                <div class="condition-value" id="humidity">--</div>
+            </div>
+            <div class="condition">
+                <div class="condition-label">Wind Speed</div>
+                <div class="condition-value" id="wind-speed">--</div>
+            </div>
+            <div class="condition">
+                <div class="condition-label">Feels Like</div>
+                <div class="condition-value" id="feels-like">--</div>
+            </div>
+            <div class="condition">
+                <div class="condition-label">Pressure</div>
+                <div class="condition-value" id="pressure">--</div>
+            </div>
+        </div>
     </div>
-
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
