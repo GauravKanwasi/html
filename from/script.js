@@ -1,70 +1,64 @@
-class InteractiveForm extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      name: "",
-      email: "",
-      option: "",
-      message: "",
-    };
-  }
+document.addEventListener('DOMContentLoaded', () => {
+    let currentAvatar = '';
+    const avatarInput = document.getElementById('avatarUpload');
+    const generateAvatarBtn = document.getElementById('generateAvatarBtn');
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
+    // Generate random avatar
+    function generateAvatar() {
+        const seed = Math.random().toString(36).substring(2);
+        currentAvatar = `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
+        document.getElementById('avatarImage').src = currentAvatar;
+    }
 
-  handleSubmit = (e) => {
-    e.preventDefault();
-    alert(
-      `Name: ${this.state.name}, Email: ${this.state.email}, Option: ${this.state.option}, Message: ${this.state.message}`
-    );
-  };
+    // Handle avatar upload
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentAvatar = e.target.result;
+                document.getElementById('avatarImage').src = currentAvatar;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
 
-  render() {
-    return (
-      <div className="container">
-        <h2>Interactive Form</h2>
-        <form onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter your name"
-            value={this.state.name}
-            onChange={this.handleChange}
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            value={this.state.email}
-            onChange={this.handleChange}
-            required
-          />
-          <select
-            name="option"
-            value={this.state.option}
-            onChange={this.handleChange}
-            required
-          >
-            <option value="">Select an option</option>
-            <option value="Option 1">Option 1</option>
-            <option value="Option 2">Option 2</option>
-          </select>
-          <textarea
-            name="message"
-            placeholder="Enter your message"
-            value={this.state.message}
-            onChange={this.handleChange}
-            required
-          ></textarea>
-          <button type="submit">Submit</button>
-        </form>
-      </div>
-    );
-  }
-}
+    // Event listeners
+    generateAvatarBtn.addEventListener('click', generateAvatar);
+    
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        clearErrors();
+        
+        let isValid = true;
+        const formData = {};
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <InteractiveForm />
-);
+        // Validation logic (same as previous code)
+        // ... (include all validation functions from previous code) ...
+
+        if (isValid) {
+            // Collect form data (same as previous code)
+            // ... (include data collection logic) ...
+            
+            showSuccess('Registration successful! Redirecting...');
+            this.reset();
+            generateAvatar();
+            console.log('Form Data:', formData);
+        }
+    });
+
+    // Helper functions (same as previous code)
+    function validateField(fieldId, errorMessage) { /* ... */ }
+    function validateEmail(fieldId, errorMessage) { /* ... */ }
+    function validatePhone(fieldId, errorMessage) { /* ... */ }
+    function validateZipCode(fieldId, errorMessage) { /* ... */ }
+    function validatePassword() { /* ... */ }
+    function validateTerms() { /* ... */ }
+    function showError(elementId, message) { /* ... */ }
+    function clearErrors() { /* ... */ }
+    function showSuccess(message) { /* ... */ }
+    function getValue(fieldId) { /* ... */ }
+
+    // Initial avatar generation
+    generateAvatar();
+});
