@@ -1,71 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- Link to the external CSS file -->
-  </head>
-  <body>
-    <div class="center">
-      <div class="container">
-        <h2>Create Account</h2>
-        <form id="account-form" onsubmit="return validateForm()">
-          <div>
-            <label for="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Enter your username"
-              required
-            />
-            <span id="username-error" class="error"></span>
-          </div>
-          <div>
-            <label for="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              required
-            />
-            <span id="email-error" class="error"></span>
-          </div>
-          <div>
-            <label for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              required
-            />
-            <span id="password-error" class="error"></span>
-          </div>
-          <div>
-            <label for="confirm-password">Confirm Password</label>
-            <input
-              type="password"
-              id="confirm-password"
-              name="confirm-password"
-              placeholder="Confirm your password"
-              required
-            />
-            <span id="confirm-password-error" class="error"></span>
-          </div>
-          <button type="submit">Create Account</button>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Create Account</h1>
+        <div class="avatar-container">
+            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=default" alt="Avatar" class="avatar" id="avatar">
+            <button type="button" class="generate-avatar" onclick="generateRandomAvatar()">Generate New Avatar</button>
+        </div>
+        <form id="signupForm">
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Username" required>
+                <div class="error" id="usernameError"></div>
+            </div>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email" required>
+                <div class="error" id="emailError"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password" required>
+                <div class="error" id="passwordError"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                <div class="error" id="confirmPasswordError"></div>
+            </div>
+            <button type="submit">Create Account</button>
         </form>
-        <p id="success-message" class="success"></p>
-      </div>
     </div>
 
-    <!-- Random Anime GIF Section -->
-    <img id="anime-gif" class="anime-gif" src="" alt="Random Anime Gif" />
-
     <script src="script.js"></script>
-    <!-- Link to the external JS file -->
-  </body>
+</body>
 </html>
