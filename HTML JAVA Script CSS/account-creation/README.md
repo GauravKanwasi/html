@@ -1,7 +1,7 @@
 # Account Creation Portal 🌟
 
-![Project Preview](https://via.placeholder.com/800x500.png?text=Account+Creation+Form+Preview) 
-*(Replace with actual screenshot)*
+![Project Preview]![image](https://github.com/user-attachments/assets/cc1e0ce2-f5f4-49fa-850d-8a89f03e08cc)
+ 
 
 A modern and interactive user registration system with dynamic avatar generation. Built with pure JavaScript and modern CSS.
 
@@ -49,7 +49,7 @@ A modern and interactive user registration system with dynamic avatar generation
 ## Demo 🚀
 
 [Live Demo](https://your-live-demo-link.com)  
-*(Host this on GitHub Pages or similar service)*
+*This is only for offline for now*
 
 **Local Demo:**
 ```bash
