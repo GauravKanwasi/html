@@ -1,71 +1,69 @@
-// Array of Anime GIF URLs
-const animeGifs = [
-  "https://media.giphy.com/media/26gPHzpMX5bCHpKZ2/giphy.gif",
-  "https://media.giphy.com/media/3o6Zt5pPkb7vOlmPjC/giphy.gif",
-  "https://media.giphy.com/media/5xaOcLFAuIu8gTo6lq/giphy.gif",
-  "https://media.giphy.com/media/9J7tdSrtppX9e/giphy.gif",
-  "https://media.giphy.com/media/3o7abAmY9p06S2AzOO/giphy.gif",
-  "https://media.giphy.com/media/ya6uFRkTe4klq/giphy.gif",
-];
-
-// Set a random GIF from the array
-function setRandomGif() {
-  const randomIndex = Math.floor(Math.random() * animeGifs.length);
-  const gif = animeGifs[randomIndex];
-  document.getElementById("anime-gif").src = gif;
+// Generate random avatar using DiceBear API
+function generateRandomAvatar() {
+    const randomSeed = Math.random().toString(36).substring(2);
+    const avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${randomSeed}`;
+    document.getElementById('avatar').src = avatarUrl;
 }
 
-// Call setRandomGif on page load
-window.onload = setRandomGif;
+// Generate initial random avatar
+generateRandomAvatar();
 
-// Form Validation (JS)
-function validateForm() {
-  document.getElementById("username-error").textContent = "";
-  document.getElementById("email-error").textContent = "";
-  document.getElementById("password-error").textContent = "";
-  document.getElementById("confirm-password-error").textContent = "";
-  document.getElementById("success-message").textContent = "";
+// Form validation
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    let isValid = true;
 
-  let isValid = true;
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirm-password").value;
+    // Username validation
+    if(username.length < 4) {
+        showError('usernameError', 'Username must be at least 4 characters');
+        isValid = false;
+    }
 
-  // Validate username
-  if (username.trim() === "") {
-    document.getElementById("username-error").textContent =
-      "Username is required.";
-    isValid = false;
-  }
+    // Email validation
+    if(!validateEmail(email)) {
+        showError('emailError', 'Please enter a valid email address');
+        isValid = false;
+    }
 
-  // Validate email
-  const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  if (!emailPattern.test(email)) {
-    document.getElementById("email-error").textContent =
-      "Please enter a valid email address.";
-    isValid = false;
-  }
+    // Password validation
+    if(password.length < 8) {
+        showError('passwordError', 'Password must be at least 8 characters');
+        isValid = false;
+    }
 
-  // Validate password
-  if (password.trim() === "") {
-    document.getElementById("password-error").textContent =
-      "Password is required.";
-    isValid = false;
-  }
+    // Confirm password validation
+    if(password !== confirmPassword) {
+        showError('confirmPasswordError', 'Passwords do not match');
+        isValid = false;
+    }
 
-  // Validate confirm password
-  if (confirmPassword !== password) {
-    document.getElementById("confirm-password-error").textContent =
-      "Passwords do not match.";
-    isValid = false;
-  }
+    if(isValid) {
+        alert('Account created successfully!\nWelcome ' + username);
+        this.reset();
+        generateRandomAvatar();
+    }
+});
 
-  // Success message if validation passes
-  if (isValid) {
-    document.getElementById("success-message").textContent =
-      "Account created successfully!";
-  }
-
-  return isValid;
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
 }
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Real-time validation
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', () => {
+        document.getElementById(input.id + 'Error').style.display = 'none';
+    });
+});
