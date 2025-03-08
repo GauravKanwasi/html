@@ -30,5 +30,5 @@ A cutting-edge, responsive website template featuring modern design patterns, sm
 
 1. **Clone Repository**
    ```bash
-   [git clone https://github.com/yourusername/modern-web-experience.git](https://github.com/GauravKanwasi/html/tree/main/raandom%20creation)
+   https://github.com/GauravKanwasi/html/tree/main/raandom%20creation
    cd modern-web-experience
