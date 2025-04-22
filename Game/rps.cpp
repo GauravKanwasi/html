@@ -25,20 +25,19 @@ void clearScreen() {
 // Displays a simple animated countdown before revealing the moves.
 void animateCountDown() {
     std::cout << BLUE;
-    const std::string words[4] = {"Rock", "Paper", "Scissors", "Shoot!"};
-    for (int i = 0; i < 4; ++i) {
-        std::cout << words[i] << std::flush;
-        std::this_thread::sleep_for(std::chrono::milliseconds(600));
-        if (i < 3) {
-            std::cout << "..." << std::flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(600));
-            // Clear the line by printing carriage return and spaces
-            std::cout << "\r" << std::string(50, ' ') << "\r";
-        } else {
-            std::cout << std::endl;
-        }
+    const std::string words[4] = {"Rock...", "Paper...", "Scissors...", "Shoot!"};
+    size_t maxLength = 0;
+    // Calculate the maximum length of words for proper overwriting
+    for (const auto& word : words) {
+        if (word.length() > maxLength) maxLength = word.length();
     }
-    std::cout << RESET;
+    for (int i = 0; i < 4; ++i) {
+        // Pad each word with spaces to match the longest word
+        std::string padded = words[i] + std::string(maxLength - words[i].length(), ' ');
+        std::cout << "\r" << padded << std::flush; // Overwrite the line
+        std::this_thread::sleep_for(std::chrono::milliseconds(600));
+    }
+    std::cout << std::endl << RESET;
 }
 
 // Prompts the player to choose a move ('r' for Rock, 'p' for Paper, 's' for Scissors).
@@ -81,8 +80,7 @@ int determineOutcome(char player, char computer) {
     if (player == computer) return 0;  // Draw
     if ((player == 'r' && computer == 's') ||
         (player == 'p' && computer == 'r') ||
-        (player == 's' && computer == 'p'))
-    {
+        (player == 's' && computer == 'p')) {
         return 1; // Player wins
     }
     return -1; // Computer wins
@@ -115,6 +113,9 @@ int main() {
         } else {
             std::cout << BLUE << "It's a draw!" << RESET << std::endl;
         }
+        
+        // Add a delay to let the player see the result
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         
         std::cout << "\nWould you like to play again? (Y/N): ";
         std::cin >> playAgain;
