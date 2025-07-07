@@ -1,195 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Modern Resume Builder</title>
     <link rel="stylesheet" href="styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Add GSAP for animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <!-- Add html2pdf for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  </head>
-  <body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css "/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js "></script>
+</head>
+<body>
     <div class="app-container">
-      <!-- Navigation Bar -->
-      <nav class="navbar">
-        <div class="logo">
-          <i class="fas fa-file-alt"></i>
-          <span>Resume Builder</span>
-        </div>
-        <div class="nav-controls">
-          <button class="btn-primary save-btn">
-            <i class="fas fa-save"></i>
-            <span>Save</span>
-          </button>
-          <div class="export-dropdown">
-            <button class="btn-primary export-btn">
-              <i class="fas fa-download"></i>
-              <span>Export</span>
-            </button>
-            <div class="export-menu">
-              <button data-format="pdf">
-                <i class="fas fa-file-pdf"></i> PDF
-              </button>
-              <button data-format="docx">
-                <i class="fas fa-file-word"></i> DOCX
-              </button>
-              <button data-format="png">
-                <i class="fas fa-file-image"></i> PNG
-              </button>
-              <button data-format="print">
-                <i class="fas fa-print"></i> Print
-              </button>
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-file-alt"></i>
+                <span>Resume Builder</span>
             </div>
-          </div>
-          <button class="theme-toggle">
-            <i class="fas fa-moon"></i>
-          </button>
-        </div>
-      </nav>
-
-      <!-- Main Content -->
-      <main class="main-content">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-          <div class="sidebar-section">
-            <h3>Templates</h3>
-            <div class="template-list">
-              <div class="template-item active" data-template="modern">
-                <img src="templates/modern.png" alt="Modern Template" />
-                <span>Modern</span>
-              </div>
-              <div class="template-item" data-template="professional">
-                <img
-                  src="templates/professional.png"
-                  alt="Professional Template"
-                />
-                <span>Professional</span>
-              </div>
-              <div class="template-item" data-template="creative">
-                <img src="templates/creative.png" alt="Creative Template" />
-                <span>Creative</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="sidebar-section">
-            <h3>Sections</h3>
-            <div class="section-list">
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="personal"
-              >
-                <i class="fas fa-user"></i>
-                <span>Personal Info</span>
-              </div>
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="experience"
-              >
-                <i class="fas fa-briefcase"></i>
-                <span>Experience</span>
-              </div>
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="education"
-              >
-                <i class="fas fa-graduation-cap"></i>
-                <span>Education</span>
-              </div>
-              <div class="section-item" draggable="true" data-section="skills">
-                <i class="fas fa-tools"></i>
-                <span>Skills</span>
-              </div>
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="projects"
-              >
-                <i class="fas fa-project-diagram"></i>
-                <span>Projects</span>
-              </div>
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="certificates"
-              >
-                <i class="fas fa-certificate"></i>
-                <span>Certificates</span>
-              </div>
-              <div
-                class="section-item"
-                draggable="true"
-                data-section="languages"
-              >
-                <i class="fas fa-language"></i>
-                <span>Languages</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="sidebar-section">
-            <h3>Customization</h3>
-            <div class="customization-options">
-              <div class="option-group">
-                <label>Font Family</label>
-                <select class="font-family-select">
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Open Sans">Open Sans</option>
-                  <option value="Poppins">Poppins</option>
-                </select>
-              </div>
-              <div class="option-group">
-                <label>Color Scheme</label>
-                <div class="color-picker">
-                  <input type="color" class="primary-color" value="#2563eb" />
-                  <input type="color" class="secondary-color" value="#1f2937" />
+            <div class="nav-controls">
+                <button class="btn-primary save-btn" data-tooltip="Save resume">
+                    <i class="fas fa-save"></i>
+                    <span>Save</span>
+                </button>
+                <div class="export-dropdown">
+                    <button class="btn-primary export-btn" data-tooltip="Export resume">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                    <div class="export-menu">
+                        <button data-format="pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button data-format="docx"><i class="fas fa-file-word"></i> DOCX</button>
+                        <button data-format="png"><i class="fas fa-file-image"></i> PNG</button>
+                        <button data-format="print"><i class="fas fa-print"></i> Print</button>
+                    </div>
                 </div>
-              </div>
-              <div class="option-group">
-                <label>Spacing</label>
-                <input
-                  type="range"
-                  class="spacing-slider"
-                  min="0.8"
-                  max="1.5"
-                  step="0.1"
-                  value="1"
-                />
-              </div>
+                <button class="theme-toggle" data-tooltip="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
-          </div>
-        </aside>
+        </nav>
 
-        <!-- Editor Area -->
-        <section class="editor-area">
-          <div class="resume-container">
-            <!-- Resume sections will be added here dynamically -->
-          </div>
-        </section>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Templates</h3>
+                    <div class="template-list">
+                        <div class="template-item active" data-template="modern">
+                            <img src="templates/modern.png" alt="Modern Template"/>
+                            <span>Modern</span>
+                        </div>
+                        <div class="template-item" data-template="professional">
+                            <img src="templates/professional.png" alt="Professional Template"/>
+                            <span>Professional</span>
+                        </div>
+                        <div class="template-item" data-template="creative">
+                            <img src="templates/creative.png" alt="Creative Template"/>
+                            <span>Creative</span>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Preview Area -->
-        <section class="preview-area">
-          <div class="preview-container">
-            <!-- Preview will be rendered here -->
-          </div>
-        </section>
-      </main>
+                <div class="sidebar-section">
+                    <h3>Sections</h3>
+                    <div class="section-list">
+                        <div class="section-item" draggable="true" data-section="personal">
+                            <i class="fas fa-user"></i>
+                            <span>Personal Info</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="experience">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Experience</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="education">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Education</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="skills">
+                            <i class="fas fa-tools"></i>
+                            <span>Skills</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="projects">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Projects</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="certificates">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certificates</span>
+                        </div>
+                        <div class="section-item" draggable="true" data-section="languages">
+                            <i class="fas fa-language"></i>
+                            <span>Languages</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>Customization</h3>
+                    <div class="customization-options">
+                        <div class="option-group">
+                            <label>Font Family</label>
+                            <select class="font-family-select">
+                                <option value="Inter">Inter</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Open Sans">Open Sans</option>
+                                <option value="Poppins">Poppins</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label>Color Scheme</label>
+                            <div class="color-scheme">
+                                <div class="scheme-1" data-color="scheme-1"></div>
+                                <div class="scheme-2" data-color="scheme-2"></div>
+                                <div class="scheme-3" data-color="scheme-3"></div>
+                            </div>
+                        </div>
+                        <div class="option-group">
+                            <label>Primary Color</label>
+                            <input type="color" class="primary-color" value="#2563eb"/>
+                        </div>
+                        <div class="option-group">
+                            <label>Secondary Color</label>
+                            <input type="color" class="secondary-color" value="#1f2937"/>
+                        </div>
+                        <div class="option-group">
+                            <label>Spacing</label>
+                            <input type="range" class="spacing-slider" min="0.8" max="1.5" step="0.1" value="1"/>
+                        </div>
+                        <div class="option-group">
+                            <label>Background Style</label>
+                            <div class="background-options">
+                                <button data-bg="solid" class="bg-style active"><i class="fas fa-fill"></i> Solid</button>
+                                <button data-bg="gradient" class="bg-style"><i class="fas fa-fill-drip"></i> Gradient</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Editor Area -->
+            <section class="editor-area">
+                <div class="resume-container"></div>
+            </section>
+
+            <!-- Preview Area -->
+            <section class="preview-area">
+                <div class="preview-container"></div>
+            </section>
+        </main>
     </div>
 
-    <!-- Notification Component -->
+    <!-- Progress Bar -->
+    <div class="progress-bar"></div>
+
+    <!-- Notification Container -->
     <div class="notification-container"></div>
 
     <!-- Scripts -->
     <script src="app.js"></script>
-  </body>
+</body>
 </html>
