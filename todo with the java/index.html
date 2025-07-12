@@ -3,92 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>To-Do List</title>
+  <title>Enhanced To-Do List</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      padding: 50px;
+      color: #333;
+      transition: 0.3s;
     }
-
+    body.dark {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
     #todo-container {
       background: white;
       padding: 20px;
       border-radius: 8px;
       width: 100%;
-      max-width: 400px;
+      max-width: 500px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: 0.3s;
     }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
+    body.dark #todo-container {
+      background-color: #2e2e2e;
     }
-
-    input[type="text"] {
-      width: 70%;
-      padding: 8px;
-      margin-right: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    input, select, button {
+      margin: 5px 0;
     }
-
-    button {
-      padding: 8px 12px;
-      border: none;
-      background-color: #007BFF;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-
-    li {
+    .filters {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      background: #f9f9f9;
-      padding: 10px;
-      margin-bottom: 10px;
+      margin-top: 10px;
+    }
+    .overdue {
+      color: red;
+      font-weight: bold;
+    }
+    .priority-tag {
+      padding: 2px 6px;
       border-radius: 4px;
+      font-size: 0.8em;
     }
-
-    .completed span {
-      text-decoration: line-through;
-      color: gray;
-    }
-
-    .actions button {
-      margin-left: 5px;
-      background-color: #6c757d;
-    }
-
-    .actions button.delete {
-      background-color: #dc3545;
-    }
-
-    .actions button.delete:hover {
-      background-color: #a71d2a;
-    }
+    .high { background: #ff4d4d; }
+    .medium { background: #ffd700; }
+    .low { background: #90ee90; }
   </style>
 </head>
 <body>
 
   <div id="todo-container">
-    <h2>To-Do List</h2>
-    <input type="text" id="taskInput" placeholder="Enter a new task" />
+    <h2>To-Do List <button id="darkModeToggle">🌙</button></h2>
+    <input type="text" id="taskInput" placeholder="Task name" />
+    <input type="date" id="dueDateInput" />
+    <select id="priorityInput">
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
     <button id="addTaskBtn">Add Task</button>
+
+    <div class="filters">
+      <select id="statusFilter">
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+      </select>
+      <select id="sortFilter">
+        <option value="default">Sort By Default</option>
+        <option value="dueDate">Sort By Due Date</option>
+        <option value="priority">Sort By Priority</option>
+      </select>
+    </div>
+
     <ul id="taskList"></ul>
   </div>
 
