@@ -1,31 +1,62 @@
-z// Load tasks from localStorage or initialize an empty array
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let darkMode = localStorage.getItem('darkMode') === 'true';
 
-// Save tasks to localStorage
-function saveTasks() {
+// Priority order for sorting
+const priorityOrder = { high: 1, medium: 2, low: 3 };
+
+// Save tasks and preferences
+function saveData() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
+  localStorage.setItem('darkMode', darkMode);
 }
 
-// Render the task list
+// Render tasks with filters/sorting
 function renderTasks() {
   const taskList = document.getElementById('taskList');
-  taskList.innerHTML = ''; // Clear previous tasks
+  const statusFilter = document.getElementById('statusFilter').value;
+  const sortFilter = document.getElementById('sortFilter').value;
 
-  tasks.forEach(task => {
+  // Filter tasks
+  let filteredTasks = [...tasks];
+  if (statusFilter === 'active') {
+    filteredTasks = filteredTasks.filter(t => !t.completed);
+  } else if (statusFilter === 'completed') {
+    filteredTasks = filteredTasks.filter(t => t.completed);
+  }
+
+  // Sort tasks
+  if (sortFilter === 'dueDate') {
+    filteredTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  } else if (sortFilter === 'priority') {
+    filteredTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  }
+
+  taskList.innerHTML = '';
+  filteredTasks.forEach(task => {
     const li = document.createElement('li');
     li.className = task.completed ? 'completed' : '';
+    if (task.dueDate && new Date(task.dueDate) < new Date() && !task.completed) {
+      li.classList.add('overdue'); // Highlight overdue tasks
+    }
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = task.completed;
     checkbox.addEventListener('change', () => {
       task.completed = checkbox.checked;
-      saveTasks();
+      saveData();
       renderTasks();
     });
 
     const span = document.createElement('span');
     span.textContent = task.text;
+
+    const dueDate = document.createElement('small');
+    dueDate.textContent = task.dueDate ? ` • Due: ${task.dueDate}` : '';
+
+    const priorityTag = document.createElement('span');
+    priorityTag.className = `priority-tag ${task.priority}`;
+    priorityTag.textContent = ` ${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}`;
 
     const actions = document.createElement('div');
     actions.className = 'actions';
@@ -33,10 +64,10 @@ function renderTasks() {
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.addEventListener('click', () => {
-      const newText = prompt('Edit your task:', task.text);
-      if (newText && newText.trim() !== '') {
-        task.text = newText.trim();
-        saveTasks();
+      const newText = prompt('Edit task:', task.text);
+      if (newText) {
+        task.text = newText;
+        saveData();
         renderTasks();
       }
     });
@@ -46,7 +77,7 @@ function renderTasks() {
     deleteBtn.className = 'delete';
     deleteBtn.addEventListener('click', () => {
       tasks = tasks.filter(t => t.id !== task.id);
-      saveTasks();
+      saveData();
       renderTasks();
     });
 
@@ -55,38 +86,45 @@ function renderTasks() {
 
     li.appendChild(checkbox);
     li.appendChild(span);
+    li.appendChild(dueDate);
+    li.appendChild(priorityTag);
     li.appendChild(actions);
 
     taskList.appendChild(li);
   });
 }
 
-// Add task event
+// Event Listeners
 document.getElementById('addTaskBtn').addEventListener('click', () => {
-  const input = document.getElementById('taskInput');
-  const text = input.value.trim();
-  if (text === '') return;
+  const text = document.getElementById('taskInput').value.trim();
+  const dueDate = document.getElementById('dueDateInput').value;
+  const priority = document.getElementById('priorityInput').value;
+  if (!text) return;
 
-  const newTask = {
+  tasks.push({
     id: Date.now(),
     text,
+    dueDate,
+    priority,
     completed: false
-  };
-
-  tasks.push(newTask);
-  saveTasks();
+  });
+  saveData();
   renderTasks();
-  input.value = '';
+  document.getElementById('taskInput').value = '';
+  document.getElementById('dueDateInput').value = '';
 });
 
-// Allow "Enter" key to add task
-document.getElementById('taskInput').addEventListener('keydown', function(event) {
-  if (event.key === 'Enter') {
-    document.getElementById('addTaskBtn').click();
-  }
+// Dark Mode Toggle
+document.getElementById('darkModeToggle').addEventListener('click', () => {
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark', darkMode);
+  saveData();
 });
 
-// Initial render
+// Load Filters/Theme
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.classList.toggle('dark', darkMode);
+  document.getElementById('statusFilter').addEventListener('change', renderTasks);
+  document.getElementById('sortFilter').addEventListener('change', renderTasks);
   renderTasks();
 });
