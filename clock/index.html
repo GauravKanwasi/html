@@ -3,296 +3,704 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radiant Smooth Clock</title>
+    <title>Samsung Style World Clock</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #1a1a2e;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            box-sizing: border-box;
         }
 
-        .container {
-            position: relative;
-            width: 100%;
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mode-switch {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 4px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            flex: 1;
+            align-items: flex-start;
+        }
+
+        .clock-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .current-time {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .digital-time {
+            font-size: 4rem;
+            font-weight: 200;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(45deg, #ffffff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .date-info {
+            font-size: 1.2rem;
+            color: #888;
+            font-weight: 300;
+        }
+
+        .timezone-info {
+            font-size: 1rem;
+            color: #00d4ff;
+            margin-top: 5px;
         }
 
         .clock-container {
             position: relative;
-            width: 350px;
-            height: 350px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2),
-                        0 0 0 1px rgba(255, 255, 255, 0.05),
-                        0 0 20px rgba(0, 195, 255, 0.3) inset,
-                        0 0 30px rgba(0, 195, 255, 0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-            z-index: 10;
+            width: 320px;
+            height: 320px;
+            margin: 20px 0;
         }
 
-        .clock-container::before {
-            content: '';
-            position: absolute;
-            width: 330px;
-            height: 330px;
+        .clock-face {
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 195, 255, 0.1) 0%, transparent 70%);
-            z-index: -1;
-        }
-
-        .clock {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15), rgba(0, 0, 0, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 0 30px rgba(255, 255, 255, 0.1);
             position: relative;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: rgba(10, 15, 40, 0.8);
-            box-shadow: 0 0 20px rgba(0, 195, 255, 0.5),
-                        0 0 40px rgba(0, 100, 200, 0.3) inset;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            backdrop-filter: blur(20px);
         }
 
-        .clock::before {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #fff;
-            border-radius: 50%;
-            z-index: 10;
-            box-shadow: 0 0 0 2px rgba(0, 195, 255, 0.8),
-                        0 0 10px rgba(0, 195, 255, 1);
-        }
-
-        .hour, .min, .sec {
-            position: absolute;
-            border-radius: 10px;
-            transform-origin: bottom;
-        }
-
-        .hour {
-            width: 8px;
-            height: 80px;
-            background: linear-gradient(to top, #fff, #00c3ff);
-            top: calc(50% - 80px);
-            left: 50%;
-            margin-left: -4px;
-            box-shadow: 0 0 10px rgba(0, 195, 255, 0.8);
-        }
-
-        .min {
-            width: 6px;
-            height: 120px;
-            background: linear-gradient(to top, #fff, #00c3ff);
-            top: calc(50% - 120px);
-            left: 50%;
-            margin-left: -3px;
-            box-shadow: 0 0 10px rgba(0, 195, 255, 0.8);
-        }
-
-        .sec {
-            width: 2px;
-            height: 140px;
-            background: linear-gradient(to top, #ff0055, #ff0055);
-            top: calc(50% - 140px);
-            left: 50%;
-            margin-left: -1px;
-            box-shadow: 0 0 5px rgba(255, 0, 85, 0.8);
-        }
-
-        .digital-clock {
-            margin-top: 30px;
-            color: #00c3ff;
-            font-size: 2.5rem;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(0, 195, 255, 0.8);
-            letter-spacing: 2px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 195, 255, 0.3);
-        }
-
-        .numbers {
+        .clock-numbers {
             position: absolute;
             width: 100%;
             height: 100%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 195, 255, 0.8);
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #ffffff;
         }
 
-        .numbers span {
+        .clock-numbers span {
             position: absolute;
             transform: translate(-50%, -50%);
         }
 
-        .numbers span:nth-child(1) { top: 15%; left: 50%; }
-        .numbers span:nth-child(2) { top: 20%; left: 70%; }
-        .numbers span:nth-child(3) { top: 35%; left: 85%; }
-        .numbers span:nth-child(4) { top: 50%; left: 90%; }
-        .numbers span:nth-child(5) { top: 65%; left: 85%; }
-        .numbers span:nth-child(6) { top: 80%; left: 70%; }
-        .numbers span:nth-child(7) { top: 85%; left: 50%; }
-        .numbers span:nth-child(8) { top: 80%; left: 30%; }
-        .numbers span:nth-child(9) { top: 65%; left: 15%; }
-        .numbers span:nth-child(10) { top: 50%; left: 10%; }
-        .numbers span:nth-child(11) { top: 35%; left: 15%; }
-        .numbers span:nth-child(12) { top: 20%; left: 30%; }
-
-        .glow {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0, 195, 255, 0.2) 0%, transparent 70%);
-            filter: blur(20px);
-            z-index: -1;
-            animation: pulse 4s infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.8); opacity: 0.6; }
-            100% { transform: scale(1.2); opacity: 1; }
-        }
-
-        .particles {
+        .hour-markers {
             position: absolute;
             width: 100%;
             height: 100%;
-            pointer-events: none;
         }
 
-        .particle {
+        .hour-marker {
             position: absolute;
-            background: rgba(0, 195, 255, 0.6);
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 2px;
+        }
+
+        .hour-marker.major {
+            width: 3px;
+            height: 15px;
+            top: 10px;
+            left: 50%;
+            margin-left: -1.5px;
+            transform-origin: 1.5px 150px;
+        }
+
+        .hour-marker.minor {
+            width: 1px;
+            height: 8px;
+            top: 17px;
+            left: 50%;
+            margin-left: -0.5px;
+            transform-origin: 0.5px 143px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .clock-hands {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hand {
+            position: absolute;
+            transform-origin: bottom center;
+            border-radius: 3px;
+            transition: transform 0.05s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 80px;
+            background: linear-gradient(to top, #ffffff, #00d4ff);
+            top: -80px;
+            left: -3px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 110px;
+            background: linear-gradient(to top, #ffffff, #00d4ff);
+            top: -110px;
+            left: -2px;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 120px;
+            background: linear-gradient(to top, #ff4757, #ff6b7a);
+            top: -120px;
+            left: -1px;
+            box-shadow: 0 0 6px rgba(255, 71, 87, 0.6);
+        }
+
+        .center-dot {
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #ffffff, #00d4ff);
             border-radius: 50%;
-            pointer-events: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+        }
+
+        .world-section {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .world-clocks {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .world-clocks h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .world-clock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .world-clock-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .world-clock-item:last-child {
+            border-bottom: none;
+        }
+
+        .city-info {
+            flex: 1;
+        }
+
+        .city-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .country-name {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .world-time {
+            font-size: 1.3rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        .time-diff {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .globe-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .globe-container h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .globe {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            background: radial-gradient(circle at 30% 30%, #1e3c72, #2a5298);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.3),
+                inset 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .globe:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .continents {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(ellipse 40px 20px at 30% 40%, #4CAF50 0%, transparent 50%),
+                radial-gradient(ellipse 35px 25px at 70% 30%, #4CAF50 0%, transparent 50%),
+                radial-gradient(ellipse 25px 15px at 50% 70%, #4CAF50 0%, transparent 50%),
+                radial-gradient(ellipse 30px 20px at 20% 75%, #4CAF50 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+
+        .timezone-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .timezone-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .timezone-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .timezone-btn.active {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border-color: transparent;
+        }
+
+        .add-timezone {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .timezone-input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .timezone-input::placeholder {
+            color: #888;
+        }
+
+        .add-btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .digital-time {
+                font-size: 3rem;
+            }
+            
+            .clock-container {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .globe {
+                width: 150px;
+                height: 150px;
+            }
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="glow"></div>
-        <div class="clock-container">
-            <div class="clock">
-                <div class="numbers">
-                    <span>12</span>
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5</span>
-                    <span>6</span>
-                    <span>7</span>
-                    <span>8</span>
-                    <span>9</span>
-                    <span>10</span>
-                    <span>11</span>
-                </div>
-                <div class="hour" id="hour"></div>
-                <div class="min" id="min"></div>
-                <div class="sec" id="sec"></div>
+    <div class="app-container">
+        <div class="header">
+            <h1>World Clock</h1>
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="local">Local Time</button>
+                <button class="mode-btn" data-mode="world">World Clock</button>
             </div>
         </div>
-        <div class="digital-clock" id="digital-clock">00:00:00</div>
+
+        <div class="main-content">
+            <div class="clock-section">
+                <div class="current-time">
+                    <div class="digital-time" id="digitalTime">00:00:00</div>
+                    <div class="date-info" id="dateInfo">Loading...</div>
+                    <div class="timezone-info" id="timezoneInfo">UTC</div>
+                </div>
+
+                <div class="clock-container">
+                    <div class="clock-face">
+                        <div class="hour-markers" id="hourMarkers"></div>
+                        <div class="clock-numbers" id="clockNumbers"></div>
+                        <div class="clock-hands">
+                            <div class="hand hour-hand" id="hourHand"></div>
+                            <div class="hand minute-hand" id="minuteHand"></div>
+                            <div class="hand second-hand" id="secondHand"></div>
+                        </div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="world-section">
+                <div class="world-clocks">
+                    <h3>World Clocks</h3>
+                    <div id="worldClocksList"></div>
+                    <div class="add-timezone">
+                        <input type="text" class="timezone-input" id="timezoneInput" placeholder="Enter city name...">
+                        <button class="add-btn" id="addTimezoneBtn">Add</button>
+                    </div>
+                </div>
+
+                <div class="globe-container">
+                    <h3>Select Timezone</h3>
+                    <div class="globe" id="globe">
+                        <div class="continents"></div>
+                    </div>
+                    <div class="timezone-selector" id="timezoneSelector"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="particles" id="particles"></div>
-
     <script>
-        // Create background particles
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
+        let currentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        let worldClocks = [
+            { city: 'New York', timezone: 'America/New_York', country: 'USA' },
+            { city: 'London', timezone: 'Europe/London', country: 'UK' },
+            { city: 'Tokyo', timezone: 'Asia/Tokyo', country: 'Japan' },
+            { city: 'Sydney', timezone: 'Australia/Sydney', country: 'Australia' }
+        ];
+
+        const popularTimezones = [
+            'America/New_York', 'Europe/London', 'Asia/Tokyo', 'Australia/Sydney',
+            'America/Los_Angeles', 'Europe/Paris', 'Asia/Shanghai', 'America/Chicago',
+            'Europe/Berlin', 'Asia/Dubai', 'America/Sao_Paulo', 'Asia/Singapore'
+        ];
+
+        function createClockElements() {
+            const hourMarkers = document.getElementById('hourMarkers');
+            const clockNumbers = document.getElementById('clockNumbers');
             
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                
-                // Random properties
-                const size = Math.random() * 5 + 1;
-                const posX = Math.random() * 100;
-                const posY = Math.random() * 100;
-                const animationDuration = Math.random() * 10 + 5;
-                const animationDelay = Math.random() * 5;
-                const hue = Math.random() * 30 + 180; // Blue range
-                
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${posX}%`;
-                particle.style.top = `${posY}%`;
-                particle.style.animation = `float ${animationDuration}s ease-in-out ${animationDelay}s infinite`;
-                particle.style.boxShadow = `0 0 ${size*2}px rgba(0, 195, 255, 0.8)`;
-                
-                // Create unique keyframes for each particle
-                const keyframes = `
-                    @keyframes float${i} {
-                        0%, 100% { transform: translate(0, 0); }
-                        25% { transform: translate(${Math.random()*20 - 10}px, ${Math.random()*20 - 10}px); }
-                        50% { transform: translate(${Math.random()*30 - 15}px, ${Math.random()*30 - 15}px); }
-                        75% { transform: translate(${Math.random()*20 - 10}px, ${Math.random()*20 - 10}px); }
-                    }
-                `;
-                
-                const style = document.createElement('style');
-                style.innerHTML = keyframes;
-                document.head.appendChild(style);
-                
-                particle.style.animationName = `float${i}`;
-                
-                particlesContainer.appendChild(particle);
+            for (let i = 0; i < 60; i++) {
+                const marker = document.createElement('div');
+                marker.className = i % 5 === 0 ? 'hour-marker major' : 'hour-marker minor';
+                marker.style.transform = `rotate(${i * 6}deg)`;
+                hourMarkers.appendChild(marker);
+            }
+
+            for (let i = 1; i <= 12; i++) {
+                const number = document.createElement('span');
+                number.textContent = i;
+                const angle = (i - 3) * 30 * Math.PI / 180;
+                const radius = 130;
+                const x = 50 + Math.cos(angle) * radius / 160 * 50;
+                const y = 50 + Math.sin(angle) * radius / 160 * 50;
+                number.style.left = `${x}%`;
+                number.style.top = `${y}%`;
+                clockNumbers.appendChild(number);
             }
         }
 
-        // Update clock hands
         function updateClock() {
             const now = new Date();
-            const hour = now.getHours();
-            const min = now.getMinutes();
-            const sec = now.getSeconds();
-            const msec = now.getMilliseconds();
+            const timeInZone = new Date(now.toLocaleString("en-US", {timeZone: currentTimezone}));
             
-            // Calculate smooth rotations
-            const hourRotation = (hour % 12) * 30 + min * 0.5;
-            const minRotation = min * 6 + sec * 0.1;
-            const secRotation = sec * 6 + msec * 0.006;
-            
-            // Apply rotations
-            document.getElementById('hour').style.transform = `rotate(${hourRotation}deg)`;
-            document.getElementById('min').style.transform = `rotate(${minRotation}deg)`;
-            document.getElementById('sec').style.transform = `rotate(${secRotation}deg)`;
-            
-            // Update digital clock
-            const formattedHour = hour.toString().padStart(2, '0');
-            const formattedMin = min.toString().padStart(2, '0');
-            const formattedSec = sec.toString().padStart(2, '0');
-            document.getElementById('digital-clock').textContent = `${formattedHour}:${formattedMin}:${formattedSec}`;
+            const hours = timeInZone.getHours();
+            const minutes = timeInZone.getMinutes();
+            const seconds = timeInZone.getSeconds();
+            const milliseconds = timeInZone.getMilliseconds();
+
+            const hourAngle = (hours % 12) * 30 + minutes * 0.5 + seconds * (0.5/60);
+            const minuteAngle = minutes * 6 + seconds * 0.1 + milliseconds * (0.1/1000);
+            const secondAngle = seconds * 6 + milliseconds * 0.006;
+
+            document.getElementById('hourHand').style.transform = `rotate(${hourAngle}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${minuteAngle}deg)`;
+            document.getElementById('secondHand').style.transform = `rotate(${secondAngle}deg)`;
+
+            const timeString = timeInZone.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const dateString = timeInZone.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            document.getElementById('digitalTime').textContent = timeString;
+            document.getElementById('dateInfo').textContent = dateString;
+            document.getElementById('timezoneInfo').textContent = currentTimezone.replace('_', ' ');
+
+            updateWorldClocks();
             
             requestAnimationFrame(updateClock);
         }
 
-        // Initialize everything
-        window.onload = function() {
-            createParticles();
+        function updateWorldClocks() {
+            const worldClocksList = document.getElementById('worldClocksList');
+            const localTime = new Date();
+            
+            worldClocksList.innerHTML = worldClocks.map(clock => {
+                const timeInZone = new Date(localTime.toLocaleString("en-US", {timeZone: clock.timezone}));
+                const timeString = timeInZone.toLocaleTimeString('en-US', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const localHour = localTime.getHours();
+                const zoneHour = timeInZone.getHours();
+                let diff = zoneHour - localHour;
+                if (diff > 12) diff -= 24;
+                if (diff < -12) diff += 24;
+                const diffText = diff === 0 ? 'Same time' : diff > 0 ? `+${diff}h` : `${diff}h`;
+                
+                return `
+                    <div class="world-clock-item" onclick="setCurrentTimezone('${clock.timezone}')">
+                        <div class="city-info">
+                            <div class="city-name">${clock.city}</div>
+                            <div class="country-name">${clock.country}</div>
+                        </div>
+                        <div>
+                            <div class="world-time">${timeString}</div>
+                            <div class="time-diff">${diffText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createTimezoneSelector() {
+            const selector = document.getElementById('timezoneSelector');
+            selector.innerHTML = popularTimezones.map(tz => {
+                const cityName = tz.split('/')[1]?.replace('_', ' ') || tz;
+                return `<button class="timezone-btn" onclick="setCurrentTimezone('${tz}')">${cityName}</button>`;
+            }).join('');
+        }
+
+        function setCurrentTimezone(timezone) {
+            currentTimezone = timezone;
+            document.querySelectorAll('.timezone-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === timezone.split('/')[1]?.replace('_', ' ')) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function addTimezone() {
+            const input = document.getElementById('timezoneInput');
+            const cityName = input.value.trim();
+            
+            if (!cityName) return;
+            
+            const commonTimezones = {
+                'paris': 'Europe/Paris',
+                'berlin': 'Europe/Berlin',
+                'madrid': 'Europe/Madrid',
+                'rome': 'Europe/Rome',
+                'moscow': 'Europe/Moscow',
+                'dubai': 'Asia/Dubai',
+                'mumbai': 'Asia/Kolkata',
+                'bangkok': 'Asia/Bangkok',
+                'singapore': 'Asia/Singapore',
+                'hong kong': 'Asia/Hong_Kong',
+                'seoul': 'Asia/Seoul',
+                'beijing': 'Asia/Shanghai',
+                'manila': 'Asia/Manila',
+                'toronto': 'America/Toronto',
+                'vancouver': 'America/Vancouver',
+                'mexico city': 'America/Mexico_City',
+                'buenos aires': 'America/Argentina/Buenos_Aires',
+                'lima': 'America/Lima',
+                'santiago': 'America/Santiago',
+                'cairo': 'Africa/Cairo',
+                'johannesburg': 'Africa/Johannesburg',
+                'lagos': 'Africa/Lagos'
+            };
+            
+            const timezone = commonTimezones[cityName.toLowerCase()] || `GMT${cityName}`;
+            const country = cityName.split(',')[1]?.trim() || 'Unknown';
+            
+            const newClock = {
+                city: cityName.split(',')[0].trim(),
+                timezone: timezone,
+                country: country
+            };
+            
+            if (!worldClocks.some(clock => clock.timezone === timezone)) {
+                worldClocks.push(newClock);
+                input.value = '';
+            }
+        }
+
+        function initApp() {
+            createClockElements();
+            createTimezoneSelector();
             updateClock();
-        };
+            
+            document.getElementById('addTimezoneBtn').addEventListener('click', addTimezone);
+            document.getElementById('timezoneInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTimezone();
+            });
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+            
+            document.getElementById('globe').addEventListener('click', () => {
+                const randomTimezone = popularTimezones[Math.floor(Math.random() * popularTimezones.length)];
+                setCurrentTimezone(randomTimezone);
+            });
+        }
+
+        window.addEventListener('load', initApp);
     </script>
 </body>
 </html>
