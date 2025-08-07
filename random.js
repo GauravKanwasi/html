@@ -87,6 +87,19 @@
         button:active {
             transform: scale(0.95);
         }
+        /* --- Enhanced Toggle Button Styles --- */
+        .toggle-btn-on {
+            background: linear-gradient(145deg, rgba(0, 150, 100, 0.4), rgba(0, 255, 150, 0.4)) !important;
+            border-color: rgba(0, 255, 150, 0.8) !important;
+            color: #00ff99 !important;
+            font-weight: bold;
+        }
+        .toggle-btn-off {
+            background: linear-gradient(145deg, rgba(100, 0, 0, 0.3), rgba(200, 50, 50, 0.3)) !important;
+            border-color: rgba(255, 50, 50, 0.5) !important;
+            color: #ff5555 !important;
+        }
+        /* --- End Enhanced Toggle Button Styles --- */
         .stats {
             position: fixed;
             top: 20px;
@@ -204,6 +217,7 @@
             </div>
             <div class="control-group">
                 <button id="supernovaButton">Trigger Supernova</button>
+                 <button id="resetButton">Reset</button> <!-- Reset Button -->
             </div>
         </div>
     </div>
@@ -232,8 +246,8 @@
     <script>
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
-        // Advanced configuration
-        let config = {
+        // --- Default Configuration ---
+        const DEFAULT_CONFIG = {
             starCount: 800,
             galaxyCount: 2,
             pulsarCount: 3,
@@ -248,6 +262,9 @@
             cosmicBackground: 2.7,
             quality: 3 // 1: Low, 5: High
         };
+        // --- End Default Configuration ---
+        // Advanced configuration
+        let config = {...DEFAULT_CONFIG}; // Start with defaults
 
         // --- Object Pools ---
         const meteorParticlePool = [];
@@ -263,7 +280,10 @@
         }
 
         function returnMeteorParticle(particle) {
-            meteorParticlePool.push(particle);
+            if (meteorParticlePool.length < 500) { // Limit pool size
+                 meteorParticlePool.push(particle);
+            }
+            // If pool is full, let it be garbage collected
         }
 
         function getSupernova(x, y) {
@@ -276,7 +296,10 @@
         }
 
         function returnSupernova(supernova) {
-            supernovaPool.push(supernova);
+             if (supernovaPool.length < 20) { // Limit pool size
+                 supernovaPool.push(supernova);
+             }
+             // If pool is full, let it be garbage collected
         }
         // --- End Object Pools ---
 
@@ -287,6 +310,7 @@
         let audioContext = null;
         let warpSound = null;
         let lastMouseTime = 0;
+        let userHasInteracted = false; // For audio autoplay policy
         // Mouse tracking
         document.addEventListener('mousemove', (e) => {
             mouse.x = e.clientX;
@@ -295,6 +319,7 @@
             lastMouseTime = performance.now();
             document.querySelector('.crosshair').style.left = e.clientX + 'px';
             document.querySelector('.crosshair').style.top = e.clientY + 'px';
+            userHasInteracted = true; // Set on first interaction
         });
         // Reset mouse movement flag after a short delay
         setInterval(() => {
@@ -304,13 +329,14 @@
             }
         }, 50);
 
-        // Audio setup
+        // Audio setup (respects autoplay policy)
         function initAudio() {
-            if (audioContext) return; // Prevent re-initialization
+            if (audioContext || !userHasInteracted) return; // Prevent re-init or init before interaction
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 // Create warp drive sound
                 const createWarpSound = () => {
+                    if (!audioContext) return;
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     oscillator.connect(gainNode);
@@ -325,7 +351,9 @@
                 };
                 warpSound = createWarpSound;
             } catch (e) {
-                console.log('Audio not supported');
+                console.log('Audio not supported or initialization failed:', e);
+                config.audioEnabled = false; // Disable if init fails
+                updateToggleButton('toggleMusic', false);
             }
         }
         // Canvas setup
@@ -359,7 +387,14 @@
                 gradient.addColorStop(0.3, `hsla(${hue}, 60%, 30%, 0.08)`);
                 gradient.addColorStop(0.6, `hsla(${hue}, 50%, 20%, 0.04)`);
                 gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                nebulaGradients.push({ gradient, rotation: Math.random() * Math.PI * 2, depth: Math.random() * 0.5 + 0.5 }); // Add depth for parallax
+                // Add properties for independent animation
+                nebulaGradients.push({
+                    gradient,
+                    rotation: Math.random() * Math.PI * 2,
+                    offsetX: (Math.random() - 0.5) * 0.2,
+                    offsetY: (Math.random() - 0.5) * 0.2,
+                    depth: Math.random() * 0.5 + 0.5 // Parallax depth
+                });
             }
             // Galaxy gradients
             galaxyGradients = [];
@@ -423,9 +458,9 @@
                 this.depth = Math.random() * 0.9 + 0.1; // For parallax
                 this.brightness = 70 + (this.temperature / 500);
                 this.saturation = Math.min(100, this.temperature / 200);
-                // Proper motion
-                this.vx = (Math.random() - 0.5) * 0.01;
-                this.vy = (Math.random() - 0.5) * 0.01;
+                // Proper motion (slightly more varied)
+                this.vx = (Math.random() - 0.5) * 0.02;
+                this.vy = (Math.random() - 0.5) * 0.02;
                 // Binary star system
                 this.isBinary = Math.random() < 0.1;
                 if (this.isBinary) {
@@ -477,8 +512,8 @@
                     if (distSq < maxDist * maxDist) {
                          const dist = Math.sqrt(distSq);
                          const force = 0.05 * (1 - dist / maxDist); // Stronger closer
-                         this.x += dx * force * 0.01;
-                         this.y += dy * force * 0.01;
+                         this.x += dx * force * 0.01 * config.speedMultiplier;
+                         this.y += dy * force * 0.01 * config.speedMultiplier;
                     }
                 }
                 // Binary star orbital motion
@@ -808,9 +843,8 @@
                     alpha: this.alpha,
                     time: performance.now()
                 });
-                // Remove old trail points
+                // Remove old trail points (optimized)
                 const currentTime = performance.now();
-                // Optimize trail removal: Remove in bulk if possible
                 let removeCount = 0;
                 for (let i = 0; i < this.trail.length; i++) {
                     if (currentTime - this.trail[i].time >= 800) {
@@ -1011,6 +1045,33 @@
         }
         // --- End Comet Class ---
 
+        // --- Asteroid Belt Class ---
+        class Asteroid {
+            constructor(beltRadius, beltWidth) {
+                this.beltRadius = beltRadius;
+                this.beltWidth = beltWidth;
+                this.angle = Math.random() * Math.PI * 2;
+                this.distance = beltRadius + (Math.random() - 0.5) * beltWidth;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speed = (Math.random() - 0.5) * 0.005 + 0.002; // Slow orbital speed
+                this.hue = Math.random() * 20 + 30; // Brownish
+                this.brightness = Math.random() * 30 + 40;
+                this.alpha = Math.random() * 0.6 + 0.2;
+            }
+            update(centerX, centerY) {
+                 this.angle += this.speed * config.speedMultiplier;
+                 this.x = centerX + Math.cos(this.angle) * this.distance;
+                 this.y = centerY + Math.sin(this.angle) * this.distance * 0.1; // Flattened orbit
+            }
+            draw() {
+                ctx.fillStyle = `hsla(${this.hue}, 30%, ${this.brightness}%, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        // --- End Asteroid Belt Class ---
+
         // Cosmic dust and particles (with parallax)
         class CosmicDust {
             constructor() {
@@ -1044,6 +1105,7 @@
         let stars = [];
         let shootingStars = [];
         let comets = []; // Add comets array
+        let asteroids = []; // Add asteroids array
         let pulsars = [];
         let blackHoles = [];
         let supernovas = [];
@@ -1052,77 +1114,142 @@
             stars = Array.from({ length: config.starCount }, () => new Star());
             shootingStars = Array.from({ length: config.shootingStarsCount }, () => new ShootingStar());
             comets = Array.from({ length: 2 }, () => new Comet()); // Initialize comets
+            // Initialize asteroid belt
+            const beltRadius = Math.min(canvas.width, canvas.height) * 0.4;
+            const beltWidth = beltRadius * 0.1;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const asteroidCount = 100 + config.quality * 50; // Scale with quality
+            asteroids = Array.from({ length: asteroidCount }, () => new Asteroid(beltRadius, beltWidth));
             pulsars = Array.from({ length: config.pulsarCount }, () => new Pulsar());
             blackHoles = Array.from({ length: config.blackHoleCount }, () => new BlackHole());
             // Adjust cosmic dust based on quality
             const dustCount = 100 + config.quality * 50;
             cosmicDust = Array.from({ length: dustCount }, () => new CosmicDust());
         }
+        // --- Utility to update toggle button styles ---
+        function updateToggleButton(buttonId, isActive) {
+             const button = document.getElementById(buttonId);
+             if (isActive) {
+                 button.classList.add('toggle-btn-on');
+                 button.classList.remove('toggle-btn-off');
+             } else {
+                 button.classList.add('toggle-btn-off');
+                 button.classList.remove('toggle-btn-on');
+             }
+        }
+        // --- End Utility ---
+
         // Control system
         function setupControls() {
             // Star controls
-            document.getElementById('starCount').addEventListener('input', (e) => {
+            const starCountSlider = document.getElementById('starCount');
+            const starCountValue = document.getElementById('starCountValue');
+            starCountSlider.addEventListener('input', (e) => {
                 config.starCount = parseInt(e.target.value);
-                document.getElementById('starCountValue').textContent = config.starCount;
+                starCountValue.textContent = config.starCount;
                 stars = Array.from({ length: config.starCount }, () => new Star());
             });
-            document.getElementById('galaxyCount').addEventListener('input', (e) => {
+            starCountSlider.dispatchEvent(new Event('input')); // Initial update
+
+            const galaxyCountSlider = document.getElementById('galaxyCount');
+            const galaxyCountValue = document.getElementById('galaxyCountValue');
+            galaxyCountSlider.addEventListener('input', (e) => {
                 config.galaxyCount = parseInt(e.target.value);
-                document.getElementById('galaxyCountValue').textContent = config.galaxyCount;
+                galaxyCountValue.textContent = config.galaxyCount;
                 createGradients(); // Recreate gradients for new galaxy count
             });
+            galaxyCountSlider.dispatchEvent(new Event('input'));
+
             // --- Quality Control ---
-            document.getElementById('quality').addEventListener('input', (e) => {
+            const qualitySlider = document.getElementById('quality');
+            const qualityValue = document.getElementById('qualityValue');
+            qualitySlider.addEventListener('input', (e) => {
                 config.quality = parseInt(e.target.value);
-                document.getElementById('qualityValue').textContent = config.quality;
+                qualityValue.textContent = config.quality;
                 // Reinitialize objects that depend on quality
                 const dustCount = 100 + config.quality * 50;
                 cosmicDust = Array.from({ length: dustCount }, () => new CosmicDust());
-                // Shooting stars count could also be adjusted, but let's keep it separate for now
+                
+                const asteroidCount = 100 + config.quality * 50;
+                const beltRadius = Math.min(canvas.width, canvas.height) * 0.4;
+                const beltWidth = beltRadius * 0.1;
+                asteroids = Array.from({ length: asteroidCount }, () => new Asteroid(beltRadius, beltWidth));
             });
+            qualitySlider.dispatchEvent(new Event('input'));
             // --- End Quality Control ---
-            document.getElementById('speed').addEventListener('input', (e) => {
+
+            const speedSlider = document.getElementById('speed');
+            const speedValue = document.getElementById('speedValue');
+            speedSlider.addEventListener('input', (e) => {
                 config.speedMultiplier = parseFloat(e.target.value);
-                document.getElementById('speedValue').textContent = config.speedMultiplier.toFixed(1);
+                speedValue.textContent = config.speedMultiplier.toFixed(1);
             });
+            speedSlider.dispatchEvent(new Event('input'));
+
             // Phenomena controls
-            document.getElementById('nebula').addEventListener('input', (e) => {
+            const nebulaSlider = document.getElementById('nebula');
+            const nebulaValue = document.getElementById('nebulaValue');
+            nebulaSlider.addEventListener('input', (e) => {
                 config.nebulaIntensity = parseInt(e.target.value);
-                document.getElementById('nebulaValue').textContent = config.nebulaIntensity;
+                nebulaValue.textContent = config.nebulaIntensity;
             });
-            document.getElementById('pulsarCount').addEventListener('input', (e) => {
+            nebulaSlider.dispatchEvent(new Event('input'));
+
+            const pulsarCountSlider = document.getElementById('pulsarCount');
+            const pulsarCountValue = document.getElementById('pulsarCountValue');
+            pulsarCountSlider.addEventListener('input', (e) => {
                 config.pulsarCount = parseInt(e.target.value);
-                document.getElementById('pulsarCountValue').textContent = config.pulsarCount;
+                pulsarCountValue.textContent = config.pulsarCount;
                 pulsars = Array.from({ length: config.pulsarCount }, () => new Pulsar());
             });
-            document.getElementById('blackHoleCount').addEventListener('input', (e) => {
+            pulsarCountSlider.dispatchEvent(new Event('input'));
+
+            const blackHoleCountSlider = document.getElementById('blackHoleCount');
+            const blackHoleCountValue = document.getElementById('blackHoleCountValue');
+            blackHoleCountSlider.addEventListener('input', (e) => {
                 config.blackHoleCount = parseInt(e.target.value);
-                document.getElementById('blackHoleCountValue').textContent = config.blackHoleCount;
+                blackHoleCountValue.textContent = config.blackHoleCount;
                 blackHoles = Array.from({ length: config.blackHoleCount }, () => new BlackHole());
             });
+            blackHoleCountSlider.dispatchEvent(new Event('input'));
+
             // Effect toggles
             document.getElementById('toggleWarp').addEventListener('click', (e) => {
                 config.warpDrive = !config.warpDrive;
                 e.target.textContent = `Warp Drive: ${config.warpDrive ? 'ON' : 'OFF'}`;
+                updateToggleButton('toggleWarp', config.warpDrive);
                 if (config.warpDrive && config.audioEnabled && warpSound) {
+                    initAudio(); // Ensure audio is initialized
                     warpSound();
                 }
             });
+            updateToggleButton('toggleWarp', config.warpDrive); // Initial state
+
             document.getElementById('toggleGravity').addEventListener('click', (e) => {
                 config.gravityEnabled = !config.gravityEnabled;
                 e.target.textContent = `Gravity: ${config.gravityEnabled ? 'ON' : 'OFF'}`;
+                updateToggleButton('toggleGravity', config.gravityEnabled);
             });
+            updateToggleButton('toggleGravity', config.gravityEnabled);
+
             document.getElementById('toggleParticles').addEventListener('click', (e) => {
                 config.particlesEnabled = !config.particlesEnabled;
                 e.target.textContent = `Particles: ${config.particlesEnabled ? 'ON' : 'OFF'}`;
+                updateToggleButton('toggleParticles', config.particlesEnabled);
             });
+            updateToggleButton('toggleParticles', config.particlesEnabled);
+
             document.getElementById('toggleMusic').addEventListener('click', (e) => {
                 config.audioEnabled = !config.audioEnabled;
                 e.target.textContent = `Audio: ${config.audioEnabled ? 'ON' : 'OFF'}`;
+                updateToggleButton('toggleMusic', config.audioEnabled);
                 if (config.audioEnabled) {
-                    initAudio(); // Initialize only when turned on
+                    initAudio(); // Initialize only when turned on and user has interacted
                 }
             });
+            updateToggleButton('toggleMusic', config.audioEnabled);
+
             document.getElementById('supernovaButton').addEventListener('click', () => {
                 const x = mouse.x || canvas.width / 2;
                 const y = mouse.y || canvas.height / 2;
@@ -1130,6 +1257,42 @@
                 const supernova = getSupernova(x, y);
                 supernovas.push(supernova);
             });
+
+            // --- Reset Button ---
+            document.getElementById('resetButton').addEventListener('click', () => {
+                 // Reset config to defaults
+                 config = {...DEFAULT_CONFIG};
+                 // Update all sliders and values
+                 starCountSlider.value = config.starCount;
+                 starCountValue.textContent = config.starCount;
+                 galaxyCountSlider.value = config.galaxyCount;
+                 galaxyCountValue.textContent = config.galaxyCount;
+                 qualitySlider.value = config.quality;
+                 qualityValue.textContent = config.quality;
+                 speedSlider.value = config.speedMultiplier;
+                 speedValue.textContent = config.speedMultiplier.toFixed(1);
+                 nebulaSlider.value = config.nebulaIntensity;
+                 nebulaValue.textContent = config.nebulaIntensity;
+                 pulsarCountSlider.value = config.pulsarCount;
+                 pulsarCountValue.textContent = config.pulsarCount;
+                 blackHoleCountSlider.value = config.blackHoleCount;
+                 blackHoleCountValue.textContent = config.blackHoleCount;
+
+                 // Update toggle buttons
+                 updateToggleButton('toggleWarp', config.warpDrive);
+                 updateToggleButton('toggleGravity', config.gravityEnabled);
+                 updateToggleButton('toggleParticles', config.particlesEnabled);
+                 updateToggleButton('toggleMusic', config.audioEnabled);
+                 document.getElementById('toggleWarp').textContent = `Warp Drive: ${config.warpDrive ? 'ON' : 'OFF'}`;
+                 document.getElementById('toggleGravity').textContent = `Gravity: ${config.gravityEnabled ? 'ON' : 'OFF'}`;
+                 document.getElementById('toggleParticles').textContent = `Particles: ${config.particlesEnabled ? 'ON' : 'OFF'}`;
+                 document.getElementById('toggleMusic').textContent = `Audio: ${config.audioEnabled ? 'ON' : 'OFF'}`;
+
+                 // Reinitialize universe
+                 createGradients();
+                 initializeUniverse();
+            });
+            // --- End Reset Button ---
         }
         // Resize handler
         window.addEventListener('resize', resizeCanvas);
@@ -1164,16 +1327,22 @@
                 ctx.fillRect(-300, -300, 600, 600);
                 ctx.restore();
             });
-            // Draw nebulae with parallax and intensity
+            // Draw nebulae with parallax, intensity, and independent animation
             if (config.nebulaIntensity > 0) {
                 ctx.globalAlpha = config.nebulaIntensity / 100;
                 nebulaGradients.forEach(nebula => {
                     nebula.rotation += 0.0005 * config.speedMultiplier;
+                    // Slowly drift nebula centers
+                    nebula.offsetX += (Math.random() - 0.5) * 0.0001 * config.speedMultiplier;
+                    nebula.offsetY += (Math.random() - 0.5) * 0.0001 * config.speedMultiplier;
                     ctx.save();
                     // Apply parallax: nebulae move even slower
                     const parallaxX = (mouse.x - canvas.width / 2) * (1 - nebula.depth) * 0.01;
                     const parallaxY = (mouse.y - canvas.height / 2) * (1 - nebula.depth) * 0.01;
-                    ctx.translate(canvas.width / 2 + parallaxX, canvas.height / 2 + parallaxY);
+                    ctx.translate(
+                        canvas.width / 2 + parallaxX + canvas.width * nebula.offsetX,
+                        canvas.height / 2 + parallaxY + canvas.height * nebula.offsetY
+                    );
                     ctx.rotate(nebula.rotation);
                     ctx.fillStyle = nebula.gradient;
                     ctx.fillRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
@@ -1206,6 +1375,13 @@
                 comet.update();
                 comet.draw();
             });
+             // Update and draw asteroids
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            asteroids.forEach(asteroid => {
+                asteroid.update(centerX, centerY);
+                asteroid.draw();
+            });
             // Update and draw shooting stars
             shootingStars.forEach(star => {
                 star.update();
@@ -1224,7 +1400,7 @@
             const totalParticles = shootingStars.reduce((sum, star) => sum + star.particles.length, 0) +
                                  supernovas.reduce((sum, sn) => sum + sn.particles.length, 0);
             document.getElementById('objectCount').textContent =
-                stars.length + shootingStars.length + comets.length + pulsars.length + blackHoles.length +
+                stars.length + shootingStars.length + comets.length + asteroids.length + pulsars.length + blackHoles.length +
                 supernovas.length + cosmicDust.length + totalParticles;
             requestAnimationFrame(animate);
         }
