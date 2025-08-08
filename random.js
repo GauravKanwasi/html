@@ -644,7 +644,8 @@
                         angle: angle,
                         radius: radius,
                         speed: 0.02 / (radius * 0.1),
-                        brightness: Math.random()
+                        brightness: Math.random(),
+                        hueOffset: (Math.random() - 0.5) * 20 // For blue/red shift
                     });
                 }
             }
@@ -658,17 +659,24 @@
                 });
             }
             draw() {
-                // Draw accretion disk
+                // Draw accretion disk with color shift
                 this.accretionDisk.forEach(particle => {
-                    const x = this.x + Math.cos(particle.angle) * particle.radius;
-                    const y = this.y + Math.sin(particle.angle) * particle.radius * 0.3; // Flattened disk
-                    const temperature = 5000 + (this.eventHorizon * 2 - particle.radius) * 100;
-                    let hue = 30;
-                    if (temperature > 8000) hue = 200;
-                    else if (temperature > 6000) hue = 60;
+                    const x = this.x + Math.cos(particle.angle + this.rotation) * particle.radius;
+                    const y = this.y + Math.sin(particle.angle + this.rotation) * particle.radius * 0.3; // Flattened disk
+                    
+                    // Calculate color based on position (simplified Doppler)
+                    const velocityDirection = Math.atan2(y - this.y, x - this.x);
+                    const relativeAngle = (velocityDirection - this.rotation + Math.PI * 2) % (Math.PI * 2);
+                    let hue = 60; // Yellow
+                    if (relativeAngle < Math.PI) {
+                        hue = 200 + particle.hueOffset; // Approaching, blue-shift
+                    } else {
+                        hue = 30 + particle.hueOffset; // Receding, red-shift
+                    }
+                    
                     ctx.fillStyle = `hsla(${hue}, 80%, 70%, ${particle.brightness * 0.8})`;
                     ctx.beginPath();
-                    ctx.arc(x, y, 1, 0, Math.PI * 2);
+                    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
                     ctx.fill();
                 });
                 // Draw gravitational lensing effect
@@ -702,6 +710,7 @@
                 this.brightness = 1;
                 this.particles = [];
                 this.hue = Math.random() * 60 + 30; // Yellow to red spectrum
+                this.remnant = null; // Initialize remnant
                 this.reset(x, y); // Initialize particles
             }
             reset(x, y) {
@@ -712,6 +721,7 @@
                  this.brightness = 1;
                  this.particles = [];
                  this.hue = Math.random() * 60 + 30;
+                 this.remnant = null;
                  // Create explosion particles
                  const particleCount = 50 + config.quality * 10; // Scale particles with quality
                  for (let i = 0; i < particleCount; i++) {
@@ -733,6 +743,23 @@
                 this.age += config.speedMultiplier;
                 this.shockwaveRadius = (this.age / this.maxAge) * 300;
                 this.brightness = Math.max(0, 1 - (this.age / this.maxAge));
+                
+                // Create remnant after explosion peak
+                if (this.age > this.maxAge * 0.3 && !this.remnant) {
+                    this.remnant = {
+                        radius: 0,
+                        maxRadius: this.shockwaveRadius * 1.5,
+                        brightness: 0.3,
+                        expansionRate: 0.5
+                    };
+                }
+                
+                // Update remnant
+                if (this.remnant) {
+                    this.remnant.radius += this.remnant.expansionRate * config.speedMultiplier;
+                    this.remnant.brightness = Math.max(0, this.remnant.brightness - 0.002 * config.speedMultiplier);
+                }
+
                 // Update particles
                 for (let i = this.particles.length - 1; i >= 0; i--) {
                     const particle = this.particles[i];
@@ -746,6 +773,21 @@
                 }
             }
             draw() {
+                // Draw remnant
+                if (this.remnant && this.remnant.brightness > 0) {
+                    const remnantGradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.remnant.radius
+                    );
+                    remnantGradient.addColorStop(0, `hsla(${this.hue + 30}, 50%, 40%, ${this.remnant.brightness * 0.1})`);
+                    remnantGradient.addColorStop(0.5, `hsla(${this.hue}, 40%, 30%, ${this.remnant.brightness * 0.05})`);
+                    remnantGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = remnantGradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.remnant.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
                 if (this.age > this.maxAge) return;
                 // Draw shockwave
                 ctx.strokeStyle = `hsla(${this.hue}, 70%, 60%, ${this.brightness * 0.5})`;
@@ -774,7 +816,8 @@
                 });
             }
             isDead() {
-                return this.age > this.maxAge && this.particles.length === 0;
+                return this.age > this.maxAge && this.particles.length === 0 && 
+                       (!this.remnant || this.remnant.brightness <= 0);
             }
         }
         // Enhanced Shooting Star with realistic physics
@@ -1057,6 +1100,7 @@
                 this.hue = Math.random() * 20 + 30; // Brownish
                 this.brightness = Math.random() * 30 + 40;
                 this.alpha = Math.random() * 0.6 + 0.2;
+                this.depth = Math.random() * 0.4 + 0.6; // Parallax depth
             }
             update(centerX, centerY) {
                  this.angle += this.speed * config.speedMultiplier;
@@ -1064,9 +1108,15 @@
                  this.y = centerY + Math.sin(this.angle) * this.distance * 0.1; // Flattened orbit
             }
             draw() {
+                // Apply parallax
+                const parallaxX = (mouse.x - canvas.width / 2) * (1 - this.depth) * 0.02;
+                const parallaxY = (mouse.y - canvas.height / 2) * (1 - this.depth) * 0.02;
+                const drawX = this.x + parallaxX;
+                const drawY = this.y + parallaxY;
+                
                 ctx.fillStyle = `hsla(${this.hue}, 30%, ${this.brightness}%, ${this.alpha})`;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.arc(drawX, drawY, this.size, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -1311,9 +1361,12 @@
                 document.getElementById('distance').textContent = totalDistance.toFixed(1) + ' ly';
                 document.getElementById('velocity').textContent = (config.warpDrive ? config.speedMultiplier * 2 : config.speedMultiplier * 0.1).toFixed(2) + ' c';
             }
-            // Clear with cosmic background
-            ctx.fillStyle = backgroundGradient;
+            
+            // --- Performance Optimization: Fade trails instead of full clear ---
+            ctx.fillStyle = 'rgba(0, 10, 20, 0.15)'; // Semi-transparent dark blue
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // --- End Performance Optimization ---
+
             // Draw galaxies with parallax
             galaxyGradients.forEach(galaxy => {
                 galaxy.rotation += galaxy.rotationSpeed * config.speedMultiplier;
