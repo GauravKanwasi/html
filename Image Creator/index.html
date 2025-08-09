@@ -3,106 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Image Generator</title>
+    <title>Natural Random Image Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-            max-width: 600px;
-            width: 95%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        h1 {
-            margin-bottom: 20px;
             color: #333;
         }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        header {
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls-container {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
         canvas {
-            border: 1px solid #ccc;
-            margin-top: 20px;
             width: 100%;
             height: auto;
-        }
-        .controls {
-            margin-top: 20px;
-        }
-        .controls label {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: white;
             display: block;
-            margin-top: 10px;
-            color: #555;
         }
-        .controls input[type="range"] {
+
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            display: none;
         }
-        .controls p {
-            margin: 5px 0;
-            color: #777;
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(74, 108, 183, 0.2);
+            border-top: 5px solid #4b6cb7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls h2 {
+            color: #4b6cb7;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
             border-radius: 4px;
-            transition: background-color 0.3s;
+            background: #dee2e6;
+            outline: none;
+            -webkit-appearance: none;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4b6cb7;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
+        .control-group p {
+            text-align: center;
+            font-weight: 600;
+            color: #4b6cb7;
+            background: #e9ecef;
+            padding: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
         .color-option {
-            margin-top: 10px;
+            flex: 1;
+            min-width: 120px;
         }
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
+
+        select, input[type="color"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            background: white;
+            font-size: 1rem;
+        }
+
+        input[type="color"] {
+            height: 45px;
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #generateButton {
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            box-shadow: 0 4px 15px rgba(75, 108, 183, 0.3);
+        }
+
+        #generateButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(75, 108, 183, 0.4);
+        }
+
+        #saveButton {
+            background: linear-gradient(to right, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        #saveButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        #historyButton {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+        }
+
+        #historyButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        .history-container {
+            display: none;
+            width: 100%;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .history-container h2 {
+            text-align: center;
+            color: #4b6cb7;
+            margin-bottom: 20px;
+        }
+
+        .history-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .history-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            object-fit: cover;
+        }
+
+        .history-image:hover {
+            transform: scale(1.05);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #182848;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
             }
-            button {
-                width: 100%;
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Random Image Generator</h1>
-        <canvas id="imageCanvas" width="500" height="500"></canvas>
-        <div class="controls">
-            <label for="numShapes">Number of Shapes:</label>
-            <input type="range" id="numShapes" min="10" max="100" value="50">
-            <p id="numShapesValue">50</p>
-
-            <label for="shapeSize">Shape Size:</label>
-            <input type="range" id="shapeSize" min="10" max="100" value="50">
-            <p id="shapeSizeValue">50</p>
-
-            <div class="color-option">
-                <label for="colorOption">Color Option:</label>
-                <select id="colorOption">
-                    <option value="random">Random</option>
-                    <option value="custom">Custom</option>
-                </select>
+        <header>
+            <h1><i class="fas fa-palette"></i> Natural Random Image Generator</h1>
+            <p>Create beautiful abstract art with natural-looking elements</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="imageCanvas" width="500" height="500"></canvas>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
             </div>
-
-            <label for="shapeColor">Shape Color (if custom):</label>
-            <input type="color" id="shapeColor" value="#000000" style="display: none;">
+            
+            <div class="controls-container">
+                <div class="controls">
+                    <h2><i class="fas fa-sliders-h"></i> Customization Options</h2>
+                    
+                    <div class="control-group">
+                        <label for="numShapes"><i class="fas fa-shapes"></i> Number of Shapes:</label>
+                        <input type="range" id="numShapes" min="10" max="200" value="50">
+                        <p id="numShapesValue">50</p>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="shapeSize"><i class="fas fa-expand-arrows-alt"></i> Shape Size:</label>
+                        <input type="range" id="shapeSize" min="10" max="100" value="50">
+                        <p id="shapeSizeValue">50</p>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="shapeType"><i class="fas fa-draw-polygon"></i> Shape Types:</label>
+                        <select id="shapeType">
+                            <option value="all">All Shapes</option>
+                            <option value="circles">Circles Only</option>
+                            <option value="rectangles">Rectangles Only</option>
+                            <option value="lines">Lines Only</option>
+                            <option value="triangles">Triangles Only</option>
+                            <option value="stars">Stars Only</option>
+                            <option value="hexagons">Hexagons Only</option>
+                            <option value="hearts">Hearts Only</option>
+                            <option value="crescents">Crescents Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="colorOption"><i class="fas fa-palette"></i> Color Option:</label>
+                        <select id="colorOption">
+                            <option value="random">Random Colors</option>
+                            <option value="gradient">Gradient Colors</option>
+                            <option value="custom">Custom Color</option>
+                            <option value="monochrome">Monochrome</option>
+                        </select>
+                    </div>
+                    
+                    <div class="color-options">
+                        <div class="color-option">
+                            <label for="shapeColor"><i class="fas fa-fill-drip"></i> Shape Color:</label>
+                            <input type="color" id="shapeColor" value="#4b6cb7">
+                        </div>
+                        
+                        <div class="color-option">
+                            <label for="bgColor"><i class="fas fa-fill"></i> Background:</label>
+                            <input type="color" id="bgColor" value="#ffffff">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="filterOption"><i class="fas fa-filter"></i> Image Filter:</label>
+                        <select id="filterOption">
+                            <option value="none">None</option>
+                            <option value="blur">Blur</option>
+                            <option value="sepia">Sepia</option>
+                            <option value="grayscale">Grayscale</option>
+                            <option value="invert">Invert</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button id="generateButton"><i class="fas fa-magic"></i> Generate Image</button>
+                    <button id="saveButton"><i class="fas fa-download"></i> Save Image</button>
+                    <button id="historyButton"><i class="fas fa-history"></i> History</button>
+                </div>
+            </div>
         </div>
-        <button id="generateButton">Generate Random Image</button>
-        <button id="saveButton">Save Image</button>
+        
+        <div class="history-container" id="historyContainer">
+            <h2><i class="fas fa-history"></i> Generated Image History</h2>
+            <div class="history-images" id="historyImages"></div>
+        </div>
     </div>
+    
+    <div class="notification" id="notification">Image saved successfully!</div>
+    
+    <footer>
+        <p>Natural Random Image Generator | Create beautiful abstract art</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>
