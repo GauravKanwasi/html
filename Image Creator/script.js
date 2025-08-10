@@ -17,6 +17,7 @@ const loading = document.getElementById('loading');
 const historyContainer = document.getElementById('historyContainer');
 const historyImages = document.getElementById('historyImages');
 const notification = document.getElementById('notification');
+const presetButtons = document.querySelectorAll('.preset-button');
 
 // History array to store generated images
 let imageHistory = [];
@@ -40,6 +41,13 @@ colorOption.addEventListener('change', function() {
     }
 });
 
+// Preset buttons
+presetButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        applyPreset(button.dataset.preset);
+    });
+});
+
 // Update value displays
 function updateNumShapesValue() {
     numShapesValue.textContent = numShapes.value;
@@ -47,6 +55,48 @@ function updateNumShapesValue() {
 
 function updateShapeSizeValue() {
     shapeSizeValue.textContent = shapeSize.value;
+}
+
+// Apply preset configurations
+function applyPreset(preset) {
+    switch(preset) {
+        case 'abstract':
+            numShapes.value = 100;
+            shapeSize.value = 40;
+            shapeType.value = 'all';
+            colorOption.value = 'random';
+            bgColor.value = '#ffffff';
+            filterOption.value = 'none';
+            break;
+        case 'geometric':
+            numShapes.value = 75;
+            shapeSize.value = 60;
+            shapeType.value = 'rectangles';
+            colorOption.value = 'vibrant';
+            bgColor.value = '#f8f9fa';
+            filterOption.value = 'none';
+            break;
+        case 'organic':
+            numShapes.value = 150;
+            shapeSize.value = 30;
+            shapeType.value = 'circles';
+            colorOption.value = 'pastel';
+            bgColor.value = '#ffffff';
+            filterOption.value = 'blur';
+            break;
+        case 'minimal':
+            numShapes.value = 20;
+            shapeSize.value = 80;
+            shapeType.value = 'triangles';
+            colorOption.value = 'monochrome';
+            bgColor.value = '#ffffff';
+            filterOption.value = 'grayscale';
+            break;
+    }
+    
+    updateNumShapesValue();
+    updateShapeSizeValue();
+    generateImage();
 }
 
 // Toggle history display
@@ -64,6 +114,11 @@ function toggleHistory() {
 // Render history images
 function renderHistory() {
     historyImages.innerHTML = '';
+    if (imageHistory.length === 0) {
+        historyImages.innerHTML = '<p style="width:100%; text-align:center; padding:20px; color:#666;">No images in history yet</p>';
+        return;
+    }
+    
     imageHistory.forEach((imgData, index) => {
         const img = document.createElement('img');
         img.src = imgData;
@@ -138,7 +193,7 @@ function generateImage() {
         
         // Add to history
         addToHistory();
-    }, 500);
+    }, 300);
 }
 
 // Get filter value
@@ -156,8 +211,28 @@ function getFilterValue(filter) {
 function addToHistory() {
     const dataURL = canvas.toDataURL('image/png');
     imageHistory.unshift(dataURL);
-    if (imageHistory.length > 12) {
+    if (imageHistory.length > 16) {
         imageHistory.pop();
+    }
+}
+
+// Generate a color based on the selected option
+function generateColor(option) {
+    switch(option) {
+        case 'random':
+            return `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+        case 'pastel':
+            return `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`;
+        case 'vibrant':
+            return `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+        case 'monochrome':
+            const gray = Math.floor(Math.random() * 256);
+            return `rgb(${gray}, ${gray}, ${gray})`;
+        case 'gradient':
+            // This will be handled separately
+            return null;
+        default:
+            return shapeColor.value;
     }
 }
 
@@ -188,18 +263,13 @@ function drawRandomShape(ctx, canvas, size, colorOption, shapeColor, shapeType) 
     
     // Set color based on option
     let color;
-    if (colorOption === 'random') {
-        color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
-    } else if (colorOption === 'gradient') {
+    if (colorOption === 'gradient') {
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`);
-        gradient.addColorStop(1, `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`);
+        gradient.addColorStop(0, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
+        gradient.addColorStop(1, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
         color = gradient;
-    } else if (colorOption === 'monochrome') {
-        const gray = Math.floor(Math.random() * 256);
-        color = `rgb(${gray}, ${gray}, ${gray})`;
     } else {
-        color = shapeColor;
+        color = generateColor(colorOption);
     }
     
     ctx.strokeStyle = color;
@@ -290,7 +360,7 @@ function saveImage() {
     const dataURL = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.href = dataURL;
-    link.download = 'random_image.png';
+    link.download = 'artistic_image.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
