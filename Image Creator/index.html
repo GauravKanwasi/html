@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artistic Random Image Generator</title>
+    <title>Advanced Random Image Generator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -339,6 +339,7 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 15px;
+            width: 100%;
         }
 
         .preset-button {
@@ -358,6 +359,35 @@
             color: white;
         }
 
+        .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .mode-button {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .mode-button.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .mode-button:hover:not(.active) {
+            background: #d1d1d1;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -371,7 +401,7 @@
                 flex-direction: column;
             }
             
-            .preset-buttons {
+            .preset-buttons, .mode-buttons {
                 flex-direction: column;
             }
         }
@@ -380,8 +410,8 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-paint-brush"></i> Artistic Random Image Generator</h1>
-            <p>Create beautiful abstract art with customizable parameters and presets</p>
+            <h1><i class="fas fa-paint-brush"></i> Advanced Random Image Generator</h1>
+            <p>Create beautiful abstract art with multiple modes and presets</p>
         </header>
         
         <div class="main-content">
@@ -399,6 +429,14 @@
                     <button class="preset-button" data-preset="organic">Organic</button>
                     <button class="preset-button" data-preset="minimal">Minimal</button>
                 </div>
+                
+                <div class="mode-buttons">
+                    <button class="mode-button active" data-mode="normal">Normal</button>
+                    <button class="mode-button" data-mode="symmetric">Symmetric</button>
+                    <button class="mode-button" data-mode="fractal">Fractal</button>
+                    <button class="mode-button" data-mode="particle">Particle</button>
+                    <button class="mode-button" data-mode="watercolor">Watercolor</button>
+                </div>
             </div>
             
             <div class="controls-container">
@@ -407,7 +445,7 @@
                     
                     <div class="control-group">
                         <label for="numShapes"><i class="fas fa-shapes"></i> Number of Shapes:</label>
-                        <input type="range" id="numShapes" min="5" max="300" value="50">
+                        <input type="range" id="numShapes" min="5" max="500" value="50">
                         <p id="numShapesValue">50</p>
                     </div>
                     
@@ -429,6 +467,8 @@
                             <option value="hexagons">Hexagons Only</option>
                             <option value="hearts">Hearts Only</option>
                             <option value="crescents">Crescents Only</option>
+                            <option value="spirals">Spirals Only</option>
+                            <option value="polygons">Polygons Only</option>
                         </select>
                     </div>
                     
@@ -441,6 +481,9 @@
                             <option value="monochrome">Monochrome</option>
                             <option value="pastel">Pastel Colors</option>
                             <option value="vibrant">Vibrant Colors</option>
+                            <option value="warm">Warm Colors</option>
+                            <option value="cool">Cool Colors</option>
+                            <option value="complementary">Complementary</option>
                         </select>
                     </div>
                     
@@ -464,6 +507,8 @@
                             <option value="sepia">Sepia</option>
                             <option value="grayscale">Grayscale</option>
                             <option value="invert">Invert</option>
+                            <option value="saturate">Saturate</option>
+                            <option value="brightness">Brightness</option>
                         </select>
                     </div>
                 </div>
@@ -485,7 +530,7 @@
     <div class="notification" id="notification">Image saved successfully!</div>
     
     <footer>
-        <p>Artistic Random Image Generator | Create beautiful abstract art</p>
+        <p>Advanced Random Image Generator | Create beautiful abstract art</p>
     </footer>
 
     <script src="script.js"></script>
