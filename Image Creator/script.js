@@ -162,10 +162,14 @@ function showNotification(message) {
     }, 3000);
 }
 
-// Generate image
+// Generate image with smooth animation
 function generateImage() {
     // Show loading indicator
     loading.style.display = 'flex';
+    
+    // Apply a subtle animation to the canvas
+    canvas.style.transform = 'scale(0.95)';
+    canvas.style.filter = 'blur(2px)';
     
     // Simulate processing time for better UX
     setTimeout(() => {
@@ -214,12 +218,14 @@ function generateImage() {
         // Reset filter
         ctx.filter = 'none';
         
-        // Hide loading indicator
+        // Hide loading indicator and animate canvas back
         loading.style.display = 'none';
+        canvas.style.transform = 'scale(1)';
+        canvas.style.filter = 'blur(0px)';
         
         // Add to history
         addToHistory();
-    }, 300);
+    }, 400);
 }
 
 // Get filter value
@@ -254,14 +260,14 @@ function generateColor(option) {
         case 'vibrant':
             return `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
         case 'warm':
-            return `hsl(${Math.floor(Math.random() * 60) + 15}, 100%, 50%)`;
+            return `hsl(${Math.floor(Math.random() * 60) + 15}, 100%, 60%)`;
         case 'cool':
-            return `hsl(${Math.floor(Math.random() * 180) + 180}, 100%, 50%)`;
+            return `hsl(${Math.floor(Math.random() * 180) + 180}, 100%, 60%)`;
         case 'complementary':
             const hue = Math.floor(Math.random() * 360);
-            return `hsl(${hue}, 100%, 50%)`;
+            return `hsl(${hue}, 80%, 60%)`;
         case 'monochrome':
-            const gray = Math.floor(Math.random() * 256);
+            const gray = Math.floor(Math.random() * 156) + 100; // Lighter grays
             return `rgb(${gray}, ${gray}, ${gray})`;
         case 'gradient':
             // This will be handled separately
@@ -271,10 +277,12 @@ function generateColor(option) {
     }
 }
 
-// Draw normal mode
+// Draw normal mode with smooth animation
 function drawNormalMode(numShapes, shapeSize, colorOption, shapeColor, shapeType) {
     for (let i = 0; i < numShapes; i++) {
-        drawRandomShape(ctx, canvas, shapeSize, colorOption, shapeColor, shapeType);
+        setTimeout(() => {
+            drawRandomShape(ctx, canvas, shapeSize, colorOption, shapeColor, shapeType);
+        }, i * 5); // Staggered drawing for smooth effect
     }
 }
 
@@ -321,17 +329,19 @@ function drawFractalMode(numShapes, shapeSize, colorOption, shapeColor, shapeTyp
     }
 }
 
-// Draw particle mode
+// Draw particle mode with smooth animation
 function drawParticleMode(numShapes, shapeSize, colorOption, shapeColor, shapeType) {
     for (let i = 0; i < numShapes; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = Math.random() * shapeSize * 0.5;
-        
-        ctx.beginPath();
-        ctx.fillStyle = generateColor(colorOption) || shapeColor;
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
+        setTimeout(() => {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * shapeSize * 0.5;
+            
+            ctx.beginPath();
+            ctx.fillStyle = generateColor(colorOption) || shapeColor;
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }, i * 2); // Staggered drawing for smooth effect
     }
 }
 
@@ -378,15 +388,15 @@ function drawShapeAtPosition(ctx, x, y, size, colorOption, shapeColor, shapeType
     let color;
     if (colorOption === 'gradient') {
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
-        gradient.addColorStop(1, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
+        gradient.addColorStop(0, `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`);
+        gradient.addColorStop(1, `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`);
         color = gradient;
     } else if (colorOption === 'complementary') {
         const hue = Math.floor(Math.random() * 360);
         const compHue = (hue + 180) % 360;
         color = Math.random() > 0.5 ? 
-            `hsl(${hue}, 100%, 50%)` : 
-            `hsl(${compHue}, 100%, 50%)`;
+            `hsl(${hue}, 80%, 60%)` : 
+            `hsl(${compHue}, 80%, 60%)`;
     } else {
         color = generateColor(colorOption);
     }
@@ -526,15 +536,15 @@ function drawRandomShape(ctx, canvas, size, colorOption, shapeColor, shapeType) 
     let color;
     if (colorOption === 'gradient') {
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
-        gradient.addColorStop(1, `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`);
+        gradient.addColorStop(0, `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`);
+        gradient.addColorStop(1, `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`);
         color = gradient;
     } else if (colorOption === 'complementary') {
         const hue = Math.floor(Math.random() * 360);
         const compHue = (hue + 180) % 360;
         color = Math.random() > 0.5 ? 
-            `hsl(${hue}, 100%, 50%)` : 
-            `hsl(${compHue}, 100%, 50%)`;
+            `hsl(${hue}, 80%, 60%)` : 
+            `hsl(${compHue}, 80%, 60%)`;
     } else {
         color = generateColor(colorOption);
     }
@@ -648,7 +658,7 @@ function saveImage() {
     const dataURL = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.href = dataURL;
-    link.download = 'advanced_artistic_image.png';
+    link.download = 'soft_animated_art.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
