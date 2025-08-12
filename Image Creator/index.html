@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Random Image Generator</title>
+    <title>Soft Animated Image Generator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -19,9 +19,10 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
             padding: 20px;
             color: #333;
+            overflow-x: hidden;
         }
 
         .container {
@@ -29,15 +30,16 @@
             flex-direction: column;
             max-width: 1200px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.85);
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             margin: 20px 0;
+            backdrop-filter: blur(10px);
         }
 
         header {
-            background: linear-gradient(to right, #2c3e50, #4a6491);
+            background: linear-gradient(to right, #6a11cb, #2575fc);
             color: white;
             padding: 25px;
             text-align: center;
@@ -78,10 +80,11 @@
         .controls-container {
             flex: 1;
             min-width: 300px;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.7);
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(5px);
         }
 
         .canvas-wrapper {
@@ -89,15 +92,18 @@
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         canvas {
             width: 100%;
             height: auto;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
             background: white;
             display: block;
+            transition: transform 0.5s ease, filter 0.5s ease;
         }
 
         .loading {
@@ -106,22 +112,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: 15px;
             display: none;
             z-index: 10;
+            backdrop-filter: blur(5px);
         }
 
         .spinner {
             width: 50px;
             height: 50px;
-            border: 5px solid rgba(44, 62, 80, 0.2);
-            border-top: 5px solid #2c3e50;
+            border: 5px solid rgba(106, 17, 203, 0.2);
+            border-top: 5px solid #6a11cb;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1.5s linear infinite;
         }
 
         @keyframes spin {
@@ -160,6 +167,7 @@
             background: #dee2e6;
             outline: none;
             -webkit-appearance: none;
+            transition: all 0.3s ease;
         }
 
         .control-group input[type="range"]::-webkit-slider-thumb {
@@ -167,19 +175,30 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #2c3e50;
+            background: #6a11cb;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .control-group input[type="range"]:hover {
+            background: #c2e9fb;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #2575fc;
         }
 
         .control-group p {
             text-align: center;
             font-weight: 600;
-            color: #2c3e50;
+            color: #6a11cb;
             background: #e9ecef;
             padding: 5px;
             border-radius: 5px;
             margin-top: 5px;
+            transition: all 0.3s ease;
         }
 
         .color-options {
@@ -200,6 +219,13 @@
             border: 1px solid #ced4da;
             background: white;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input[type="color"]:focus {
+            outline: none;
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
         }
 
         input[type="color"] {
@@ -223,52 +249,51 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         #generateButton {
-            background: linear-gradient(to right, #3498db, #2c3e50);
+            background: linear-gradient(to right, #6a11cb, #2575fc);
             color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
         #generateButton:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.3);
         }
 
         #saveButton {
-            background: linear-gradient(to right, #27ae60, #219653);
+            background: linear-gradient(to right, #11998e, #38ef7d);
             color: white;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
         }
 
         #saveButton:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
         }
 
         #historyButton {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
             color: white;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
         }
 
         #historyButton:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.3);
         }
 
         .history-container {
             display: none;
             width: 100%;
             padding: 20px;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.7);
             border-top: 1px solid #e9ecef;
+            backdrop-filter: blur(5px);
         }
 
         .history-container h2 {
@@ -297,14 +322,15 @@
             border-radius: 10px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             object-fit: cover;
             border: 2px solid transparent;
         }
 
         .history-image:hover {
-            transform: scale(1.05);
-            border-color: #3498db;
+            transform: scale(1.1);
+            border-color: #6a11cb;
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.3);
         }
 
         .notification {
@@ -317,7 +343,7 @@
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             transform: translateX(200%);
-            transition: transform 0.3s ease;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 1000;
         }
 
@@ -328,10 +354,10 @@
         footer {
             text-align: center;
             padding: 20px;
-            color: white;
+            color: #2c3e50;
             font-size: 1rem;
             opacity: 0.8;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .preset-buttons {
@@ -345,18 +371,21 @@
         .preset-button {
             flex: 1;
             min-width: 100px;
-            padding: 10px;
-            background: #e9ecef;
+            padding: 12px;
+            background: rgba(233, 236, 239, 0.8);
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .preset-button:hover {
-            background: #3498db;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
             color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3);
         }
 
         .mode-buttons {
@@ -370,22 +399,24 @@
         .mode-button {
             flex: 1;
             min-width: 100px;
-            padding: 10px;
-            background: #e9ecef;
+            padding: 12px;
+            background: rgba(233, 236, 239, 0.8);
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .mode-button.active {
-            background: #3498db;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
             color: white;
         }
 
         .mode-button:hover:not(.active) {
-            background: #d1d1d1;
+            background: rgba(209, 209, 209, 0.8);
+            transform: translateY(-3px);
         }
 
         @media (max-width: 768px) {
@@ -410,8 +441,8 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-paint-brush"></i> Advanced Random Image Generator</h1>
-            <p>Create beautiful abstract art with multiple modes and presets</p>
+            <h1><i class="fas fa-paint-brush"></i> Soft Animated Image Generator</h1>
+            <p>Create beautiful abstract art with smooth animations and soft aesthetics</p>
         </header>
         
         <div class="main-content">
@@ -490,7 +521,7 @@
                     <div class="color-options">
                         <div class="color-option">
                             <label for="shapeColor"><i class="fas fa-fill-drip"></i> Shape Color:</label>
-                            <input type="color" id="shapeColor" value="#3498db">
+                            <input type="color" id="shapeColor" value="#6a11cb">
                         </div>
                         
                         <div class="color-option">
@@ -530,7 +561,7 @@
     <div class="notification" id="notification">Image saved successfully!</div>
     
     <footer>
-        <p>Advanced Random Image Generator | Create beautiful abstract art</p>
+        <p>Soft Animated Image Generator | Create beautiful abstract art</p>
     </footer>
 
     <script src="script.js"></script>
