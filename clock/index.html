@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Samsung Style World Clock</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -17,6 +18,20 @@
             color: #ffffff;
             overflow-x: hidden;
             min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 153, 204, 0.05) 0%, transparent 20%);
+            z-index: -1;
         }
 
         .app-container {
@@ -43,6 +58,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            font-size: 1.8rem;
         }
 
         .mode-switch {
@@ -51,6 +73,7 @@
             border-radius: 25px;
             padding: 4px;
             backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .mode-btn {
@@ -62,6 +85,9 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .mode-btn.active {
@@ -86,6 +112,7 @@
         .current-time {
             text-align: center;
             margin-bottom: 30px;
+            width: 100%;
         }
 
         .digital-time {
@@ -98,6 +125,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
         }
 
         .date-info {
@@ -110,6 +138,10 @@
             font-size: 1rem;
             color: #00d4ff;
             margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .clock-container {
@@ -245,6 +277,7 @@
             margin-bottom: 20px;
             max-height: 400px;
             overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .world-clocks h3 {
@@ -252,6 +285,9 @@
             font-weight: 500;
             margin-bottom: 20px;
             color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .world-clock-item {
@@ -262,13 +298,28 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .world-clock-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.1), transparent);
+            transition: width 0.5s ease;
+            z-index: -1;
+        }
+
+        .world-clock-item:hover::before {
+            width: 100%;
         }
 
         .world-clock-item:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 10px;
-            padding-left: 10px;
-            padding-right: 10px;
+            transform: translateX(5px);
         }
 
         .world-clock-item:last-child {
@@ -283,11 +334,17 @@
             font-size: 1.1rem;
             font-weight: 500;
             margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .country-name {
             font-size: 0.9rem;
             color: #888;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .world-time {
@@ -309,6 +366,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .globe-container h3 {
@@ -316,13 +374,16 @@
             font-weight: 500;
             margin-bottom: 20px;
             color: #00d4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .globe {
             width: 240px;
             height: 240px;
             margin: 0 auto 20px;
-            background: radial-gradient(circle at 35% 25%, #4a90e2, #2c5aa0);
             border-radius: 50%;
             position: relative;
             overflow: hidden;
@@ -332,6 +393,8 @@
                 0 20px 40px rgba(0, 0, 0, 0.4),
                 inset -10px -10px 30px rgba(0, 0, 0, 0.3),
                 inset 10px 10px 30px rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
         }
 
         .globe:hover {
@@ -342,15 +405,48 @@
                 inset 15px 15px 40px rgba(255, 255, 255, 0.15);
         }
 
-        .globe::before {
+        .earth {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"><rect width="200" height="100" fill="%231e40af"/><path d="M20 20 Q40 10 60 20 T100 20 T140 20 T180 20 Q190 30 180 40 T140 40 T100 40 T60 40 T20 40 Q10 30 20 20" fill="%2322c55e"/><path d="M30 60 Q50 50 70 60 T110 60 T150 60 T190 60 Q195 70 190 80 T150 80 T110 80 T70 80 T30 80 Q25 70 30 60" fill="%2322c55e"/></svg>');
+            background-size: cover;
+            animation: earthRotate 30s linear infinite;
+            transform-style: preserve-3d;
+        }
+
+        .earth::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: radial-gradient(ellipse 50% 60% at 35% 25%, rgba(255, 255, 255, 0.3), transparent 70%);
             border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"><path d="M20 30 Q30 25 40 30 T60 30 T80 30 Q85 35 80 40 T60 40 T40 40 T20 40 Q15 35 20 30" fill="white" opacity="0.7"/><path d="M100 50 Q110 45 120 50 T140 50 T160 50 Q165 55 160 60 T140 60 T120 60 T100 60 Q95 55 100 50" fill="white" opacity="0.5"/><path d="M50 70 Q60 65 70 70 T90 70 T110 70 Q115 75 110 80 T90 80 T70 80 T50 80 Q45 75 50 70" fill="white" opacity="0.6"/></svg>');
+            background-size: cover;
+            animation: cloudsRotate 60s linear infinite;
+            opacity: 0.7;
+        }
+
+        .atmosphere {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 0 50px rgba(100, 150, 255, 0.3),
+                inset 0 0 100px rgba(50, 100, 200, 0.2);
             pointer-events: none;
         }
 
@@ -367,11 +463,13 @@
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.2s ease;
+            transform-style: preserve-3d;
         }
 
         .continent:hover {
             transform: scale(1.1);
             filter: brightness(1.3);
+            z-index: 10;
         }
 
         .north-america {
@@ -466,6 +564,11 @@
             to { transform: rotateY(360deg); }
         }
 
+        @keyframes cloudsRotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 0.7; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.2); }
@@ -487,16 +590,22 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
         .timezone-btn:hover {
             background: rgba(0, 212, 255, 0.2);
             border-color: rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
         }
 
         .timezone-btn.active {
             background: linear-gradient(45deg, #00d4ff, #0099cc);
             border-color: transparent;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
         }
 
         .add-timezone {
@@ -513,6 +622,13 @@
             border-radius: 8px;
             color: #ffffff;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .timezone-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
 
         .timezone-input::placeholder {
@@ -527,11 +643,19 @@
             color: #ffffff;
             cursor: pointer;
             font-weight: 500;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .add-btn:hover {
             transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .add-btn:active {
+            transform: scale(0.98);
         }
 
         @keyframes rotate {
@@ -558,20 +682,306 @@
                 width: 150px;
                 height: 150px;
             }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
         }
 
         .hidden {
             display: none;
+        }
+
+        .timezone-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .clock-container::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
+        .world-clock-item .city-name i {
+            color: #00d4ff;
+        }
+
+        .world-clock-item .country-name i {
+            color: #888;
+        }
+
+        .globe-container h3 i {
+            color: #00d4ff;
+        }
+
+        .world-clocks h3 i {
+            color: #00d4ff;
+        }
+
+        .header h1 i {
+            color: #00d4ff;
+        }
+
+        .mode-btn i {
+            font-size: 1.1rem;
+        }
+
+        .add-btn i {
+            font-size: 1.1rem;
+        }
+
+        .timezone-btn i {
+            font-size: 0.9rem;
+        }
+
+        .world-clock-item .world-time {
+            font-weight: 500;
+        }
+
+        .world-clock-item .time-diff {
+            font-weight: 300;
+        }
+
+        .world-clock-item .city-name {
+            font-weight: 600;
+        }
+
+        .world-clock-item .country-name {
+            font-weight: 300;
+        }
+
+        .digital-time {
+            font-weight: 300;
+        }
+
+        .date-info {
+            font-weight: 400;
+        }
+
+        .timezone-info {
+            font-weight: 400;
+        }
+
+        .clock-numbers {
+            font-weight: 400;
+        }
+
+        .hour-marker.major {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .hour-marker.minor {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .hand {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .center-dot {
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+
+        .globe {
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.3),
+                inset -5px -5px 15px rgba(0, 0, 0, 0.2),
+                inset 5px 5px 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .globe:hover {
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset -8px -8px 20px rgba(0, 0, 0, 0.3),
+                inset 8px 8px 20px rgba(255, 255, 255, 0.08);
+        }
+
+        .continent {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .continent:hover {
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .timezone-marker {
+            box-shadow: 0 0 5px rgba(255, 255, 0, 0.8);
+        }
+
+        .timezone-marker:hover {
+            box-shadow: 0 0 10px rgba(255, 100, 100, 0.9);
+        }
+
+        .world-clocks {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .globe-container {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-switch {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-btn.active {
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .add-btn {
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .timezone-btn {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .timezone-btn.active {
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .timezone-input {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .timezone-input:focus {
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .clock-face {
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .hand {
+            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .second-hand {
+            transition: transform 0.05s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .world-clock-item {
+            transition: all 0.3s ease;
+        }
+
+        .world-clock-item:hover {
+            transition: all 0.3s ease;
+        }
+
+        .continent {
+            transition: all 0.2s ease;
+        }
+
+        .continent:hover {
+            transition: all 0.2s ease;
+        }
+
+        .timezone-marker {
+            transition: all 0.2s ease;
+        }
+
+        .timezone-marker:hover {
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn {
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            transition: all 0.3s ease;
+        }
+
+        .timezone-btn {
+            transition: all 0.3s ease;
+        }
+
+        .timezone-btn:hover {
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            transition: all 0.2s ease;
+        }
+
+        .add-btn:hover {
+            transition: all 0.2s ease;
+        }
+
+        .globe {
+            transition: all 0.3s ease;
+        }
+
+        .globe:hover {
+            transition: all 0.3s ease;
+        }
+
+        .timezone-input {
+            transition: all 0.3s ease;
+        }
+
+        .timezone-input:focus {
+            transition: all 0.3s ease;
+        }
+
+        .clock-container::after {
+            animation: pulseGlow 4s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.2; transform: scale(1); }
+            100% { opacity: 0.5; transform: scale(1.05); }
+        }
+
+        .world-clock-item::before {
+            transition: width 0.5s ease;
+        }
+
+        .world-clock-item:hover::before {
+            transition: width 0.5s ease;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="header">
-            <h1>World Clock</h1>
+            <h1><i class="fas fa-globe-americas"></i> World Clock</h1>
             <div class="mode-switch">
-                <button class="mode-btn active" data-mode="local">Local Time</button>
-                <button class="mode-btn" data-mode="world">World Clock</button>
+                <button class="mode-btn active" data-mode="local"><i class="fas fa-clock"></i> Local Time</button>
+                <button class="mode-btn" data-mode="world"><i class="fas fa-globe"></i> World Clock</button>
             </div>
         </div>
 
@@ -580,7 +990,7 @@
                 <div class="current-time">
                     <div class="digital-time" id="digitalTime">00:00:00</div>
                     <div class="date-info" id="dateInfo">Loading...</div>
-                    <div class="timezone-info" id="timezoneInfo">UTC</div>
+                    <div class="timezone-info" id="timezoneInfo"><i class="fas fa-map-marker-alt"></i> UTC</div>
                 </div>
 
                 <div class="clock-container">
@@ -599,17 +1009,21 @@
 
             <div class="world-section">
                 <div class="world-clocks">
-                    <h3>World Clocks</h3>
+                    <h3><i class="fas fa-clock"></i> World Clocks</h3>
                     <div id="worldClocksList"></div>
                     <div class="add-timezone">
                         <input type="text" class="timezone-input" id="timezoneInput" placeholder="Enter city name...">
-                        <button class="add-btn" id="addTimezoneBtn">Add</button>
+                        <button class="add-btn" id="addTimezoneBtn"><i class="fas fa-plus"></i> Add</button>
                     </div>
                 </div>
 
                 <div class="globe-container">
-                    <h3>Select Timezone</h3>
+                    <h3><i class="fas fa-globe-europe"></i> Select Timezone</h3>
                     <div class="globe" id="globe">
+                        <div class="earth">
+                            <div class="clouds"></div>
+                            <div class="atmosphere"></div>
+                        </div>
                         <div class="continents">
                             <div class="continent north-america" data-timezone="America/New_York" title="North America (New York)"></div>
                             <div class="continent south-america" data-timezone="America/Sao_Paulo" title="South America (São Paulo)"></div>
@@ -645,7 +1059,11 @@
             { city: 'New York', timezone: 'America/New_York', country: 'USA' },
             { city: 'London', timezone: 'Europe/London', country: 'UK' },
             { city: 'Tokyo', timezone: 'Asia/Tokyo', country: 'Japan' },
-            { city: 'Sydney', timezone: 'Australia/Sydney', country: 'Australia' }
+            { city: 'Sydney', timezone: 'Australia/Sydney', country: 'Australia' },
+            { city: 'Dubai', timezone: 'Asia/Dubai', country: 'UAE' },
+            { city: 'Paris', timezone: 'Europe/Paris', country: 'France' },
+            { city: 'Beijing', timezone: 'Asia/Shanghai', country: 'China' },
+            { city: 'Moscow', timezone: 'Europe/Moscow', country: 'Russia' }
         ];
 
         const popularTimezones = [
@@ -711,7 +1129,7 @@
 
             document.getElementById('digitalTime').textContent = timeString;
             document.getElementById('dateInfo').textContent = dateString;
-            document.getElementById('timezoneInfo').textContent = currentTimezone.replace('_', ' ');
+            document.getElementById('timezoneInfo').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${currentTimezone.replace('_', ' ')}`;
 
             updateWorldClocks();
             
@@ -737,11 +1155,25 @@
                 if (diff < -12) diff += 24;
                 const diffText = diff === 0 ? 'Same time' : diff > 0 ? `+${diff}h` : `${diff}h`;
                 
+                // Get country flag emoji
+                const flags = {
+                    'USA': '🇺🇸',
+                    'UK': '🇬🇧',
+                    'Japan': '🇯🇵',
+                    'Australia': '🇦🇺',
+                    'UAE': '🇦🇪',
+                    'France': '🇫🇷',
+                    'China': '🇨🇳',
+                    'Russia': '🇷🇺'
+                };
+                
+                const flag = flags[clock.country] || '🌍';
+                
                 return `
                     <div class="world-clock-item" onclick="setCurrentTimezone('${clock.timezone}')">
                         <div class="city-info">
-                            <div class="city-name">${clock.city}</div>
-                            <div class="country-name">${clock.country}</div>
+                            <div class="city-name"><i class="fas fa-city"></i> ${clock.city}</div>
+                            <div class="country-name"><i class="fas fa-flag"></i> ${flag} ${clock.country}</div>
                         </div>
                         <div>
                             <div class="world-time">${timeString}</div>
@@ -756,15 +1188,35 @@
             const selector = document.getElementById('timezoneSelector');
             selector.innerHTML = popularTimezones.map(tz => {
                 const cityName = tz.split('/')[1]?.replace('_', ' ') || tz;
-                return `<button class="timezone-btn" onclick="setCurrentTimezone('${tz}')">${cityName}</button>`;
+                const icon = getCityIcon(cityName);
+                return `<button class="timezone-btn" onclick="setCurrentTimezone('${tz}')"><i class="${icon}"></i> ${cityName}</button>`;
             }).join('');
+        }
+
+        function getCityIcon(cityName) {
+            const icons = {
+                'New_York': 'fas fa-statue-of-liberty',
+                'London': 'fas fa-big-ben',
+                'Tokyo': 'fas fa-torii-gate',
+                'Sydney': 'fas fa-opera',
+                'Los_Angeles': 'fas fa-film',
+                'Paris': 'fas fa-eiffel-tower',
+                'Shanghai': 'fas fa-landmark',
+                'Chicago': 'fas fa-wind',
+                'Berlin': 'fas fa-brandenburg-gate',
+                'Dubai': 'fas fa-skyscraper',
+                'Sao_Paulo': 'fas fa-carnival',
+                'Singapore': 'fas fa-merlion'
+            };
+            
+            return icons[cityName] || 'fas fa-globe';
         }
 
         function setCurrentTimezone(timezone) {
             currentTimezone = timezone;
             document.querySelectorAll('.timezone-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.textContent === timezone.split('/')[1]?.replace('_', ' ')) {
+                if (btn.textContent.trim() === timezone.split('/')[1]?.replace('_', ' ')) {
                     btn.classList.add('active');
                 }
             });
@@ -813,6 +1265,9 @@
             if (!worldClocks.some(clock => clock.timezone === timezone)) {
                 worldClocks.push(newClock);
                 input.value = '';
+                showTimezoneToast(`Added ${newClock.city} to world clocks`);
+            } else {
+                showTimezoneToast(`${newClock.city} is already in your list`);
             }
         }
 
@@ -850,6 +1305,7 @@
                 if (e.target === e.currentTarget) {
                     const randomTimezone = popularTimezones[Math.floor(Math.random() * popularTimezones.length)];
                     setCurrentTimezone(randomTimezone);
+                    showTimezoneToast(`Randomly selected ${randomTimezone.split('/')[1].replace('_', ' ')}`);
                 }
             });
         }
@@ -862,29 +1318,7 @@
             
             const toast = document.createElement('div');
             toast.className = 'timezone-toast';
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(45deg, #00d4ff, #0099cc);
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-weight: 500;
-                z-index: 1000;
-                animation: slideIn 0.3s ease;
-                box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
-            `;
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
             
             document.body.appendChild(toast);
             
