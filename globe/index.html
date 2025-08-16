@@ -5,33 +5,33 @@
 <title>Interactive Earth – Zones & Cities</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Arial,sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   body{background:#000;color:#fff;overflow:hidden}
   #container{position:absolute;top:0;left:0;width:100%;height:100%}
-  #ui{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:20px;font-size:14px;z-index:10}
-  button{cursor:pointer}
-  #tzBtn,#cityBtn{position:absolute;top:20px;width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;font-size:24px;backdrop-filter:blur(4px)}
+  #ui{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:20px;font-size:14px}
+  #clock{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:18px;font-variant-numeric:tabular-nums}
+  button{cursor:pointer;border:none;background:rgba(255,255,255,.15);color:#fff;backdrop-filter:blur(4px)}
+  #tzBtn,#cityBtn{position:absolute;top:20px;width:48px;height:48px;border-radius:50%;font-size:24px;transition:.3s}
   #tzBtn{right:20px}
   #cityBtn{right:80px}
-  .sheet{position:fixed;bottom:0;left:0;width:100%;max-height:0;background:#111;overflow:hidden;transition:max-height .3s;border-top:1px solid #333;border-radius:20px 20px 0 0}
+  button:hover{background:rgba(255,255,255,.25)}
+  .sheet{position:fixed;bottom:0;left:0;width:100%;max-height:0;background:#111;overflow:hidden;transition:max-height .3s;border-top:1px solid #333;border-radius:20px 20px 0 0;z-index:30}
   .sheet.open{max-height:60vh}
   .sheetHeader{padding:14px 18px;border-bottom:1px solid #333;display:flex;align-items:center}
   .sheetHeader span{flex:1;font-weight:600}
-  .closeSheet{background:none;border:none;color:#fff;font-size:20px}
+  .closeSheet{background:none;color:#fff;font-size:20px}
   .sheetSearch{background:#222;border:none;color:#fff;width:100%;padding:10px 18px;font-size:15px;outline:none}
   .sheetList{max-height:calc(60vh - 110px);overflow-y:auto}
   .sheetRow{padding:12px 18px;display:flex;align-items:center;font-size:15px}
-  .sheetRow:not(:last-child){border-bottom:1px solid #222}
   .sheetRow:hover{background:#222}
   .sheetRow input{margin-right:12px}
   #tooltip{position:absolute;background:rgba(0,0,0,.8);padding:4px 8px;border-radius:4px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .2s}
-  #clock{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:18px;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
 <div id="container"></div>
-<div id="ui">Drag to rotate • Scroll to zoom • Showing <span id="count">0</span></div>
-<div id="clock">00:00:00</div>
+<div id="ui">Drag to rotate • Scroll to zoom • Visible: <span id="count">0</span></div>
+<div id="clock">--:--:--</div>
 
 <button id="tzBtn" title="Time zones">🌍</button>
 <button id="cityBtn" title="Cities">🏙️</button>
@@ -60,15 +60,20 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script>
-// Scene
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);
+// ---------- THREE ----------
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// lights
 scene.add(new THREE.AmbientLight(0xffffff,.4));
-const light=new THREE.DirectionalLight(0xffffff,1);light.position.set(5,3,5);scene.add(light);
+const light=new THREE.DirectionalLight(0xffffff,1);
+light.position.set(5,3,5);
+scene.add(light);
 
+// Earth
 const radius=5;
 const earth=new THREE.Mesh(
   new THREE.SphereGeometry(radius,64,64),
@@ -77,27 +82,32 @@ const earth=new THREE.Mesh(
     bumpMap:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png'),
     bumpScale:0.05
   })
-);scene.add(earth);
+);
+scene.add(earth);
 
+// Clouds
 const clouds=new THREE.Mesh(
   new THREE.SphereGeometry(radius+.03,64,64),
   new THREE.MeshPhongMaterial({
     map:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
     transparent:true,opacity:.4
   })
-);scene.add(clouds);
+);
+scene.add(clouds);
 
-// Data
+// ---------- DATA ----------
+// Time zones every 15°
 const zones=[];
 for(let lon=-180;lon<180;lon+=15)zones.push({name:`UTC${lon?lon/15:''}`,lat:0,lon});
 
+// Major cities
 const cities=[
   {name:'New York',lat:40.7,lon:-74,offset:-4},
   {name:'London',lat:51.5,lon:-0.1,offset:1},
   {name:'Tokyo',lat:35.7,lon:139.6,offset:9},
   {name:'Sydney',lat:-33.9,lon:151.2,offset:10},
   {name:'Rio',lat:-22.9,lon:-43.2,offset:-3},
-  {name:'Cairo',lat:30.0,lon:31.2,offset:2},
+  {name:'Cairo',lat:30,lon:31.2,offset:2},
   {name:'Moscow',lat:55.8,lon:37.6,offset:3},
   {name:'Beijing',lat:39.9,lon:116.4,offset:8},
   {name:'Cape Town',lat:-33.9,lon:18.4,offset:2},
@@ -109,24 +119,28 @@ const cities=[
   {name:'Berlin',lat:52.5,lon:13.4,offset:2},
   {name:'Seoul',lat:37.6,lon:127,offset:9},
   {name:'Mexico City',lat:19.4,lon:-99.1,offset:-6},
-  {name:'Nairobi',lat:-1.3,lon:36.8,offset:3}
+  {name:'Nairobi',lat:-1.3,lon:36.8,offset:3},
+  {name:'Toronto',lat:43.7,lon:-79.4,offset:-4},
+  {name:'Bangkok',lat:13.8,lon:100.5,offset:7}
 ];
 
-// Markers
-const markerGroup=new THREE.Group();scene.add(markerGroup);
-const cityGroup=new THREE.Group();scene.add(cityGroup);
+// ---------- MARKERS ----------
+const markerGroup=new THREE.Group();scene.add(markerGroup); // zones
+const cityGroup=new THREE.Group();scene.add(cityGroup);     // cities
+
 const latLonToVector3=(lat,lon,r)=>new THREE.Vector3(
   -r*Math.cos(lat*Math.PI/180)*Math.cos(lon*Math.PI/180),
   r*Math.sin(lat*Math.PI/180),
   r*Math.cos(lat*Math.PI/180)*Math.sin(lon*Math.PI/180)
 );
 
-// time-zone markers
+// zone markers
+const zoneMat=new THREE.SpriteMaterial({
+  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="3" fill="#fff" fill-opacity=".45"/></svg>')),
+  transparent:true,opacity:.6,depthTest:false
+});
 zones.forEach(z=>{
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({
-    map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><circle cx="4" cy="4" r="3" fill="#fff" fill-opacity="0.45"/></svg>')),
-    transparent:true,opacity:.6,depthTest:false
-  }));
+  const sp=new THREE.Sprite(zoneMat.clone());
   sp.position.copy(latLonToVector3(z.lat,z.lon,radius+.05));
   sp.scale.set(.12,.12,1);
   sp.userData=z;
@@ -134,34 +148,37 @@ zones.forEach(z=>{
 });
 
 // city markers
+const cityMat=new THREE.SpriteMaterial({
+  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
+  transparent:true,opacity:.9,depthTest:false
+});
 cities.forEach(c=>{
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({
-    map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
-    transparent:true,opacity:.9,depthTest:false
-  }));
+  const sp=new THREE.Sprite(cityMat.clone());
   sp.position.copy(latLonToVector3(c.lat,c.lon,radius+.08));
   sp.scale.set(.2,.2,1);
   sp.userData=c;
   cityGroup.add(sp);
 });
 
-// UI
+// ---------- UI ----------
 let selectedZones=new Set();zones.forEach((_,i)=>selectedZones.add(i));
 let selectedCities=new Set();cities.forEach((_,i)=>selectedCities.add(i));
 const countSpan=document.getElementById('count');
+const clock=document.getElementById('clock');
+const tooltip=document.getElementById('tooltip');
+
+// sheets
 const tzSheet=document.getElementById('tzSheet');
 const citySheet=document.getElementById('citySheet');
 const tzSearch=document.getElementById('tzSearch');
 const citySearch=document.getElementById('citySearch');
 const tzList=document.getElementById('tzList');
 const cityList=document.getElementById('cityList');
-const tooltip=document.getElementById('tooltip');
-const clock=document.getElementById('clock');
 
-function buildZoneList(f=''){
+function buildZoneList(filter=''){
   tzList.innerHTML='';
   zones.forEach((z,i)=>{
-    if(!z.name.toLowerCase().includes(f.toLowerCase()))return;
+    if(!z.name.toLowerCase().includes(filter.toLowerCase()))return;
     const row=document.createElement('label');row.className='sheetRow';
     const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedZones.has(i);
     cb.addEventListener('change',()=>toggleZone(i));
@@ -170,10 +187,10 @@ function buildZoneList(f=''){
     tzList.appendChild(row);
   });
 }
-function buildCityList(f=''){
+function buildCityList(filter=''){
   cityList.innerHTML='';
   cities.forEach((c,i)=>{
-    if(!c.name.toLowerCase().includes(f.toLowerCase()))return;
+    if(!c.name.toLowerCase().includes(filter.toLowerCase()))return;
     const row=document.createElement('label');row.className='sheetRow';
     const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCities.has(i);
     cb.addEventListener('change',()=>toggleCity(i));
@@ -193,8 +210,7 @@ function toggleCity(i){
   buildCityList(citySearch.value);updateCount();
 }
 function updateCount(){
-  const total=selectedZones.size+selectedCities.size;
-  countSpan.textContent=total;
+  countSpan.textContent=selectedZones.size+selectedCities.size;
 }
 
 buildZoneList();buildCityList();updateCount();
@@ -208,11 +224,10 @@ citySearch.addEventListener('input',e=>buildCityList(e.target.value));
 
 // live clock
 setInterval(()=>{
-  const now=new Date();
-  clock.textContent=now.toLocaleTimeString();
+  clock.textContent=new Date().toLocaleTimeString();
 },1000);
 
-// Controls
+// ---------- CONTROLS ----------
 let rot={x:0,y:0},tgt={x:0,y:0},drag=false,last={x:0,y:0};
 renderer.domElement.addEventListener('mousedown',e=>{drag=true;last={x:e.clientX,y:e.clientY}});
 document.addEventListener('mousemove',e=>{
@@ -234,8 +249,10 @@ renderer.domElement.addEventListener('mousemove',e=>{
   mouse.x=(e.clientX/innerWidth)*2-1;
   mouse.y=-(e.clientY/innerHeight)*2+1;
   raycaster.setFromCamera(mouse,camera);
-  const inter=[...raycaster.intersectObjects(markerGroup.children),...raycaster.intersectObjects(cityGroup.children)];
-  if(inter.length&&inter[0].object.visible){
+  const zoneInter=raycaster.intersectObjects(markerGroup.children).filter(i=>i.object.visible);
+  const cityInter=raycaster.intersectObjects(cityGroup.children).filter(i=>i.object.visible);
+  const inter=[...zoneInter,...cityInter];
+  if(inter.length){
     const d=inter[0].object.userData;
     tooltip.style.left=e.clientX+10+'px';
     tooltip.style.top=e.clientY-20+'px';
