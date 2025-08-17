@@ -8,7 +8,7 @@
   *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   body{background:#000;color:#fff;overflow:hidden}
   #container{position:absolute;top:0;left:0;width:100%;height:100%}
-  #ui{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:20px;font-size:14px}
+  #ui{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:20px;font-size:14px;z-index:10}
   #clock{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:18px;font-variant-numeric:tabular-nums}
   button{cursor:pointer;border:none;background:rgba(255,255,255,.15);color:#fff;backdrop-filter:blur(4px)}
   #tzBtn,#cityBtn{position:absolute;top:20px;width:48px;height:48px;border-radius:50%;font-size:24px;transition:.3s}
@@ -60,14 +60,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script>
-// ---------- THREE ----------
+// Scene
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
 renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// lights
+// Lights
 scene.add(new THREE.AmbientLight(0xffffff,.4));
 const light=new THREE.DirectionalLight(0xffffff,1);
 light.position.set(5,3,5);
@@ -96,11 +96,9 @@ const clouds=new THREE.Mesh(
 scene.add(clouds);
 
 // ---------- DATA ----------
-// Time zones every 15°
 const zones=[];
 for(let lon=-180;lon<180;lon+=15)zones.push({name:`UTC${lon?lon/15:''}`,lat:0,lon});
 
-// Major cities
 const cities=[
   {name:'New York',lat:40.7,lon:-74,offset:-4},
   {name:'London',lat:51.5,lon:-0.1,offset:1},
@@ -135,12 +133,11 @@ const latLonToVector3=(lat,lon,r)=>new THREE.Vector3(
 );
 
 // zone markers
-const zoneMat=new THREE.SpriteMaterial({
-  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="3" fill="#fff" fill-opacity=".45"/></svg>')),
-  transparent:true,opacity:.6,depthTest:false
-});
 zones.forEach(z=>{
-  const sp=new THREE.Sprite(zoneMat.clone());
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({
+    map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><circle cx="4" cy="4" r="3" fill="#fff" fill-opacity=".45"/></svg>')),
+    transparent:true,opacity:.6,depthTest:false
+  }));
   sp.position.copy(latLonToVector3(z.lat,z.lon,radius+.05));
   sp.scale.set(.12,.12,1);
   sp.userData=z;
@@ -148,12 +145,11 @@ zones.forEach(z=>{
 });
 
 // city markers
-const cityMat=new THREE.SpriteMaterial({
-  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
-  transparent:true,opacity:.9,depthTest:false
-});
 cities.forEach(c=>{
-  const sp=new THREE.Sprite(cityMat.clone());
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({
+    map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
+    transparent:true,opacity:.9,depthTest:false
+  }));
   sp.position.copy(latLonToVector3(c.lat,c.lon,radius+.08));
   sp.scale.set(.2,.2,1);
   sp.userData=c;
