@@ -5,757 +5,187 @@
 <title>Interactive Earth – Zones & Cities</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  }
-  
-  body {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: #fff;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  header {
-    text-align: center;
-    padding: 15px 0;
-    background: rgba(0, 0, 0, 0.7);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 20;
-  }
-  
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    background: linear-gradient(to right, #00c9ff, #92fe9d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 1px;
-  }
-  
-  #container {
-    position: relative;
-    flex: 1;
-    width: 100%;
-  }
-  
-  #ui {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 14px;
-    z-index: 10;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  #count-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  #count {
-    font-weight: 600;
-    color: #00c9ff;
-  }
-  
-  #clock {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-size: 18px;
-    font-variant-numeric: tabular-nums;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-  }
-  
-  .controls {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 15px;
-    z-index: 15;
-  }
-  
-  button {
-    cursor: pointer;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    backdrop-filter: blur(4px);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  button:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  }
-  
-  button.active {
-    background: rgba(0, 201, 255, 0.3);
-    box-shadow: 0 0 15px rgba(0, 201, 255, 0.5);
-  }
-  
-  .sheet {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 0;
-    background: rgba(17, 17, 17, 0.95);
-    overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px 20px 0 0;
-    z-index: 30;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.5);
-  }
-  
-  .sheet.open {
-    max-height: 70vh;
-  }
-  
-  .sheetHeader {
-    padding: 18px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .sheetHeader span {
-    font-weight: 600;
-    font-size: 1.2rem;
-    color: #00c9ff;
-  }
-  
-  .closeSheet {
-    background: none;
-    color: #fff;
-    font-size: 22px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-  }
-  
-  .closeSheet:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: rotate(90deg);
-  }
-  
-  .sheetSearch {
-    background: rgba(34, 34, 34, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
-    outline: none;
-    transition: all 0.3s;
-  }
-  
-  .sheetSearch:focus {
-    border-color: #00c9ff;
-    box-shadow: 0 0 0 2px rgba(0, 201, 255, 0.3);
-  }
-  
-  .sheetList {
-    max-height: calc(70vh - 130px);
-    overflow-y: auto;
-  }
-  
-  .sheetRow {
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-  
-  .sheetRow:hover {
-    background: rgba(34, 34, 34, 0.7);
-  }
-  
-  .sheetRow input {
-    margin-right: 15px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-  
-  #tooltip {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 14px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    z-index: 25;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  #tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 20px;
-    border: 5px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.85);
-  }
-  
-  .loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 100;
-    transition: opacity 0.5s;
-  }
-  
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(255, 255, 255, 0.1);
-    border-top: 5px solid #00c9ff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .instructions {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 14px;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    display: flex;
-    gap: 15px;
-  }
-  
-  .instruction-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  .key {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: monospace;
-  }
-  
-  @media (max-width: 768px) {
-    h1 {
-      font-size: 1.4rem;
-    }
-    
-    #ui {
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 15px;
-      border-radius: 15px;
-      font-size: 12px;
-    }
-    
-    .instructions {
-      flex-direction: column;
-      gap: 5px;
-      padding: 8px 15px;
-      font-size: 12px;
-      bottom: 90px;
-    }
-    
-    .controls {
-      top: 15px;
-      right: 15px;
-    }
-    
-    button {
-      width: 45px;
-      height: 45px;
-      font-size: 20px;
-    }
-    
-    #clock {
-      top: 15px;
-      left: 15px;
-      font-size: 16px;
-      padding: 8px 12px;
-    }
-  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  body{background:#000;color:#fff;overflow:hidden}
+  #container{position:absolute;top:0;left:0;width:100%;height:100%}
+  #ui{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:20px;font-size:14px;z-index:10}
+  #clock{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:18px;font-variant-numeric:tabular-nums}
+  #tooltip{position:absolute;background:rgba(0,0,0,.8);padding:4px 8px;border-radius:4px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .2s}
 </style>
 </head>
 <body>
-  <header>
-    <h1>Interactive Earth Explorer</h1>
-  </header>
-  
-  <div id="container">
-    <div class="loading">
-      <div class="spinner"></div>
-    </div>
-  </div>
-  
-  <div id="ui">
-    <div class="instructions">
-      <div class="instruction-item">
-        <span class="key">Drag</span> to rotate
-      </div>
-      <div class="instruction-item">
-        <span class="key">Scroll</span> to zoom
-      </div>
-    </div>
-    <div id="count-container">
-      Visible: <span id="count">0</span>
-    </div>
-  </div>
-  
-  <div id="clock">--:--:--</div>
-  
-  <div class="controls">
-    <button id="tzBtn" title="Time zones">🌍</button>
-    <button id="cityBtn" title="Cities">🏙️</button>
-  </div>
-  
-  <!-- Time-zone sheet -->
-  <div id="tzSheet" class="sheet">
-    <div class="sheetHeader">
-      <span>Time Zones</span>
-      <button class="closeSheet" id="closeTzSheet">✕</button>
-    </div>
-    <input class="sheetSearch" id="tzSearch" placeholder="Search time zones…"/>
-    <div class="sheetList" id="tzList"></div>
-  </div>
-  
-  <!-- Cities sheet -->
-  <div id="citySheet" class="sheet">
-    <div class="sheetHeader">
-      <span>Cities</span>
-      <button class="closeSheet" id="closeCitySheet">✕</button>
-    </div>
-    <input class="sheetSearch" id="citySearch" placeholder="Search cities…"/>
-    <div class="sheetList" id="cityList"></div>
-  </div>
-  
-  <div id="tooltip"></div>
+<div id="container"></div>
+<div id="ui">Drag to rotate • Scroll to zoom • Hover for name • Click to add/remove</div>
+<div id="clock">--:--:--</div>
+<div id="tooltip"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script>
-// Scene setup
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000022);
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-document.getElementById('container').appendChild(renderer.domElement);
+// ---------- THREE ----------
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
 
-// Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
+scene.add(new THREE.AmbientLight(0xffffff,.4));
+const light=new THREE.DirectionalLight(0xffffff,1);
+light.position.set(5,3,5);
+scene.add(light);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 3, 5);
-scene.add(directionalLight);
-
-// Earth
-const radius = 5;
-const earth = new THREE.Mesh(
-  new THREE.SphereGeometry(radius, 64, 64),
+const radius=5;
+const earth=new THREE.Mesh(
+  new THREE.SphereGeometry(radius,64,64),
   new THREE.MeshPhongMaterial({
-    map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg'),
-    bumpMap: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png'),
-    bumpScale: 0.05,
-    specular: new THREE.Color(0x333333),
-    shininess: 5
+    map:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg'),
+    bumpMap:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png'),
+    bumpScale:0.05
   })
 );
 scene.add(earth);
 
-// Clouds
-const clouds = new THREE.Mesh(
-  new THREE.SphereGeometry(radius + 0.03, 64, 64),
+const clouds=new THREE.Mesh(
+  new THREE.SphereGeometry(radius+.03,64,64),
   new THREE.MeshPhongMaterial({
-    map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
-    transparent: true,
-    opacity: 0.4
+    map:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
+    transparent:true,opacity:.4
   })
 );
 scene.add(clouds);
 
 // ---------- DATA ----------
-const zones = [];
-for (let lon = -180; lon < 180; lon += 15) {
-  zones.push({ 
-    name: `UTC${lon !== 0 ? (lon > 0 ? '+' : '') + (lon/15) : ''}`, 
-    lat: 0, 
-    lon 
-  });
-}
-
-const cities = [
-  {name: 'New York', lat: 40.7, lon: -74, offset: -4},
-  {name: 'London', lat: 51.5, lon: -0.1, offset: 1},
-  {name: 'Tokyo', lat: 35.7, lon: 139.6, offset: 9},
-  {name: 'Sydney', lat: -33.9, lon: 151.2, offset: 10},
-  {name: 'Rio de Janeiro', lat: -22.9, lon: -43.2, offset: -3},
-  {name: 'Cairo', lat: 30, lon: 31.2, offset: 2},
-  {name: 'Moscow', lat: 55.8, lon: 37.6, offset: 3},
-  {name: 'Beijing', lat: 39.9, lon: 116.4, offset: 8},
-  {name: 'Cape Town', lat: -33.9, lon: 18.4, offset: 2},
-  {name: 'Los Angeles', lat: 34.1, lon: -118.2, offset: -7},
-  {name: 'Paris', lat: 48.9, lon: 2.3, offset: 2},
-  {name: 'Dubai', lat: 25.2, lon: 55.3, offset: 4},
-  {name: 'Mumbai', lat: 19.1, lon: 72.9, offset: 5.5},
-  {name: 'Singapore', lat: 1.3, lon: 103.8, offset: 8},
-  {name: 'Berlin', lat: 52.5, lon: 13.4, offset: 2},
-  {name: 'Seoul', lat: 37.6, lon: 127, offset: 9},
-  {name: 'Mexico City', lat: 19.4, lon: -99.1, offset: -6},
-  {name: 'Nairobi', lat: -1.3, lon: 36.8, offset: 3},
-  {name: 'Toronto', lat: 43.7, lon: -79.4, offset: -4},
-  {name: 'Bangkok', lat: 13.8, lon: 100.5, offset: 7},
-  {name: 'São Paulo', lat: -23.5, lon: -46.6, offset: -3},
-  {name: 'Istanbul', lat: 41.0, lon: 29.0, offset: 3},
-  {name: 'Lagos', lat: 6.5, lon: 3.4, offset: 1},
-  {name: 'Jakarta', lat: -6.2, lon: 106.8, offset: 7}
+const cities=[
+  {name:'New York',lat:40.7,lon:-74,offset:-4},
+  {name:'London',lat:51.5,lon:-0.1,offset:1},
+  {name:'Tokyo',lat:35.7,lon:139.6,offset:9},
+  {name:'Sydney',lat:-33.9,lon:151.2,offset:10},
+  {name:'Rio',lat:-22.9,lon:-43.2,offset:-3},
+  {name:'Cairo',lat:30,lon:31.2,offset:2},
+  {name:'Moscow',lat:55.8,lon:37.6,offset:3},
+  {name:'Beijing',lat:39.9,lon:116.4,offset:8},
+  {name:'Cape Town',lat:-33.9,lon:18.4,offset:2},
+  {name:'Los Angeles',lat:34.1,lon:-118.2,offset:-7},
+  {name:'Paris',lat:48.9,lon:2.3,offset:2},
+  {name:'Dubai',lat:25.2,lon:55.3,offset:4},
+  {name:'Mumbai',lat:19.1,lon:72.9,offset:5.5},
+  {name:'Singapore',lat:1.3,lon:103.8,offset:8},
+  {name:'Berlin',lat:52.5,lon:13.4,offset:2},
+  {name:'Seoul',lat:37.6,lon:127,offset:9},
+  {name:'Mexico City',lat:19.4,lon:-99.1,offset:-6},
+  {name:'Nairobi',lat:-1.3,lon:36.8,offset:3},
+  {name:'Toronto',lat:43.7,lon:-79.4,offset:-4},
+  {name:'Bangkok',lat:13.8,lon:100.5,offset:7}
 ];
 
 // ---------- MARKERS ----------
-const markerGroup = new THREE.Group();
-scene.add(markerGroup);
-const cityGroup = new THREE.Group();
-scene.add(cityGroup);
-
-const latLonToVector3 = (lat, lon, r) => new THREE.Vector3(
-  -r * Math.cos(lat * Math.PI / 180) * Math.cos(lon * Math.PI / 180),
-  r * Math.sin(lat * Math.PI / 180),
-  r * Math.cos(lat * Math.PI / 180) * Math.sin(lon * Math.PI / 180)
+const markerGroup=new THREE.Group();scene.add(markerGroup);
+const latLonToVector3=(lat,lon,r)=>new THREE.Vector3(
+  -r*Math.cos(lat*Math.PI/180)*Math.cos(lon*Math.PI/180),
+  r*Math.sin(lat*Math.PI/180),
+  r*Math.cos(lat*Math.PI/180)*Math.sin(lon*Math.PI/180)
 );
 
-// Zone markers
-zones.forEach((z, i) => {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: new THREE.TextureLoader().load('data:image/svg+xml;base64,' + btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#ffffff" fill-opacity="0.7"/></svg>')),
-    transparent: true,
-    opacity: 0.8,
-    depthTest: false
-  }));
-  sp.position.copy(latLonToVector3(z.lat, z.lon, radius + 0.05));
-  sp.scale.set(0.15, 0.15, 1);
-  sp.userData = z;
+const markerMat=new THREE.SpriteMaterial({
+  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
+  transparent:true,opacity:.9,depthTest:false
+});
+
+cities.forEach(c=>{
+  const sp=new THREE.Sprite(markerMat.clone());
+  sp.position.copy(latLonToVector3(c.lat,c.lon,radius+.08));
+  sp.scale.set(.2,.2,1);
+  sp.userData=c;
   markerGroup.add(sp);
 });
 
-// City markers
-cities.forEach((c, i) => {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: new THREE.TextureLoader().load('data:image/svg+xml;base64,' + btoa('<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" fill="#00d2ff"/></svg>')),
-    transparent: true,
-    opacity: 0.9,
-    depthTest: false
-  }));
-  sp.position.copy(latLonToVector3(c.lat, c.lon, radius + 0.08));
-  sp.scale.set(0.25, 0.25, 1);
-  sp.userData = c;
-  cityGroup.add(sp);
-});
-
 // ---------- UI ----------
-let selectedZones = new Set();
-zones.forEach((_, i) => selectedZones.add(i));
-let selectedCities = new Set();
-cities.forEach((_, i) => selectedCities.add(i));
+const countSpan=document.getElementById('ui').querySelector('span');
+const clock=document.getElementById('clock');
+const tooltip=document.getElementById('tooltip');
 
-const countSpan = document.getElementById('count');
-const clock = document.getElementById('clock');
-const tooltip = document.getElementById('tooltip');
-const loadingScreen = document.querySelector('.loading');
-
-// Sheets
-const tzSheet = document.getElementById('tzSheet');
-const citySheet = document.getElementById('citySheet');
-const tzSearch = document.getElementById('tzSearch');
-const citySearch = document.getElementById('citySearch');
-const tzList = document.getElementById('tzList');
-const cityList = document.getElementById('cityList');
-
-// Buttons
-const tzBtn = document.getElementById('tzBtn');
-const cityBtn = document.getElementById('cityBtn');
-
-function buildZoneList(filter = '') {
-  tzList.innerHTML = '';
-  zones.forEach((z, i) => {
-    if (!z.name.toLowerCase().includes(filter.toLowerCase())) return;
-    const row = document.createElement('label');
-    row.className = 'sheetRow';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = selectedZones.has(i);
-    cb.addEventListener('change', () => toggleZone(i));
-    row.appendChild(cb);
-    row.append(' ' + z.name);
-    row.addEventListener('click', e => {
-      if (e.target !== cb) {
-        cb.checked = !cb.checked;
-        toggleZone(i);
-      }
-    });
-    tzList.appendChild(row);
-  });
+let visibleMarkers=new Set(cities.map((_,i)=>i));
+function updateCount(){
+  countSpan.textContent=visibleMarkers.size;
 }
-
-function buildCityList(filter = '') {
-  cityList.innerHTML = '';
-  cities.forEach((c, i) => {
-    if (!c.name.toLowerCase().includes(filter.toLowerCase())) return;
-    const row = document.createElement('label');
-    row.className = 'sheetRow';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = selectedCities.has(i);
-    cb.addEventListener('change', () => toggleCity(i));
-    row.appendChild(cb);
-    row.append(' ' + c.name);
-    row.addEventListener('click', e => {
-      if (e.target !== cb) {
-        cb.checked = !cb.checked;
-        toggleCity(i);
-      }
-    });
-    cityList.appendChild(row);
-  });
-}
-
-function toggleZone(i) {
-  if (selectedZones.has(i)) {
-    selectedZones.delete(i);
-    markerGroup.children[i].visible = false;
-  } else {
-    selectedZones.add(i);
-    markerGroup.children[i].visible = true;
-  }
-  buildZoneList(tzSearch.value);
-  updateCount();
-}
-
-function toggleCity(i) {
-  if (selectedCities.has(i)) {
-    selectedCities.delete(i);
-    cityGroup.children[i].visible = false;
-  } else {
-    selectedCities.add(i);
-    cityGroup.children[i].visible = true;
-  }
-  buildCityList(citySearch.value);
-  updateCount();
-}
-
-function updateCount() {
-  countSpan.textContent = selectedZones.size + selectedCities.size;
-}
-
-buildZoneList();
-buildCityList();
 updateCount();
 
-// Button event listeners
-tzBtn.addEventListener('click', () => {
-  tzSheet.classList.add('open');
-  tzBtn.classList.add('active');
-  buildZoneList();
+// ---------- CONTROLS ----------
+let rot={x:0,y:0},tgt={x:0,y:0},drag=false,last={x:0,y:0};
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+
+renderer.domElement.addEventListener('mousedown',e=>{
+  drag=true;
+  last={x:e.clientX,y:e.clientY};
 });
 
-cityBtn.addEventListener('click', () => {
-  citySheet.classList.add('open');
-  cityBtn.classList.add('active');
-  buildCityList();
+renderer.domElement.addEventListener('mousemove',e=>{
+  if(drag){
+    tgt.y+=(e.clientX-last.x)*0.005;
+    tgt.x-=(e.clientY-last.y)*0.005;
+    tgt.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,tgt.x));
+    last={x:e.clientX,y:e.clientY};
+  }
+  // Tooltip
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const inter=raycaster.intersectObjects(markerGroup.children);
+  if(inter.length){
+    const d=inter[0].object.userData;
+    tooltip.style.left=e.clientX+10+'px';
+    tooltip.style.top=e.clientY-20+'px';
+    tooltip.textContent=d.name;
+    tooltip.style.opacity=1;
+  }else tooltip.style.opacity=0;
 });
 
-document.getElementById('closeTzSheet').addEventListener('click', () => {
-  tzSheet.classList.remove('open');
-  tzBtn.classList.remove('active');
+renderer.domElement.addEventListener('mouseup',()=>drag=false);
+renderer.domElement.addEventListener('mouseleave',()=>tooltip.style.opacity=0);
+
+// Click to toggle marker visibility
+renderer.domElement.addEventListener('click',e=>{
+  if(drag) return;
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  const inter=raycaster.intersectObjects(markerGroup.children);
+  if(inter.length){
+    const idx=markerGroup.children.indexOf(inter[0].object);
+    inter[0].object.visible=!inter[0].object.visible;
+    if(inter[0].object.visible) visibleMarkers.add(idx);
+    else visibleMarkers.delete(idx);
+    updateCount();
+  }
 });
 
-document.getElementById('closeCitySheet').addEventListener('click', () => {
-  citySheet.classList.remove('open');
-  cityBtn.classList.remove('active');
+// Zoom
+renderer.domElement.addEventListener('wheel',e=>{
+  camera.position.z+=e.deltaY*0.01;
+  camera.position.z=Math.max(8,Math.min(20,camera.position.z));
 });
-
-tzSearch.addEventListener('input', e => buildZoneList(e.target.value));
-citySearch.addEventListener('input', e => buildCityList(e.target.value));
 
 // Live clock
-setInterval(() => {
-  const now = new Date();
-  clock.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-}, 1000);
+setInterval(()=>clock.textContent=new Date().toLocaleTimeString(),1000);
 
-// ---------- CONTROLS ----------
-let rot = {x: 0, y: 0};
-let tgt = {x: 0, y: 0};
-let drag = false;
-let last = {x: 0, y: 0};
-
-renderer.domElement.addEventListener('mousedown', e => {
-  drag = true;
-  last = {x: e.clientX, y: e.clientY};
-});
-
-document.addEventListener('mousemove', e => {
-  if (!drag) return;
-  tgt.y += (e.clientX - last.x) * 0.005;
-  tgt.x -= (e.clientY - last.y) * 0.005;
-  tgt.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, tgt.x));
-  last = {x: e.clientX, y: e.clientY};
-});
-
-document.addEventListener('mouseup', () => drag = false);
-
-renderer.domElement.addEventListener('wheel', e => {
-  camera.position.z += e.deltaY * 0.01;
-  camera.position.z = Math.max(8, Math.min(25, camera.position.z));
-});
-
-// Tooltip
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-renderer.domElement.addEventListener('mousemove', e => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  
-  const zoneInter = raycaster.intersectObjects(markerGroup.children).filter(i => i.object.visible);
-  const cityInter = raycaster.intersectObjects(cityGroup.children).filter(i => i.object.visible);
-  const inter = [...zoneInter, ...cityInter];
-  
-  if (inter.length) {
-    const d = inter[0].object.userData;
-    tooltip.style.left = (e.clientX + 15) + 'px';
-    tooltip.style.top = (e.clientY - 35) + 'px';
-    tooltip.textContent = d.name;
-    tooltip.style.opacity = 1;
-  } else {
-    tooltip.style.opacity = 0;
-  }
-});
-
-renderer.domElement.addEventListener('mouseleave', () => tooltip.style.opacity = 0);
-
-// Initial visibility
-zones.forEach((_, i) => markerGroup.children[i].visible = true);
-cities.forEach((_, i) => cityGroup.children[i].visible = true);
-
-camera.position.z = 15;
-
-// Animation loop
-function animate() {
+camera.position.z=12;
+function animate(){
   requestAnimationFrame(animate);
-  
-  // Smooth rotation
-  rot.x += (tgt.x - rot.x) * 0.05;
-  rot.y += (tgt.y - rot.y) * 0.05;
-  
-  // Apply rotation to Earth and markers
-  earth.rotation.x = rot.x;
-  earth.rotation.y = rot.y;
-  clouds.rotation.x = rot.x;
-  clouds.rotation.y = rot.y + 0.0002;
-  
-  markerGroup.rotation.x = rot.x;
-  markerGroup.rotation.y = rot.y;
-  
-  cityGroup.rotation.x = rot.x;
-  cityGroup.rotation.y = rot.y;
-  
-  // Auto-rotation when not dragging
-  if (!drag) {
-    tgt.y += 0.001;
-  }
-  
-  renderer.render(scene, camera);
+  rot.x+=(tgt.x-rot.x)*.05;
+  rot.y+=(tgt.y-rot.y)*.05;
+  earth.rotation.x=clouds.rotation.x=rot.x;
+  earth.rotation.y=clouds.rotation.y=rot.y;
+  markerGroup.rotation.x=markerGroup.rotation.y=rot.x;
+  markerGroup.rotation.y=rot.y;
+  clouds.rotation.y+=0.0002;
+  renderer.render(scene,camera);
 }
+animate();
 
-// Start animation after textures load
-const textureLoader = new THREE.TextureLoader();
-let loadedTextures = 0;
-const totalTextures = 3;
-
-function checkLoadComplete() {
-  loadedTextures++;
-  if (loadedTextures === totalTextures) {
-    loadingScreen.style.opacity = '0';
-    setTimeout(() => {
-      loadingScreen.style.display = 'none';
-      animate();
-    }, 500);
-  }
-}
-
-textureLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg', checkLoadComplete);
-textureLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png', checkLoadComplete);
-textureLoader.load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png', checkLoadComplete);
-
-// Handle window resize
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth,innerHeight);
 });
 </script>
 </body>
