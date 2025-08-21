@@ -2,168 +2,191 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>Interactive Earth</title>
+<title>Enhanced Interactive Earth</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-  body{background:#000;color:#fff;overflow:hidden}
-  #container{position:absolute;top:0;left:0;width:100%;height:100%}
-  #ui{position:absolute;top:20px;left:20px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:14px}
-  #tooltip{position:absolute;background:rgba(0,0,0,.8);padding:4px 8px;border-radius:4px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .2s}
+  body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+  #popup {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #fff;
+    display: none;
+    text-align: center;
+    font-size: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  #resetBtn {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  #resetBtn:hover { background: rgba(255,255,255,0.3); }
 </style>
 </head>
 <body>
-<div id="container"></div>
-<div id="ui">Left-drag to rotate • Scroll to zoom • Hover for info • Right-click to toggle city</div>
-<div id="tooltip"></div>
+  <div id="container"></div>
+  <div id="popup"></div>
+  <button id="resetBtn">Reset View</button>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script>
-// ---------- BASIC THREE ----------
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setSize(innerWidth,innerHeight);
-document.body.appendChild(renderer.domElement);
+// Scene setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById('container').appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff,.4));
-const light=new THREE.DirectionalLight(0xffffff,1);
-light.position.set(5,3,5);
-scene.add(light);
+// Lighting
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+sunLight.position.set(5,3,5);
+scene.add(sunLight);
 
-const radius=5;
-const earth=new THREE.Mesh(
+// Earth sphere
+const radius = 5;
+const earthTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
+const earthBump = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png');
+const earth = new THREE.Mesh(
   new THREE.SphereGeometry(radius,64,64),
-  new THREE.MeshPhongMaterial({
-    map:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg'),
-    bumpMap:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png'),
-    bumpScale:0.05
-  })
+  new THREE.MeshPhongMaterial({map: earthTexture,bumpMap: earthBump,bumpScale:0.05})
 );
 scene.add(earth);
 
-const clouds=new THREE.Mesh(
-  new THREE.SphereGeometry(radius+.03,64,64),
+// Clouds
+const clouds = new THREE.Mesh(
+  new THREE.SphereGeometry(radius+0.05,64,64),
   new THREE.MeshPhongMaterial({
-    map:new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
-    transparent:true,opacity:.4
+    map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
+    transparent:true, opacity:0.4
   })
 );
 scene.add(clouds);
 
-// ---------- CITIES ----------
-const cities=[
-  {name:'New York',lat:40.7,lon:-74},
-  {name:'London',lat:51.5,lon:-0.1},
-  {name:'Tokyo',lat:35.7,lon:139.6},
-  {name:'Sydney',lat:-33.9,lon:151.2},
-  {name:'Rio',lat:-22.9,lon:-43.2},
-  {name:'Cairo',lat:30,lon:31.2},
-  {name:'Moscow',lat:55.8,lon:37.6},
-  {name:'Beijing',lat:39.9,lon:116.4},
-  {name:'Cape Town',lat:-33.9,lon:18.4},
-  {name:'Los Angeles',lat:34.1,lon:-118.2},
-  {name:'Paris',lat:48.9,lon:2.3},
-  {name:'Dubai',lat:25.2,lon:55.3}
+// Night Terminator (semi-transparent dark overlay)
+const terminator = new THREE.Mesh(
+  new THREE.SphereGeometry(radius+0.01,64,64),
+  new THREE.MeshLambertMaterial({color:0x000000, transparent:true, opacity:0.35, side:THREE.FrontSide})
+);
+scene.add(terminator);
+
+// City Data
+const cities = [
+  {name:'New York',lat:40.7,lon:-74,offset:-4,flag:'🇺🇸'},
+  {name:'London',lat:51.5,lon:-0.1,offset:1,flag:'🇬🇧'},
+  {name:'Tokyo',lat:35.7,lon:139.6,offset:9,flag:'🇯🇵'},
+  {name:'Sydney',lat:-33.9,lon:151.2,offset:10,flag:'🇦🇺'}
 ];
 
-const cityGroup=new THREE.Group();scene.add(cityGroup);
-const latLonToVector3=(lat,lon,r)=>new THREE.Vector3(
-  -r*Math.cos(lat*Math.PI/180)*Math.cos(lon*Math.PI/180),
-  r*Math.sin(lat*Math.PI/180),
-  r*Math.cos(lat*Math.PI/180)*Math.sin(lon*Math.PI/180)
-);
+// Convert lat/lon to 3D vector
+function latLonToVec3(lat, lon, r){
+  const phi = (90-lat)*Math.PI/180;
+  const theta = (lon+180)*Math.PI/180;
+  return new THREE.Vector3(
+    -(r*Math.sin(phi)*Math.cos(theta)),
+    r*Math.cos(phi),
+    r*Math.sin(phi)*Math.sin(theta)
+  );
+}
 
-const cityMat=new THREE.SpriteMaterial({
-  map:new THREE.TextureLoader().load('data:image/svg+xml;base64,'+btoa('<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#00d2ff"/></svg>')),
-  transparent:true,opacity:.9,depthTest:false
+// Add city markers
+const cityGroup = new THREE.Group();
+cities.forEach(c => {
+  const marker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08,16,16),
+    new THREE.MeshBasicMaterial({color:0x00d2ff})
+  );
+  marker.position.copy(latLonToVec3(c.lat,c.lon,radius+0.1));
+  marker.userData = c;
+  cityGroup.add(marker);
 });
+scene.add(cityGroup);
 
-cities.forEach(c=>{
-  const sp=new THREE.Sprite(cityMat.clone());
-  sp.position.copy(latLonToVector3(c.lat,c.lon,radius+.08));
-  sp.scale.set(.2,.2,1);
-  sp.userData=c;
-  cityGroup.add(sp);
-});
+// Interaction: raycaster
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const popup = document.getElementById('popup');
 
-// ---------- CONTROLS ----------
-let rot={x:0,y:0},tgt={x:0,y:0},drag=false,last={x:0,y:0};
-const raycaster=new THREE.Raycaster();
-const mouse=new THREE.Vector2();
-const tooltip=document.getElementById('tooltip');
-
-// Mouse down
-renderer.domElement.addEventListener('mousedown',e=>{
-  if(e.button===0){ // left button
-    drag=true;
-    last={x:e.clientX,y:e.clientY};
-  }
-});
-
-// Mouse move
-renderer.domElement.addEventListener('mousemove',e=>{
-  if(drag){
-    tgt.y+=(e.clientX-last.x)*0.005;
-    tgt.x-=(e.clientY-last.y)*0.005;
-    tgt.x=Math.max(-Math.PI/2,Math.min(Math.PI/2,tgt.x));
-    last={x:e.clientX,y:e.clientY};
-  }
-  // tooltip
-  mouse.x=(e.clientX/innerWidth)*2-1;
-  mouse.y=-(e.clientY/innerHeight)*2+1;
+renderer.domElement.addEventListener('click',e=>{
+  mouse.x = (e.clientX/window.innerWidth)*2-1;
+  mouse.y = -(e.clientY/window.innerHeight)*2+1;
   raycaster.setFromCamera(mouse,camera);
-  const inter=raycaster.intersectObjects(cityGroup.children);
-  if(inter.length){
-    const d=inter[0].object.userData;
-    tooltip.style.left=e.clientX+10+'px';
-    tooltip.style.top=e.clientY-20+'px';
-    tooltip.textContent=d.name;
-    tooltip.style.opacity=1;
-  }else tooltip.style.opacity=0;
-});
-
-// Mouse up
-renderer.domElement.addEventListener('mouseup',()=>drag=false);
-renderer.domElement.addEventListener('mouseleave',()=>tooltip.style.opacity=0);
-
-// Right-click to toggle city
-renderer.domElement.addEventListener('contextmenu',e=>{
-  e.preventDefault();
-  mouse.x=(e.clientX/innerWidth)*2-1;
-  mouse.y=-(e.clientY/innerHeight)*2+1;
-  raycaster.setFromCamera(mouse,camera);
-  const inter=raycaster.intersectObjects(cityGroup.children);
-  if(inter.length){
-    const obj=inter[0].object;
-    obj.visible=!obj.visible;
+  const intersects = raycaster.intersectObjects(cityGroup.children);
+  if(intersects.length>0){
+    const city = intersects[0].object.userData;
+    const now = new Date();
+    const utc = now.getUTCHours()+now.getUTCMinutes()/60;
+    let localH = (utc+city.offset+24)%24;
+    const hh = String(Math.floor(localH)).padStart(2,'0');
+    const mm = String(Math.floor((localH%1)*60)).padStart(2,'0');
+    popup.innerHTML = `${city.flag} <b>${city.name}</b><br/>Local Time: ${hh}:${mm}`;
+    popup.style.display = 'block';
+    flyTo(city.lat, city.lon);
   }
 });
 
-// Zoom
-renderer.domElement.addEventListener('wheel',e=>{
-  camera.position.z+=e.deltaY*0.01;
-  camera.position.z=Math.max(8,Math.min(20,camera.position.z));
+// Fly-To animation
+let targetRot = {x:0,y:0};
+function flyTo(lat,lon){
+  targetRot.x = (lat*Math.PI/180);
+  targetRot.y = (lon*Math.PI/180);
+}
+
+// Controls
+let rot={x:0,y:0};
+let dragging=false, last={x:0,y:0};
+renderer.domElement.addEventListener('mousedown',e=>{dragging=true;last={x:e.clientX,y:e.clientY}});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+  if(!dragging) return;
+  rot.y += (e.clientX-last.x)*0.005;
+  rot.x += (e.clientY-last.y)*0.005;
+  last={x:e.clientX,y:e.clientY};
 });
 
-camera.position.z=12;
+// Reset view
+const resetBtn=document.getElementById('resetBtn');
+resetBtn.addEventListener('click',()=>{rot={x:0,y:0}; targetRot={x:0,y:0};});
+
+// Camera
+camera.position.z=15;
+
+// Animate
 function animate(){
   requestAnimationFrame(animate);
-  rot.x+=(tgt.x-rot.x)*.05;
-  rot.y+=(tgt.y-rot.y)*.05;
-  earth.rotation.x=clouds.rotation.x=rot.x;
-  earth.rotation.y=clouds.rotation.y=rot.y;
-  cityGroup.rotation.x=cityGroup.rotation.y=rot.x;
-  cityGroup.rotation.y=rot.y;
-  clouds.rotation.y+=0.0002;
+
+  // Smooth fly-to
+  rot.x += (targetRot.x-rot.x)*0.02;
+  rot.y += (targetRot.y-rot.y)*0.02;
+
+  earth.rotation.set(rot.x,rot.y,0);
+  clouds.rotation.set(rot.x,rot.y+0.001,0);
+  cityGroup.rotation.set(rot.x,rot.y,0);
+  terminator.rotation.set(rot.x,rot.y,0);
+
   renderer.render(scene,camera);
 }
 animate();
 
+// Resize
 window.addEventListener('resize',()=>{
-  camera.aspect=innerWidth/innerHeight;
+  camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
+  renderer.setSize(window.innerWidth,window.innerHeight);
 });
 </script>
 </body>
