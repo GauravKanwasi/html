@@ -1,193 +1,861 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<title>Enhanced Interactive Earth</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>
-  body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-  #popup {
-    position: absolute;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    padding: 12px 18px;
-    border-radius: 10px;
-    color: #fff;
-    display: none;
-    text-align: center;
-    font-size: 14px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  }
-  #resetBtn {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-  }
-  #resetBtn:hover { background: rgba(255,255,255,0.3); }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Earth - Global Time Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #041b30, #000000);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+        
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .panel {
+            background: rgba(0, 20, 40, 0.85);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 180, 255, 0.2);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        
+        #header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #a6e1ff;
+        }
+        
+        #info-panel {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 300px;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            padding: 15px 25px;
+        }
+        
+        .control-btn {
+            background: rgba(30, 70, 120, 0.8);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-btn:hover {
+            background: rgba(50, 110, 180, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 30, 60, 0.95);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 180, 255, 0.3);
+            max-width: 280px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 10, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(100, 180, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4db8ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .progress-container {
+            width: 280px;
+            height: 8px;
+            background: rgba(100, 180, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #0080ff, #00c0ff);
+            transition: width 0.5s ease;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #a6e1ff;
+            text-shadow: 0 0 10px rgba(100, 180, 255, 0.5);
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin: 15px 0 8px 0;
+            color: #a6e1ff;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(100, 180, 255, 0.1);
+        }
+        
+        .info-label {
+            color: #88c9ff;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #4db8ff;
+        }
+        
+        .pinned-value {
+            color: #ffd700;
+        }
+        
+        .time-value {
+            color: #7bff7b;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 90px;
+            right: 20px;
+            background: rgba(0, 20, 40, 0.85);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            max-width: 320px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 180, 255, 0.2);
+        }
+        
+        .key {
+            display: inline-block;
+            background: rgba(30, 70, 120, 0.8);
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin: 0 3px;
+            font-size: 12px;
+        }
+        
+        .highlight {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        
+        #cities-list {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .city-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(30, 70, 120, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .city-item:hover {
+            background: rgba(50, 110, 180, 0.6);
+        }
+        
+        .pinned-city {
+            background: rgba(255, 215, 0, 0.15);
+            border-left: 3px solid #ffd700;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 180, 255, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 180, 255, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            #info-panel {
+                width: 250px;
+                font-size: 14px;
+            }
+            
+            #controls {
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 90%;
+            }
+            
+            .control-btn {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            #instructions {
+                position: static;
+                margin: 20px;
+                max-width: none;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="container"></div>
-  <div id="popup"></div>
-  <button id="resetBtn">Reset View</button>
+    <div id="loading">
+        <div class="spinner"></div>
+        <h1>Earth Time Explorer</h1>
+        <p>Loading world data and textures...</p>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+        <p id="loading-text">Initializing...</p>
+    </div>
+    
+    <div id="container"></div>
+    
+    <div id="header" class="panel">
+        🌍 Earth Time Explorer • Hover over cities to see local time
+    </div>
+    
+    <div id="info-panel" class="panel">
+        <h2>Current Selection</h2>
+        <div class="info-row">
+            <span class="info-label">City:</span>
+            <span class="info-value" id="city-name">None</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Local Time:</span>
+            <span class="info-value time-value" id="city-time">--:--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Pinned Cities:</span>
+            <span class="info-value pinned-value" id="pinned-count">0</span>
+        </div>
+        
+        <h2>Pinned Cities</h2>
+        <div id="cities-list">
+            <div class="no-pins">No cities pinned yet</div>
+        </div>
+    </div>
+    
+    <div id="controls" class="panel">
+        <button class="control-btn" id="reset-btn">↺ Reset View</button>
+        <button class="control-btn" id="zoom-in-btn">+ Zoom In</button>
+        <button class="control-btn" id="zoom-out-btn">- Zoom Out</button>
+        <button class="control-btn" id="clear-pins-btn">✕ Clear Pins</button>
+    </div>
+    
+    <div id="instructions" class="panel">
+        <h3>How to Use:</h3>
+        <p>• <span class="highlight">Drag</span> with left mouse button to rotate the Earth</p>
+        <p>• <span class="highlight">Scroll</span> to zoom in and out</p>
+        <p>• <span class="highlight">Hover</span> over cities to see local time</p>
+        <p>• <span class="highlight">Click</span> on cities to pin/unpin them</p>
+        <p>• Use buttons below to control the view</p>
+    </div>
+    
+    <div id="tooltip"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-<script>
-// Scene setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.getElementById('container').appendChild(renderer.domElement);
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    <script>
+        // Check if Three.js is loaded
+        if (typeof THREE === 'undefined') {
+            document.getElementById('loading-text').textContent = 'Error: Three.js failed to load. Please check your connection.';
+        } else {
+            // ---------- TEXTURE SOURCES WITH FALLBACKS ----------
+            const textureSources = {
+                earth: [
+                    'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_atmos_2048.jpg',
+                    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
+                    'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'
+                ],
+                bump: [
+                    'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_normal_2048.jpg',
+                    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg',
+                    'https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'
+                ],
+                clouds: [
+                    'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r158/examples/textures/planets/earth_clouds_1024.png',
+                    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png',
+                    'https://threejs.org/examples/textures/planets/earth_clouds_1024.png'
+                ]
+            };
 
-// Lighting
-const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambient);
-const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-sunLight.position.set(5,3,5);
-scene.add(sunLight);
+            // ---------- THREE SETUP ----------
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Add stars background
+            const addStars = () => {
+                const starGeometry = new THREE.BufferGeometry();
+                const starCount = 7000;
+                const starPositions = new Float32Array(starCount * 3);
+                const starSizes = new Float32Array(starCount);
+                
+                for (let i = 0; i < starCount * 3; i += 3) {
+                    starPositions[i] = (Math.random() - 0.5) * 2000;
+                    starPositions[i + 1] = (Math.random() - 0.5) * 2000;
+                    starPositions[i + 2] = (Math.random() - 0.5) * 2000;
+                    
+                    // Random star size
+                    starSizes[i/3] = Math.random() * 2 + 0.5;
+                }
+                
+                starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+                starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+                
+                const starMaterial = new THREE.PointsMaterial({
+                    color: 0xffffff,
+                    size: 1.5,
+                    sizeAttenuation: true
+                });
+                
+                const stars = new THREE.Points(starGeometry, starMaterial);
+                scene.add(stars);
+            };
+            
+            addStars();
 
-// Earth sphere
-const radius = 5;
-const earthTexture = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg');
-const earthBump = new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png');
-const earth = new THREE.Mesh(
-  new THREE.SphereGeometry(radius,64,64),
-  new THREE.MeshPhongMaterial({map: earthTexture,bumpMap: earthBump,bumpScale:0.05})
-);
-scene.add(earth);
+            // Lighting
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            const light = new THREE.DirectionalLight(0xffffff, 1.2);
+            light.position.set(5, 3, 5);
+            scene.add(light);
 
-// Clouds
-const clouds = new THREE.Mesh(
-  new THREE.SphereGeometry(radius+0.05,64,64),
-  new THREE.MeshPhongMaterial({
-    map: new THREE.TextureLoader().load('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png'),
-    transparent:true, opacity:0.4
-  })
-);
-scene.add(clouds);
+            // Earth
+            const radius = 5;
+            const textureLoader = new THREE.TextureLoader();
+            
+            // Create a simple earth as fallback
+            const createFallbackEarth = () => {
+                const earthGeometry = new THREE.SphereGeometry(radius, 32, 32);
+                const earthMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x2a5cb3,
+                    specular: new THREE.Color(0x333333),
+                    shininess: 5
+                });
+                
+                const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+                scene.add(earth);
+                return earth;
+            };
+            
+            // Create fallback clouds
+            const createFallbackClouds = () => {
+                const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, 32, 32);
+                const cloudsMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                
+                const clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+                scene.add(clouds);
+                return clouds;
+            };
+            
+            // Function to load texture with fallbacks
+            const loadTextureWithFallbacks = (urls, onLoad, onError) => {
+                let currentIndex = 0;
+                
+                const tryLoad = () => {
+                    if (currentIndex >= urls.length) {
+                        onError('All texture sources failed');
+                        return;
+                    }
+                    
+                    textureLoader.load(
+                        urls[currentIndex],
+                        onLoad,
+                        undefined,
+                        () => {
+                            currentIndex++;
+                            tryLoad();
+                        }
+                    );
+                };
+                
+                tryLoad();
+            };
+            
+            // Update progress bar
+            const updateProgress = (loaded, total, text) => {
+                const percent = (loaded / total) * 100;
+                document.getElementById('progress').style.width = percent + '%';
+                document.getElementById('loading-text').textContent = text;
+                
+                if (loaded >= total) {
+                    setTimeout(() => {
+                        document.getElementById('loading').style.opacity = 0;
+                        setTimeout(() => {
+                            document.getElementById('loading').style.display = 'none';
+                        }, 500);
+                    }, 500);
+                }
+            };
+            
+            // Initialize progress
+            let texturesLoaded = 0;
+            const totalTextures = 3;
+            updateProgress(0, totalTextures, 'Initializing...');
+            
+            // Load earth texture
+            let earth, clouds;
+            
+            loadTextureWithFallbacks(
+                textureSources.earth,
+                (earthTexture) => {
+                    const earthGeometry = new THREE.SphereGeometry(radius, 64, 64);
+                    
+                    loadTextureWithFallbacks(
+                        textureSources.bump,
+                        (bumpTexture) => {
+                            const earthMaterial = new THREE.MeshPhongMaterial({
+                                map: earthTexture,
+                                bumpMap: bumpTexture,
+                                bumpScale: 0.05,
+                                specular: new THREE.Color(0x333333),
+                                shininess: 5
+                            });
+                            
+                            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+                            scene.add(earth);
+                            texturesLoaded++;
+                            updateProgress(texturesLoaded, totalTextures, 'Loaded Earth textures...');
+                        },
+                        () => {
+                            // Fallback without bump map
+                            const earthMaterial = new THREE.MeshPhongMaterial({
+                                map: earthTexture,
+                                specular: new THREE.Color(0x333333),
+                                shininess: 5
+                            });
+                            
+                            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+                            scene.add(earth);
+                            texturesLoaded++;
+                            updateProgress(texturesLoaded, totalTextures, 'Loaded Earth texture...');
+                        }
+                    );
+                },
+                () => {
+                    // Fallback earth without texture
+                    earth = createFallbackEarth();
+                    texturesLoaded++;
+                    updateProgress(texturesLoaded, totalTextures, 'Using fallback Earth model...');
+                }
+            );
+            
+            // Load clouds texture
+            loadTextureWithFallbacks(
+                textureSources.clouds,
+                (cloudsTexture) => {
+                    const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, 64, 64);
+                    const cloudsMaterial = new THREE.MeshPhongMaterial({
+                        map: cloudsTexture,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+                    
+                    clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+                    scene.add(clouds);
+                    texturesLoaded++;
+                    updateProgress(texturesLoaded, totalTextures, 'Loaded clouds...');
+                },
+                () => {
+                    // Fallback clouds without texture
+                    clouds = createFallbackClouds();
+                    texturesLoaded++;
+                    updateProgress(texturesLoaded, totalTextures, 'Using fallback clouds...');
+                }
+            );
 
-// Night Terminator (semi-transparent dark overlay)
-const terminator = new THREE.Mesh(
-  new THREE.SphereGeometry(radius+0.01,64,64),
-  new THREE.MeshLambertMaterial({color:0x000000, transparent:true, opacity:0.35, side:THREE.FrontSide})
-);
-scene.add(terminator);
+            // ---------- CITIES DATA ----------
+            const cities = [
+                {name: 'New York', lat: 40.7, lon: -74, offset: -4},
+                {name: 'London', lat: 51.5, lon: -0.1, offset: 1},
+                {name: 'Tokyo', lat: 35.7, lon: 139.6, offset: 9},
+                {name: 'Sydney', lat: -33.9, lon: 151.2, offset: 10},
+                {name: 'Rio de Janeiro', lat: -22.9, lon: -43.2, offset: -3},
+                {name: 'Cairo', lat: 30, lon: 31.2, offset: 2},
+                {name: 'Moscow', lat: 55.8, lon: 37.6, offset: 3},
+                {name: 'Beijing', lat: 39.9, lon: 116.4, offset: 8},
+                {name: 'Cape Town', lat: -33.9, lon: 18.4, offset: 2},
+                {name: 'Los Angeles', lat: 34.1, lon: -118.2, offset: -7},
+                {name: 'Paris', lat: 48.9, lon: 2.3, offset: 2},
+                {name: 'Dubai', lat: 25.2, lon: 55.3, offset: 4},
+                {name: 'Mumbai', lat: 19.1, lon: 72.9, offset: 5.5},
+                {name: 'Singapore', lat: 1.3, lon: 103.8, offset: 8},
+                {name: 'Berlin', lat: 52.5, lon: 13.4, offset: 2}
+            ];
 
-// City Data
-const cities = [
-  {name:'New York',lat:40.7,lon:-74,offset:-4,flag:'🇺🇸'},
-  {name:'London',lat:51.5,lon:-0.1,offset:1,flag:'🇬🇧'},
-  {name:'Tokyo',lat:35.7,lon:139.6,offset:9,flag:'🇯🇵'},
-  {name:'Sydney',lat:-33.9,lon:151.2,offset:10,flag:'🇦🇺'}
-];
+            // City markers
+            const cityGroup = new THREE.Group();
+            scene.add(cityGroup);
+            
+            const latLonToVector3 = (lat, lon, r) => {
+                const phi = (90 - lat) * Math.PI / 180;
+                const theta = (lon + 180) * Math.PI / 180;
+                
+                return new THREE.Vector3(
+                    -r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.cos(phi),
+                    r * Math.sin(phi) * Math.sin(theta)
+                );
+            };
 
-// Convert lat/lon to 3D vector
-function latLonToVec3(lat, lon, r){
-  const phi = (90-lat)*Math.PI/180;
-  const theta = (lon+180)*Math.PI/180;
-  return new THREE.Vector3(
-    -(r*Math.sin(phi)*Math.cos(theta)),
-    r*Math.cos(phi),
-    r*Math.sin(phi)*Math.sin(theta)
-  );
-}
+            const pinMat = new THREE.SpriteMaterial({ color: 0xffd700 });
+            const normalMat = new THREE.SpriteMaterial({ color: 0x00d2ff });
 
-// Add city markers
-const cityGroup = new THREE.Group();
-cities.forEach(c => {
-  const marker = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08,16,16),
-    new THREE.MeshBasicMaterial({color:0x00d2ff})
-  );
-  marker.position.copy(latLonToVec3(c.lat,c.lon,radius+0.1));
-  marker.userData = c;
-  cityGroup.add(marker);
-});
-scene.add(cityGroup);
+            cities.forEach((city, index) => {
+                const sp = new THREE.Sprite(normalMat.clone());
+                sp.position.copy(latLonToVector3(city.lat, city.lon, radius + 0.08));
+                sp.scale.set(0.25, 0.25, 1);
+                sp.userData = { ...city, index };
+                cityGroup.add(sp);
+            });
 
-// Interaction: raycaster
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-const popup = document.getElementById('popup');
+            // ---------- STATE MANAGEMENT ----------
+            let pinned = new Set();
+            let hovered = null;
+            const pinnedSpan = document.getElementById('pinned-count');
+            const cityNameSpan = document.getElementById('city-name');
+            const cityTimeSpan = document.getElementById('city-time');
+            const tooltip = document.getElementById('tooltip');
+            const citiesList = document.getElementById('cities-list');
 
-renderer.domElement.addEventListener('click',e=>{
-  mouse.x = (e.clientX/window.innerWidth)*2-1;
-  mouse.y = -(e.clientY/window.innerHeight)*2+1;
-  raycaster.setFromCamera(mouse,camera);
-  const intersects = raycaster.intersectObjects(cityGroup.children);
-  if(intersects.length>0){
-    const city = intersects[0].object.userData;
-    const now = new Date();
-    const utc = now.getUTCHours()+now.getUTCMinutes()/60;
-    let localH = (utc+city.offset+24)%24;
-    const hh = String(Math.floor(localH)).padStart(2,'0');
-    const mm = String(Math.floor((localH%1)*60)).padStart(2,'0');
-    popup.innerHTML = `${city.flag} <b>${city.name}</b><br/>Local Time: ${hh}:${mm}`;
-    popup.style.display = 'block';
-    flyTo(city.lat, city.lon);
-  }
-});
+            // ---------- UTILITY FUNCTIONS ----------
+            function localTime(offset) {
+                const d = new Date();
+                const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+                const local = new Date(utc + (offset * 3600000));
+                return local.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            function updateCitiesList() {
+                if (pinned.size === 0) {
+                    citiesList.innerHTML = '<div class="no-pins">No cities pinned yet</div>';
+                    return;
+                }
+                
+                citiesList.innerHTML = '';
+                pinned.forEach(index => {
+                    const city = cities[index];
+                    const cityElement = document.createElement('div');
+                    cityElement.className = 'city-item pinned-city';
+                    cityElement.innerHTML = `
+                        <strong>${city.name}</strong> - ${localTime(city.offset)}
+                    `;
+                    cityElement.addEventListener('click', () => {
+                        // Focus on this city
+                        const cityObj = cityGroup.children[index];
+                        const cityPos = cityObj.position.clone();
+                        
+                        // Calculate target rotation to bring city to center
+                        tgt.y = Math.atan2(cityPos.x, cityPos.z);
+                        tgt.x = Math.asin(cityPos.y / radius);
+                    });
+                    citiesList.appendChild(cityElement);
+                });
+            }
 
-// Fly-To animation
-let targetRot = {x:0,y:0};
-function flyTo(lat,lon){
-  targetRot.x = (lat*Math.PI/180);
-  targetRot.y = (lon*Math.PI/180);
-}
+            // ---------- INTERACTION HANDLERS ----------
+            let rot = { x: 0, y: 0 };
+            let tgt = { x: 0, y: 0 };
+            let drag = false;
+            let last = { x: 0, y: 0 };
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
 
-// Controls
-let rot={x:0,y:0};
-let dragging=false, last={x:0,y:0};
-renderer.domElement.addEventListener('mousedown',e=>{dragging=true;last={x:e.clientX,y:e.clientY}});
-window.addEventListener('mouseup',()=>dragging=false);
-window.addEventListener('mousemove',e=>{
-  if(!dragging) return;
-  rot.y += (e.clientX-last.x)*0.005;
-  rot.x += (e.clientY-last.y)*0.005;
-  last={x:e.clientX,y:e.clientY};
-});
+            // Mouse event handlers
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                if (e.button === 0) {
+                    drag = true;
+                    last = { x: e.clientX, y: e.clientY };
+                }
+            });
 
-// Reset view
-const resetBtn=document.getElementById('resetBtn');
-resetBtn.addEventListener('click',()=>{rot={x:0,y:0}; targetRot={x:0,y:0};});
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (drag) {
+                    tgt.y += (e.clientX - last.x) * 0.005;
+                    tgt.x -= (e.clientY - last.y) * 0.005;
+                    tgt.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, tgt.x));
+                    last = { x: e.clientX, y: e.clientY };
+                }
+                
+                // Hover detection
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersections = raycaster.intersectObjects(cityGroup.children);
+                
+                if (intersections.length > 0) {
+                    const obj = intersections[0].object;
+                    hovered = obj.userData;
+                    
+                    // Highlight hovered city
+                    obj.material.color.set(0xffffff);
+                    
+                    // Update tooltip
+                    tooltip.style.left = (e.clientX + 15) + 'px';
+                    tooltip.style.top = (e.clientY - 15) + 'px';
+                    tooltip.innerHTML = `<strong>${hovered.name}</strong><br>Local time: ${localTime(hovered.offset)}`;
+                    tooltip.style.opacity = 1;
+                    
+                    // Update info panel
+                    cityNameSpan.textContent = hovered.name;
+                    cityTimeSpan.textContent = localTime(hovered.offset);
+                } else {
+                    if (hovered) {
+                        // Reset previously hovered city color
+                        const prevObj = cityGroup.children[hovered.index];
+                        prevObj.material.color.set(pinned.has(hovered.index) ? 0xffd700 : 0x00d2ff);
+                        hovered = null;
+                    }
+                    tooltip.style.opacity = 0;
+                    cityNameSpan.textContent = 'None';
+                    cityTimeSpan.textContent = '--:--';
+                }
+            });
 
-// Camera
-camera.position.z=15;
+            renderer.domElement.addEventListener('mouseup', () => {
+                drag = false;
+            });
 
-// Animate
-function animate(){
-  requestAnimationFrame(animate);
+            renderer.domElement.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = 0;
+                drag = false;
+            });
 
-  // Smooth fly-to
-  rot.x += (targetRot.x-rot.x)*0.02;
-  rot.y += (targetRot.y-rot.y)*0.02;
+            // Click to pin/unpin cities
+            renderer.domElement.addEventListener('click', (e) => {
+                if (drag) return;
+                
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersections = raycaster.intersectObjects(cityGroup.children);
+                
+                if (intersections.length > 0) {
+                    const obj = intersections[0].object;
+                    const cityIndex = obj.userData.index;
+                    
+                    if (pinned.has(cityIndex)) {
+                        pinned.delete(cityIndex);
+                        obj.material.color.set(0x00d2ff);
+                    } else {
+                        pinned.add(cityIndex);
+                        obj.material.color.set(0xffd700);
+                    }
+                    
+                    pinnedSpan.textContent = pinned.size;
+                    updateCitiesList();
+                }
+            });
 
-  earth.rotation.set(rot.x,rot.y,0);
-  clouds.rotation.set(rot.x,rot.y+0.001,0);
-  cityGroup.rotation.set(rot.x,rot.y,0);
-  terminator.rotation.set(rot.x,rot.y,0);
+            // Zoom with scroll
+            renderer.domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camera.position.z += e.deltaY * 0.01;
+                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+            });
 
-  renderer.render(scene,camera);
-}
-animate();
+            // Control buttons
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                tgt.x = 0;
+                tgt.y = 0;
+                camera.position.z = 15;
+            });
+            
+            document.getElementById('zoom-in-btn').addEventListener('click', () => {
+                camera.position.z -= 1;
+                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+            });
+            
+            document.getElementById('zoom-out-btn').addEventListener('click', () => {
+                camera.position.z += 1;
+                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+            });
+            
+            document.getElementById('clear-pins-btn').addEventListener('click', () => {
+                pinned.forEach(index => {
+                    cityGroup.children[index].material.color.set(0x00d2ff);
+                });
+                pinned.clear();
+                pinnedSpan.textContent = '0';
+                updateCitiesList();
+            });
 
-// Resize
-window.addEventListener('resize',()=>{
-  camera.aspect=window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth,window.innerHeight);
-});
-</script>
+            // Touch support for mobile devices
+            let touchStartDistance = 0;
+            
+            renderer.domElement.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    drag = true;
+                    last = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                } else if (e.touches.length === 2) {
+                    // Pinch zoom
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    touchStartDistance = Math.sqrt(dx * dx + dy * dy);
+                }
+            });
+
+            renderer.domElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && drag) {
+                    tgt.y += (e.touches[0].clientX - last.x) * 0.005;
+                    tgt.x -= (e.touches[0].clientY - last.y) * 0.005;
+                    tgt.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, tgt.x));
+                    last = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                } else if (e.touches.length === 2) {
+                    // Handle pinch zoom
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    const zoomFactor = (distance - touchStartDistance) * 0.01;
+                    camera.position.z -= zoomFactor;
+                    camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+                    
+                    touchStartDistance = distance;
+                }
+            });
+
+            renderer.domElement.addEventListener('touchend', () => {
+                drag = false;
+            });
+
+            // ---------- ANIMATION LOOP ----------
+            camera.position.z = 15;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Smooth rotation
+                rot.x += (tgt.x - rot.x) * 0.05;
+                rot.y += (tgt.y - rot.y) * 0.05;
+                
+                // Apply rotations
+                if (earth) {
+                    earth.rotation.x = rot.x;
+                    earth.rotation.y = rot.y;
+                }
+                
+                if (clouds) {
+                    clouds.rotation.x = rot.x;
+                    clouds.rotation.y = rot.y + 0.0002;
+                }
+                
+                // Rotate city markers with Earth
+                cityGroup.rotation.x = rot.x;
+                cityGroup.rotation.y = rot.y;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+
+            // ---------- WINDOW RESIZE HANDLING ----------
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // Initialize cities list
+            updateCitiesList();
+        }
+    </script>
 </body>
 </html>
