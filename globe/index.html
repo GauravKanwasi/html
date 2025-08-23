@@ -284,6 +284,27 @@
                 max-width: none;
             }
         }
+
+        @media (max-width: 480px) {
+            #info-panel {
+                width: 90%;
+                left: 5%;
+                top: 70px;
+                font-size: 12px;
+            }
+            #header {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+            .control-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            #instructions {
+                font-size: 12px;
+                margin: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -325,10 +346,10 @@
     </div>
     
     <div id="controls" class="panel">
-        <button class="control-btn" id="reset-btn">↺ Reset View</button>
-        <button class="control-btn" id="zoom-in-btn">+ Zoom In</button>
-        <button class="control-btn" id="zoom-out-btn">- Zoom Out</button>
-        <button class="control-btn" id="clear-pins-btn">✕ Clear Pins</button>
+        <button class="control-btn" id="reset-btn" aria-label="Reset globe view">↺ Reset View</button>
+        <button class="control-btn" id="zoom-in-btn" aria-label="Zoom in">+ Zoom In</button>
+        <button class="control-btn" id="zoom-out-btn" aria-label="Zoom out">- Zoom Out</button>
+        <button class="control-btn" id="clear-pins-btn" aria-label="Clear pinned cities">✕ Clear Pins</button>
     </div>
     
     <div id="instructions" class="panel">
@@ -374,10 +395,14 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('container').appendChild(renderer.domElement);
             
+            // Performance optimization for mobile
+            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+            const starCount = isMobile ? 3000 : 7000;
+            const earthSegments = isMobile ? 32 : 64;
+
             // Add stars background
             const addStars = () => {
                 const starGeometry = new THREE.BufferGeometry();
-                const starCount = 7000;
                 const starPositions = new Float32Array(starCount * 3);
                 const starSizes = new Float32Array(starCount);
                 
@@ -417,7 +442,7 @@
             
             // Create a simple earth as fallback
             const createFallbackEarth = () => {
-                const earthGeometry = new THREE.SphereGeometry(radius, 32, 32);
+                const earthGeometry = new THREE.SphereGeometry(radius, earthSegments, earthSegments);
                 const earthMaterial = new THREE.MeshPhongMaterial({
                     color: 0x2a5cb3,
                     specular: new THREE.Color(0x333333),
@@ -431,7 +456,7 @@
             
             // Create fallback clouds
             const createFallbackClouds = () => {
-                const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, 32, 32);
+                const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, earthSegments, earthSegments);
                 const cloudsMaterial = new THREE.MeshPhongMaterial({
                     color: 0xffffff,
                     transparent: true,
@@ -449,7 +474,8 @@
                 
                 const tryLoad = () => {
                     if (currentIndex >= urls.length) {
-                        onError('All texture sources failed');
+                        onError('Failed to load texture. Using fallback model.');
+                        document.getElementById('loading-text').textContent = 'Failed to load textures, using fallback...';
                         return;
                     }
                     
@@ -468,8 +494,11 @@
             };
             
             // Update progress bar
+            let texturesLoaded = 0;
+            const totalTextures = 3;
+            const maxLoadingTime = 10000; // 10 seconds timeout
             const updateProgress = (loaded, total, text) => {
-                const percent = (loaded / total) * 100;
+                const percent = Math.min((loaded / total) * 100, 100);
                 document.getElementById('progress').style.width = percent + '%';
                 document.getElementById('loading-text').textContent = text;
                 
@@ -482,10 +511,15 @@
                     }, 500);
                 }
             };
+
+            // Add timeout to prevent infinite loading
+            setTimeout(() => {
+                if (texturesLoaded < totalTextures) {
+                    updateProgress(totalTextures, totalTextures, 'Loading timeout, using fallback models...');
+                }
+            }, maxLoadingTime);
             
             // Initialize progress
-            let texturesLoaded = 0;
-            const totalTextures = 3;
             updateProgress(0, totalTextures, 'Initializing...');
             
             // Load earth texture
@@ -494,7 +528,7 @@
             loadTextureWithFallbacks(
                 textureSources.earth,
                 (earthTexture) => {
-                    const earthGeometry = new THREE.SphereGeometry(radius, 64, 64);
+                    const earthGeometry = new THREE.SphereGeometry(radius, earthSegments, earthSegments);
                     
                     loadTextureWithFallbacks(
                         textureSources.bump,
@@ -539,7 +573,7 @@
             loadTextureWithFallbacks(
                 textureSources.clouds,
                 (cloudsTexture) => {
-                    const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, 64, 64);
+                    const cloudsGeometry = new THREE.SphereGeometry(radius + 0.03, earthSegments, earthSegments);
                     const cloudsMaterial = new THREE.MeshPhongMaterial({
                         map: cloudsTexture,
                         transparent: true,
@@ -599,7 +633,7 @@
             cities.forEach((city, index) => {
                 const sp = new THREE.Sprite(normalMat.clone());
                 sp.position.copy(latLonToVector3(city.lat, city.lon, radius + 0.08));
-                sp.scale.set(0.25, 0.25, 1);
+                sp.scale.set(0.35, 0.35, 1);
                 sp.userData = { ...city, index };
                 cityGroup.add(sp);
             });
@@ -628,7 +662,8 @@
                 }
                 
                 citiesList.innerHTML = '';
-                pinned.forEach(index => {
+                const sortedPinned = Array.from(pinned).sort((a, b) => cities[a].name.localeCompare(cities[b].name));
+                sortedPinned.forEach(index => {
                     const city = cities[index];
                     const cityElement = document.createElement('div');
                     cityElement.className = 'city-item pinned-city';
@@ -655,6 +690,7 @@
             let last = { x: 0, y: 0 };
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
+            let targetZoom = 15;
 
             // Mouse event handlers
             renderer.domElement.addEventListener('mousedown', (e) => {
@@ -687,10 +723,19 @@
                     obj.material.color.set(0xffffff);
                     
                     // Update tooltip
-                    tooltip.style.left = (e.clientX + 15) + 'px';
-                    tooltip.style.top = (e.clientY - 15) + 'px';
+                    tooltip.style.left = (e.clientX + 20) + 'px';
+                    tooltip.style.top = (e.clientY - 40) + 'px';
                     tooltip.innerHTML = `<strong>${hovered.name}</strong><br>Local time: ${localTime(hovered.offset)}`;
                     tooltip.style.opacity = 1;
+                    
+                    // Ensure tooltip stays within viewport
+                    const tooltipRect = tooltip.getBoundingClientRect();
+                    if (tooltipRect.right > window.innerWidth) {
+                        tooltip.style.left = (e.clientX - tooltipRect.width - 20) + 'px';
+                    }
+                    if (tooltipRect.bottom > window.innerHeight) {
+                        tooltip.style.top = (e.clientY - tooltipRect.height - 40) + 'px';
+                    }
                     
                     // Update info panel
                     cityNameSpan.textContent = hovered.name;
@@ -734,9 +779,20 @@
                     if (pinned.has(cityIndex)) {
                         pinned.delete(cityIndex);
                         obj.material.color.set(0x00d2ff);
+                        obj.scale.set(0.35, 0.35, 1);
                     } else {
                         pinned.add(cityIndex);
                         obj.material.color.set(0xffd700);
+                        // Pulse animation
+                        let pulseScale = 0.35;
+                        const pulseInterval = setInterval(() => {
+                            pulseScale += 0.05;
+                            obj.scale.set(pulseScale, pulseScale, 1);
+                            if (pulseScale >= 0.5) {
+                                clearInterval(pulseInterval);
+                                setTimeout(() => obj.scale.set(0.35, 0.35, 1), 100);
+                            }
+                        }, 50);
                     }
                     
                     pinnedSpan.textContent = pinned.size;
@@ -747,25 +803,25 @@
             // Zoom with scroll
             renderer.domElement.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                camera.position.z += e.deltaY * 0.01;
-                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+                targetZoom += e.deltaY * 0.005; // Reduced sensitivity
+                targetZoom = Math.max(7, Math.min(25, targetZoom));
             });
 
             // Control buttons
             document.getElementById('reset-btn').addEventListener('click', () => {
                 tgt.x = 0;
                 tgt.y = 0;
-                camera.position.z = 15;
+                targetZoom = 15;
             });
             
             document.getElementById('zoom-in-btn').addEventListener('click', () => {
-                camera.position.z -= 1;
-                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+                targetZoom -= 1;
+                targetZoom = Math.max(7, Math.min(25, targetZoom));
             });
             
             document.getElementById('zoom-out-btn').addEventListener('click', () => {
-                camera.position.z += 1;
-                camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+                targetZoom += 1;
+                targetZoom = Math.max(7, Math.min(25, targetZoom));
             });
             
             document.getElementById('clear-pins-btn').addEventListener('click', () => {
@@ -775,6 +831,32 @@
                 pinned.clear();
                 pinnedSpan.textContent = '0';
                 updateCitiesList();
+            });
+
+            // Keyboard controls
+            window.addEventListener('keydown', (e) => {
+                switch (e.key) {
+                    case 'ArrowLeft':
+                        tgt.y -= 0.05;
+                        break;
+                    case 'ArrowRight':
+                        tgt.y += 0.05;
+                        break;
+                    case 'ArrowUp':
+                        tgt.x -= 0.05;
+                        break;
+                    case 'ArrowDown':
+                        tgt.x += 0.05;
+                        break;
+                    case '+':
+                        targetZoom -= 1;
+                        targetZoom = Math.max(7, Math.min(25, targetZoom));
+                        break;
+                    case '-':
+                        targetZoom += 1;
+                        targetZoom = Math.max(7, Math.min(25, targetZoom));
+                        break;
+                }
             });
 
             // Touch support for mobile devices
@@ -805,8 +887,8 @@
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
                     const zoomFactor = (distance - touchStartDistance) * 0.01;
-                    camera.position.z -= zoomFactor;
-                    camera.position.z = Math.max(7, Math.min(25, camera.position.z));
+                    targetZoom -= zoomFactor;
+                    targetZoom = Math.max(7, Math.min(25, targetZoom));
                     
                     touchStartDistance = distance;
                 }
@@ -825,6 +907,9 @@
                 // Smooth rotation
                 rot.x += (tgt.x - rot.x) * 0.05;
                 rot.y += (tgt.y - rot.y) * 0.05;
+                
+                // Smooth zoom
+                camera.position.z += (targetZoom - camera.position.z) * 0.1;
                 
                 // Apply rotations
                 if (earth) {
@@ -855,6 +940,14 @@
             
             // Initialize cities list
             updateCitiesList();
+
+            // Time updates
+            setInterval(() => {
+                if (hovered) {
+                    cityTimeSpan.textContent = localTime(hovered.offset);
+                }
+                updateCitiesList(); // Update pinned cities' times
+            }, 1000);
         }
     </script>
 </body>
