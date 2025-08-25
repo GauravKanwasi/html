@@ -244,10 +244,10 @@ void playTournament() {
     }
     std::cout << "\n" << BLUE << "Tournament Over! Your total score is: " 
               << totalScore << RESET << std::endl;
-    saveHighScore(totalScore);
-    if (totalScore > highScore) {  // Note: saveHighScore already updates highScore
+    if (totalScore > highScore) {
         std::cout << GREEN << "New high score!" << RESET << std::endl;
     }
+    saveHighScore(totalScore);
     waitForEnter();
 }
 
