@@ -27,8 +27,9 @@ void waitForEnter();
 void loadHighScore();
 void saveHighScore(int score);
 
-// Global high score variable
+// Global variables
 int highScore = 0;
+std::string playerName = "Player";
 
 // Random number generator using C++11 <random>
 int getRandomNumber(int min, int max) {
@@ -65,6 +66,7 @@ int getValidatedChoice(int min, int max) {
         std::cout << RED << "Invalid input. Please enter a number between "
                   << min << " and " << max << ": " << RESET;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear any remaining input
     return choice;
 }
 
@@ -99,9 +101,8 @@ void provideHint(int guess, int secret, int range) {
 
 // Wait for user to press Enter before continuing
 void waitForEnter() {
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
     std::cout << "\nPress Enter to return to the main menu...";
-    std::cin.get();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
 // Load high score from file
@@ -109,6 +110,7 @@ void loadHighScore() {
     std::ifstream in("highscore.txt");
     if (in) {
         in >> highScore;
+        in.close();
     }
 }
 
@@ -117,7 +119,10 @@ void saveHighScore(int score) {
     if (score > highScore) {
         highScore = score;
         std::ofstream out("highscore.txt");
-        out << highScore;
+        if (out) {
+            out << highScore;
+            out.close();
+        }
     }
 }
 
@@ -143,15 +148,33 @@ void playSingleRound() {
     std::cout << "2. Medium (1 - 100)" << std::endl;
     std::cout << "3. Hard (1 - 200)" << std::endl;
     std::cout << "4. Expert (1 - 1000)" << std::endl;
+    std::cout << "5. Custom (Enter your own range)" << std::endl;
     std::cout << "Enter your choice: ";
-    int diffChoice = getValidatedChoice(1, 4);
+    int diffChoice = getValidatedChoice(1, 5);
 
     int maxNumber = 100;  // default value
-    switch (diffChoice) {
-        case 1: maxNumber = 50; break;
-        case 2: maxNumber = 100; break;
-        case 3: maxNumber = 200; break;
-        case 4: maxNumber = 1000; break;
+    if (diffChoice == 5) {
+        std::cout << "Enter the maximum number for the range (minimum is 1): ";
+        maxNumber = getValidatedChoice(1, std::numeric_limits<int>::max());
+    } else {
+        switch (diffChoice) {
+            case 1: maxNumber = 50; break;
+            case 2: maxNumber = 100; break;
+            case 3: maxNumber = 200; break;
+            case 4: maxNumber = 1000; break;
+        }
+    }
+
+    // Ask for limited attempts
+    std::cout << "Do you want limited attempts? (y/n): ";
+    std::string limChoice;
+    std::cin >> limChoice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear input
+    bool limited = (limChoice == "y" || limChoice == "Y");
+    int maxAttempts = 0;
+    if (limited) {
+        std::cout << "Enter maximum attempts: ";
+        maxAttempts = getValidatedChoice(1, 1000);
     }
 
     // Generate the secret number within the chosen range
@@ -163,7 +186,7 @@ void playSingleRound() {
     int tries = 0;
     bool guessedCorrectly = false;
 
-    while (!guessedCorrectly) {
+    while (true) {
         std::cout << "\nEnter your guess: ";
         guess = getValidatedChoice(1, maxNumber);
         tries++;
@@ -175,9 +198,16 @@ void playSingleRound() {
             std::cout << YELLOW << "Too high!" << RESET << std::endl;
             provideHint(guess, secretNumber, maxNumber);
         } else {
-            std::cout << GREEN << "Congratulations! You guessed the number in "
+            std::cout << GREEN << "Congratulations, " << playerName << "! You guessed the number in "
                       << tries << " tries." << RESET << std::endl;
             guessedCorrectly = true;
+            break;
+        }
+
+        if (limited && tries >= maxAttempts) {
+            std::cout << RED << "Out of attempts! The correct number was " 
+                      << secretNumber << "." << RESET << std::endl;
+            break;
         }
     }
     waitForEnter();
@@ -187,7 +217,7 @@ void playSingleRound() {
 void playTournament() {
     clearScreen();
     printHeader();
-    std::cout << "\nWelcome to Tournament Mode!" << std::endl;
+    std::cout << "\nWelcome to Tournament Mode, " << playerName << "!" << std::endl;
     std::cout << "You will face 3 rounds with increasing difficulty. Try to score as many points as possible." << std::endl;
     std::cout << "Points decrease with each wrong guess. Beat the high score!" << std::endl;
 
@@ -243,11 +273,12 @@ void playTournament() {
         }
     }
     std::cout << "\n" << BLUE << "Tournament Over! Your total score is: " 
-              << totalScore << RESET << std::endl;
-    if (totalScore > highScore) {
+              << totalScore << ", " << playerName << "." << RESET << std::endl;
+    bool isNewHighScore = (totalScore > highScore);
+    saveHighScore(totalScore);
+    if (isNewHighScore) {
         std::cout << GREEN << "New high score!" << RESET << std::endl;
     }
-    saveHighScore(totalScore);
     waitForEnter();
 }
 
@@ -256,7 +287,7 @@ void howToPlay() {
     clearScreen();
     printHeader();
     std::cout << "\nHow to Play:" << std::endl;
-    std::cout << "1. In Single Round mode, select a difficulty level and try to guess the secret number with unlimited attempts." << std::endl;
+    std::cout << "1. In Single Round mode, select a difficulty level (or custom) and optionally limit attempts. Guess the secret number." << std::endl;
     std::cout << "2. After each wrong guess, you'll get feedback if it's too high/low and a temperature hint on closeness." << std::endl;
     std::cout << "3. In Tournament mode, play through 3 rounds with increasing difficulty and limited attempts." << std::endl;
     std::cout << "4. Each wrong guess in Tournament reduces your round score. Total score is summed across rounds." << std::endl;
@@ -266,6 +297,13 @@ void howToPlay() {
 
 int main() {
     loadHighScore();
+    clearScreen();
+    printHeader();
+    std::cout << "\nWelcome! Please enter your name: ";
+    std::getline(std::cin, playerName);
+    if (playerName.empty()) {
+        playerName = "Player";
+    }
     int choice;
     do {
         clearScreen();
@@ -293,7 +331,7 @@ int main() {
                 viewHighScore();
                 break;
             case 5:
-                std::cout << "\n" << GREEN << "Thank you for playing! Goodbye!" << RESET << std::endl;
+                std::cout << "\n" << GREEN << "Thank you for playing, " << playerName << "! Goodbye!" << RESET << std::endl;
                 break;
         }
     } while (choice != 5);
