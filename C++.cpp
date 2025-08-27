@@ -5,6 +5,8 @@
 #include <random>
 #include <cstdlib>  // for system()
 #include <fstream>  // for high score persistence
+#include <vector>
+#include <algorithm>
 
 // ANSI color codes for a nicer display
 const std::string RESET  = "\033[0m";
@@ -23,12 +25,14 @@ void playSingleRound();
 void playTournament();
 void howToPlay();
 void viewHighScore();
+void settings();
 void waitForEnter();
 void loadHighScore();
 void saveHighScore(int score);
 
 // Global variables
 int highScore = 0;
+std::string highScoreName = "";
 std::string playerName = "Player";
 
 // Random number generator using C++11 <random>
@@ -103,13 +107,14 @@ void provideHint(int guess, int secret, int range) {
 void waitForEnter() {
     std::cout << "\nPress Enter to return to the main menu...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 // Load high score from file
 void loadHighScore() {
     std::ifstream in("highscore.txt");
     if (in) {
-        in >> highScore;
+        in >> highScoreName >> highScore;
         in.close();
     }
 }
@@ -118,9 +123,10 @@ void loadHighScore() {
 void saveHighScore(int score) {
     if (score > highScore) {
         highScore = score;
+        highScoreName = playerName;
         std::ofstream out("highscore.txt");
         if (out) {
-            out << highScore;
+            out << highScoreName << " " << highScore;
             out.close();
         }
     }
@@ -131,11 +137,53 @@ void viewHighScore() {
     clearScreen();
     printHeader();
     std::cout << "\n" << CYAN << "Current High Score (Tournament Mode): " 
-              << highScore << RESET << std::endl;
+              << highScore;
+    if (!highScoreName.empty()) {
+        std::cout << " by " << highScoreName;
+    }
+    std::cout << RESET << std::endl;
     if (highScore == 0) {
         std::cout << YELLOW << "No high score set yet. Play a tournament to set one!" << RESET << std::endl;
     }
     waitForEnter();
+}
+
+// Settings menu
+void settings() {
+    int choice;
+    do {
+        clearScreen();
+        printHeader();
+        std::cout << "\nSettings:" << std::endl;
+        std::cout << "1. Change Player Name" << std::endl;
+        std::cout << "2. Reset High Score" << std::endl;
+        std::cout << "3. Back to Main Menu" << std::endl;
+        std::cout << "Enter your choice: ";
+        choice = getValidatedChoice(1, 3);
+
+        switch (choice) {
+            case 1:
+                clearScreen();
+                printHeader();
+                std::cout << "\nEnter your new name: ";
+                std::getline(std::cin, playerName);
+                if (playerName.empty()) {
+                    playerName = "Player";
+                }
+                std::cout << GREEN << "Name changed to " << playerName << "." << RESET << std::endl;
+                waitForEnter();
+                break;
+            case 2:
+                highScore = 0;
+                highScoreName = "";
+                saveHighScore(0);  // To overwrite file
+                std::cout << GREEN << "High score reset!" << RESET << std::endl;
+                waitForEnter();
+                break;
+            case 3:
+                break;
+        }
+    } while (choice != 3);
 }
 
 // Single round game mode
@@ -148,12 +196,13 @@ void playSingleRound() {
     std::cout << "2. Medium (1 - 100)" << std::endl;
     std::cout << "3. Hard (1 - 200)" << std::endl;
     std::cout << "4. Expert (1 - 1000)" << std::endl;
-    std::cout << "5. Custom (Enter your own range)" << std::endl;
+    std::cout << "5. Insane (1 - 10000)" << std::endl;
+    std::cout << "6. Custom (Enter your own range)" << std::endl;
     std::cout << "Enter your choice: ";
-    int diffChoice = getValidatedChoice(1, 5);
+    int diffChoice = getValidatedChoice(1, 6);
 
     int maxNumber = 100;  // default value
-    if (diffChoice == 5) {
+    if (diffChoice == 6) {
         std::cout << "Enter the maximum number for the range (minimum is 1): ";
         maxNumber = getValidatedChoice(1, std::numeric_limits<int>::max());
     } else {
@@ -162,6 +211,7 @@ void playSingleRound() {
             case 2: maxNumber = 100; break;
             case 3: maxNumber = 200; break;
             case 4: maxNumber = 1000; break;
+            case 5: maxNumber = 10000; break;
         }
     }
 
@@ -185,10 +235,32 @@ void playSingleRound() {
     int guess;
     int tries = 0;
     bool guessedCorrectly = false;
+    std::vector<int> previousGuesses;
 
     while (true) {
-        std::cout << "\nEnter your guess: ";
+        if (!previousGuesses.empty()) {
+            std::vector<int> sortedGuesses = previousGuesses;
+            std::sort(sortedGuesses.begin(), sortedGuesses.end());
+            std::cout << "Previous guesses: ";
+            for (int g : sortedGuesses) {
+                std::cout << g << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        std::cout << "\nGuess #" << (tries + 1);
+        if (limited) {
+            std::cout << " (of " << maxAttempts << ")";
+        }
+        std::cout << ": ";
         guess = getValidatedChoice(1, maxNumber);
+
+        if (std::find(previousGuesses.begin(), previousGuesses.end(), guess) != previousGuesses.end()) {
+            std::cout << YELLOW << "You've already guessed that! Try a different number." << RESET << std::endl;
+            continue;
+        }
+
+        previousGuesses.push_back(guess);
         tries++;
 
         if (guess < secretNumber) {
@@ -236,12 +308,30 @@ void playTournament() {
         int guess;
         int attempts = 0;
         bool success = false;
+        std::vector<int> previousGuesses;
 
         while (attempts < maxAttempts[round]) {
+            if (!previousGuesses.empty()) {
+                std::vector<int> sortedGuesses = previousGuesses;
+                std::sort(sortedGuesses.begin(), sortedGuesses.end());
+                std::cout << "Previous guesses: ";
+                for (int g : sortedGuesses) {
+                    std::cout << g << " ";
+                }
+                std::cout << std::endl;
+            }
+
             std::cout << "\nAttempt " << (attempts + 1) 
                       << " of " << maxAttempts[round] 
                       << ". Your guess: ";
             guess = getValidatedChoice(1, ranges[round]);
+
+            if (std::find(previousGuesses.begin(), previousGuesses.end(), guess) != previousGuesses.end()) {
+                std::cout << YELLOW << "You've already guessed that! Try a different number." << RESET << std::endl;
+                continue;
+            }
+
+            previousGuesses.push_back(guess);
             attempts++;
 
             if (guess < secretNumber) {
@@ -277,7 +367,7 @@ void playTournament() {
     bool isNewHighScore = (totalScore > highScore);
     saveHighScore(totalScore);
     if (isNewHighScore) {
-        std::cout << GREEN << "New high score!" << RESET << std::endl;
+        std::cout << GREEN << "New high score set by " << playerName << "!" << RESET << std::endl;
     }
     waitForEnter();
 }
@@ -289,9 +379,11 @@ void howToPlay() {
     std::cout << "\nHow to Play:" << std::endl;
     std::cout << "1. In Single Round mode, select a difficulty level (or custom) and optionally limit attempts. Guess the secret number." << std::endl;
     std::cout << "2. After each wrong guess, you'll get feedback if it's too high/low and a temperature hint on closeness." << std::endl;
-    std::cout << "3. In Tournament mode, play through 3 rounds with increasing difficulty and limited attempts." << std::endl;
-    std::cout << "4. Each wrong guess in Tournament reduces your round score. Total score is summed across rounds." << std::endl;
-    std::cout << "5. Beat the high score in Tournament mode! It's saved between sessions." << std::endl;
+    std::cout << "3. Previous guesses are displayed and duplicates are prevented." << std::endl;
+    std::cout << "4. In Tournament mode, play through 3 rounds with increasing difficulty and limited attempts." << std::endl;
+    std::cout << "5. Each wrong guess in Tournament reduces your round score. Total score is summed across rounds." << std::endl;
+    std::cout << "6. Beat the high score in Tournament mode! It's saved with your name between sessions." << std::endl;
+    std::cout << "7. Use Settings to change name or reset high score." << std::endl;
     waitForEnter();
 }
 
@@ -313,9 +405,10 @@ int main() {
         std::cout << "2. Tournament Mode" << std::endl;
         std::cout << "3. How to Play" << std::endl;
         std::cout << "4. View High Score" << std::endl;
-        std::cout << "5. Quit" << std::endl;
+        std::cout << "5. Settings" << std::endl;
+        std::cout << "6. Quit" << std::endl;
         std::cout << "Enter your choice: ";
-        choice = getValidatedChoice(1, 5);
+        choice = getValidatedChoice(1, 6);
 
         switch (choice) {
             case 1:
@@ -331,9 +424,12 @@ int main() {
                 viewHighScore();
                 break;
             case 5:
+                settings();
+                break;
+            case 6:
                 std::cout << "\n" << GREEN << "Thank you for playing, " << playerName << "! Goodbye!" << RESET << std::endl;
                 break;
         }
-    } while (choice != 5);
+    } while (choice != 6);
     return 0;
 }
