@@ -3,22 +3,21 @@
 #include <string>
 #include <cmath>
 #include <random>
-#include <cstdlib>
-#include <fstream>
 #include <vector>
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <fstream>
 
 // ANSI color codes
-const std::string RESET      = "\033[0m";
-const std::string RED        = "\033[1;31m";
-const std::string GREEN      = "\033[1;32m";
-const std::string YELLOW     = "\033[1;33m";
-const std::string BLUE       = "\033[1;34m";
-const std::string MAGENTA    = "\033[1;35m";
-const std::string CYAN       = "\033[1;36m";
-const std::string WHITE      = "\033[1;37m";
+const std::string RESET      = "";
+const std::string RED        = "";
+const std::string GREEN      = "";
+const std::string YELLOW     = "";
+const std::string BLUE       = "";
+const std::string MAGENTA    = "";
+const std::string CYAN       = "";
+const std::string WHITE      = "";
 
 // Game constants
 const std::string HIGH_SCORE_FILE = "highscores.txt";
@@ -72,22 +71,18 @@ int getRandomNumber(int min, int max) {
 
 // Clears the console screen
 void clearScreen() {
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
 }
 
 // Prints header
 void printHeader() {
-    if (!enableColor) return;
-    
-    std::cout << BLUE;
     std::cout << "=========================================" << std::endl;
     std::cout << "         GUESS THE NUMBER GAME           " << std::endl;
     std::cout << "=========================================" << std::endl;
-    std::cout << RESET;
 }
 
 // Gets validated input
@@ -96,8 +91,8 @@ int getValidatedChoice(int min, int max) {
     while (!(std::cin >> choice) || choice < min || choice > max) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << RED << "Invalid input. Please enter a number between "
-                  << min << " and " << max << ": " << RESET;
+        std::cout << "Invalid input. Please enter a number between "
+                  << min << " and " << max << ": ";
     }
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return choice;
@@ -105,34 +100,32 @@ int getValidatedChoice(int min, int max) {
 
 // Provides hint
 void provideHint(int guess, int secret, int range) {
-    if (!enableColor) return;
-    
     int diff = std::abs(secret - guess);
     if (diff == 0) return;
 
     double percentDiff = static_cast<double>(diff) / range;
     
     if (percentDiff < 0.02) {
-        std::cout << MAGENTA << "🔥 Boiling hot!" << RESET;
+        std::cout << "Boiling hot!";
     } else if (percentDiff < 0.05) {
-        std::cout << RED << "🔥 Very hot!" << RESET;
+        std::cout << "Very hot!";
     } else if (percentDiff < 0.1) {
-        std::cout << YELLOW << "♨️ Hot!" << RESET;
+        std::cout << "Hot!";
     } else if (percentDiff < 0.2) {
-        std::cout << YELLOW << "☀️ Warm" << RESET;
+        std::cout << "Warm";
     } else if (percentDiff < 0.3) {
-        std::cout << CYAN << "💨 Cool" << RESET;
+        std::cout << "Cool";
     } else if (percentDiff < 0.4) {
-        std::cout << BLUE << "❄️ Cold" << RESET;
+        std::cout << "Cold";
     } else {
-        std::cout << BLUE << "🧊 Freezing!" << RESET;
+        std::cout << "Freezing!";
     }
     std::cout << std::endl;
 }
 
 // Wait for user input
 void waitForEnter() {
-    std::cout << YELLOW << "\nPress Enter to continue..." << RESET;
+    std::cout << "\nPress Enter to continue...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.get();
 }
@@ -179,9 +172,6 @@ bool saveHighScore(int score, const std::string& playerName) {
 
 // Print trophy
 void printTrophy() {
-    if (!enableColor) return;
-    
-    std::cout << YELLOW;
     std::cout << "    .-=========-." << std::endl;
     std::cout << "    \\'-=======-'/" << std::endl;
     std::cout << "    _|   .=.   |_" << std::endl;
@@ -191,40 +181,32 @@ void printTrophy() {
     std::cout << "       _`) (`_" << std::endl;
     std::cout << "     _/_______\\_" << std::endl;
     std::cout << "    /___________\\" << std::endl;
-    std::cout << RESET;
 }
 
 // Print fireworks
 void printFireworks() {
-    if (!enableColor) return;
-    
-    std::cout << RED;
-    std::cout << "✨   *       ✨ *" << std::endl;
-    std::cout << "    *   ✨     *" << std::endl;
-    std::cout << "   *       *   ✨" << std::endl;
-    std::cout << "✨   *   ✨     *" << std::endl;
-    std::cout << "    *       *   ✨" << std::endl;
-    std::cout << RESET;
+    std::cout << "*   *       * *" << std::endl;
+    std::cout << "    *   *     *" << std::endl;
+    std::cout << "   *       *   *" << std::endl;
+    std::cout << "*   *   *     *" << std::endl;
+    std::cout << "    *       *   *" << std::endl;
 }
 
 // Print scoreboard
 void printScoreboard() {
-    std::cout << CYAN;
-    std::cout << "╔══════════════════════════════════╗" << std::endl;
-    std::cout << "║           HIGH SCORES            ║" << std::endl;
-    std::cout << "╠══════════════════════════════════╣" << std::endl;
+    std::cout << "High Scores:" << std::endl;
+    std::cout << "====================" << std::endl;
     
     if (highScores.empty()) {
-        std::cout << "║        No high scores yet!       ║" << std::endl;
+        std::cout << "No high scores yet!" << std::endl;
     } else {
         for (size_t i = 0; i < highScores.size(); ++i) {
-            std::cout << "║ " << (i + 1) << ". " 
+            std::cout << (i + 1) << ". " 
                       << highScores[i].name << " - " 
-                      << highScores[i].score << " ║" << std::endl;
+                      << highScores[i].score << std::endl;
         }
     }
-    std::cout << "╚══════════════════════════════════╝" << std::endl;
-    std::cout << RESET;
+    std::cout << "====================" << std::endl;
 }
 
 // View high scores
@@ -241,11 +223,11 @@ void displayStats() {
     clearScreen();
     printHeader();
     
-    std::cout << CYAN << "\nGame Statistics:\n" << RESET;
-    std::cout << "• High scores stored: " << highScores.size() << std::endl;
+    std::cout << "\nGame Statistics:" << std::endl;
+    std::cout << "High scores stored: " << highScores.size() << std::endl;
     
     if (!highScores.empty()) {
-        std::cout << "• Top score: " << highScores[0].score << " by " << highScores[0].name << std::endl;
+        std::cout << "Top score: " << highScores[0].score << " by " << highScores[0].name << std::endl;
     }
     
     waitForEnter();
@@ -258,9 +240,9 @@ void settingsMenu() {
         clearScreen();
         printHeader();
         
-        std::cout << CYAN << "\nSettings Menu:\n" << RESET;
-        std::cout << "1. Animations: " << (enableAnimations ? GREEN "ON" : RED "OFF") << RESET << std::endl;
-        std::cout << "2. Colors: " << (enableColor ? GREEN "ON" : RED "OFF") << RESET << std::endl;
+        std::cout << "\nSettings Menu:" << std::endl;
+        std::cout << "1. Animations: " << (enableAnimations ? "ON" : "OFF") << std::endl;
+        std::cout << "2. Colors: " << (enableColor ? "ON" : "OFF") << std::endl;
         std::cout << "3. Back to Main Menu" << std::endl;
         std::cout << "Enter your choice: ";
         
@@ -297,14 +279,14 @@ void quickPlay() {
         previousGuesses.push_back(guess);
 
         if (guess < secretNumber) {
-            std::cout << YELLOW << "Too low!" << RESET << std::endl;
+            std::cout << "Too low!" << std::endl;
             provideHint(guess, secretNumber, 100);
         } else if (guess > secretNumber) {
-            std::cout << YELLOW << "Too high!" << RESET << std::endl;
+            std::cout << "Too high!" << std::endl;
             provideHint(guess, secretNumber, 100);
         } else {
-            std::cout << GREEN << "\nCongratulations! You guessed the number in "
-                      << tries << " tries." << RESET << std::endl;
+            std::cout << "\nCongratulations! You guessed the number in "
+                      << tries << " tries." << std::endl;
             
             if (enableAnimations) {
                 printFireworks();
@@ -312,16 +294,9 @@ void quickPlay() {
             
             std::cout << "\nYour guesses: ";
             for (size_t i = 0; i < previousGuesses.size(); ++i) {
-                if (previousGuesses[i] < secretNumber) {
-                    std::cout << RED << previousGuesses[i] << RESET;
-                } else if (previousGuesses[i] > secretNumber) {
-                    std::cout << BLUE << previousGuesses[i] << RESET;
-                } else {
-                    std::cout << GREEN << previousGuesses[i] << RESET;
-                }
-                
+                std::cout << previousGuesses[i];
                 if (i < previousGuesses.size() - 1) {
-                    std::cout << " → ";
+                    std::cout << " -> ";
                 }
             }
             std::cout << std::endl;
@@ -351,14 +326,14 @@ void extremeMode() {
         tries++;
 
         if (guess < secretNumber) {
-            std::cout << YELLOW << "Too low!" << RESET << std::endl;
+            std::cout << "Too low!" << std::endl;
             provideHint(guess, secretNumber, 1000);
         } else if (guess > secretNumber) {
-            std::cout << YELLOW << "Too high!" << RESET << std::endl;
+            std::cout << "Too high!" << std::endl;
             provideHint(guess, secretNumber, 1000);
         } else {
-            std::cout << GREEN << "\nCongratulations! You guessed the number in "
-                      << tries << " tries." << RESET << std::endl;
+            std::cout << "\nCongratulations! You guessed the number in "
+                      << tries << " tries." << std::endl;
             
             if (enableAnimations) {
                 printFireworks();
@@ -373,7 +348,7 @@ void extremeMode() {
     }
     
     if (!guessedCorrectly) {
-        std::cout << RED << "\nGame Over! The number was: " << secretNumber << RESET << std::endl;
+        std::cout << "\nGame Over! The number was: " << secretNumber << std::endl;
     }
     
     waitForEnter();
@@ -402,14 +377,14 @@ void multiplayerMode() {
         tries++;
 
         if (guess < secretNumber) {
-            std::cout << YELLOW << "Too low!" << RESET << std::endl;
+            std::cout << "Too low!" << std::endl;
             provideHint(guess, secretNumber, 1000);
         } else if (guess > secretNumber) {
-            std::cout << YELLOW << "Too high!" << RESET << std::endl;
+            std::cout << "Too high!" << std::endl;
             provideHint(guess, secretNumber, 1000);
         } else {
-            std::cout << GREEN << "\nCongratulations! You guessed the number in "
-                      << tries << " tries." << RESET << std::endl;
+            std::cout << "\nCongratulations! You guessed the number in "
+                      << tries << " tries." << std::endl;
             
             if (enableAnimations) {
                 printFireworks();
@@ -471,14 +446,14 @@ void playSingleRound() {
         previousGuesses.push_back(guess);
 
         if (guess < secretNumber) {
-            std::cout << YELLOW << "Too low!" << RESET << std::endl;
+            std::cout << "Too low!" << std::endl;
             provideHint(guess, secretNumber, range);
         } else if (guess > secretNumber) {
-            std::cout << YELLOW << "Too high!" << RESET << std::endl;
+            std::cout << "Too high!" << std::endl;
             provideHint(guess, secretNumber, range);
         } else {
-            std::cout << GREEN << "\nCongratulations! You guessed the number in "
-                      << tries << " tries." << RESET << std::endl;
+            std::cout << "\nCongratulations! You guessed the number in "
+                      << tries << " tries." << std::endl;
                       
             if (enableAnimations) {
                 printFireworks();
@@ -486,16 +461,9 @@ void playSingleRound() {
             
             std::cout << "\nYour guesses: ";
             for (size_t i = 0; i < previousGuesses.size(); ++i) {
-                if (previousGuesses[i] < secretNumber) {
-                    std::cout << RED << previousGuesses[i] << RESET;
-                } else if (previousGuesses[i] > secretNumber) {
-                    std::cout << BLUE << previousGuesses[i] << RESET;
-                } else {
-                    std::cout << GREEN << previousGuesses[i] << RESET;
-                }
-                
+                std::cout << previousGuesses[i];
                 if (i < previousGuesses.size() - 1) {
-                    std::cout << " → ";
+                    std::cout << " -> ";
                 }
             }
             std::cout << std::endl;
@@ -526,9 +494,9 @@ void playTournament() {
     std::string roundNames[rounds] = {"Easy", "Medium", "Hard"};
 
     for (int round = 0; round < rounds; round++) {
-        std::cout << "\n" << BLUE << "Round " << round + 1 << " (" << roundNames[round] 
+        std::cout << "\nRound " << round + 1 << " (" << roundNames[round] 
                   << ") - Guess the number between 1 and " 
-                  << ranges[round] << RESET << std::endl;
+                  << ranges[round] << std::endl;
                   
         int secretNumber = getRandomNumber(1, ranges[round]);
         int roundScore = maxAttempts[round] * 100;
@@ -544,18 +512,18 @@ void playTournament() {
             attempts++;
 
             if (guess < secretNumber) {
-                std::cout << YELLOW << "Too low!" << RESET << std::endl;
+                std::cout << "Too low!" << std::endl;
                 provideHint(guess, secretNumber, ranges[round]);
                 roundScore -= 100;
             } else if (guess > secretNumber) {
-                std::cout << YELLOW << "Too high!" << RESET << std::endl;
+                std::cout << "Too high!" << std::endl;
                 provideHint(guess, secretNumber, ranges[round]);
                 roundScore -= 100;
             } else {
-                std::cout << GREEN << "Correct! You guessed it in " 
+                std::cout << "Correct! You guessed it in " 
                           << attempts << " attempt" 
                           << (attempts > 1 ? "s" : "") << "." 
-                          << RESET << std::endl;
+                          << std::endl;
                 success = true;
                 break;
             }
@@ -565,16 +533,16 @@ void playTournament() {
         
         if (success) {
             if (roundScore < 0) roundScore = 0;
-            std::cout << GREEN << "You earned " 
+            std::cout << "You earned " 
                       << roundScore << " points in this round." 
-                      << RESET << std::endl;
+                      << std::endl;
             totalScore += roundScore;
         } else {
-            std::cout << RED << "Out of attempts! The correct number was " 
-                      << secretNumber << "." << RESET << std::endl;
+            std::cout << "Out of attempts! The correct number was " 
+                      << secretNumber << "." << std::endl;
         }
         
-        std::cout << CYAN << "Total score so far: " << totalScore << RESET << std::endl;
+        std::cout << "Total score so far: " << totalScore << std::endl;
         
         if (round < rounds - 1) {
             std::cout << "\nNext round starting..." << std::endl;
@@ -584,8 +552,8 @@ void playTournament() {
         }
     }
     
-    std::cout << "\n" << BLUE << "Tournament Over! Your total score is: " 
-              << totalScore << RESET << std::endl;
+    std::cout << "\nTournament Over! Your total score is: " 
+              << totalScore << std::endl;
               
     if (enableAnimations && totalScore > 0) {
         printTrophy();
@@ -593,7 +561,7 @@ void playTournament() {
     
     bool isNewHighScore = saveHighScore(totalScore, playerName);
     if (isNewHighScore) {
-        std::cout << GREEN << "New high score! You've made it to the leaderboard!" << RESET << std::endl;
+        std::cout << "New high score! You've made it to the leaderboard!" << std::endl;
     }
     
     waitForEnter();
@@ -604,7 +572,7 @@ void howToPlay() {
     clearScreen();
     printHeader();
     
-    std::cout << CYAN << "\nHow to Play:\n" << RESET;
+    std::cout << "\nHow to Play:" << std::endl;
     std::cout << "1. In Single Round mode, select a difficulty level and try to guess the secret number." << std::endl;
     std::cout << "2. After each wrong guess, you'll get feedback and a temperature hint on closeness." << std::endl;
     std::cout << "3. In Tournament mode, play through 3 rounds with increasing difficulty and limited attempts." << std::endl;
@@ -668,7 +636,7 @@ int main() {
                 settingsMenu();
                 break;
             case 10:
-                std::cout << "\n" << GREEN << "Thank you for playing! Goodbye!" << RESET << std::endl;
+                std::cout << "\nThank you for playing! Goodbye!" << std::endl;
                 break;
         }
     } while (choice != 10);
