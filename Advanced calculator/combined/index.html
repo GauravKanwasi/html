@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Scientific Calculator</title>
+    <title>Compact Scientific Calculator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -14,7 +14,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            background: linear-gradient(135deg, #4776E6, #8E54E9);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,19 +24,18 @@
 
         .calculator-container {
             width: 100%;
-            max-width: 380px;
+            max-width: 360px;
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(10px);
-            border-radius: 24px;
+            border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.18);
-            transition: all 0.3s ease;
         }
 
         .calculator-header {
             background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             color: #fff;
             display: flex;
@@ -45,19 +44,18 @@
         }
 
         .calculator-header h1 {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 500;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .mode-toggle {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 50px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             transition: all 0.3s ease;
         }
 
@@ -66,91 +64,71 @@
         }
 
         .display-container {
-            padding: 20px;
+            padding: 15px;
             background: rgba(0, 0, 0, 0.15);
         }
 
         #history {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: rgba(255, 255, 255, 0.85);
             text-align: right;
-            min-height: 26px;
-            margin-bottom: 15px;
+            min-height: 24px;
+            margin-bottom: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding: 10px;
+            padding: 8px;
             background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            transition: all 0.3s ease;
+            border-radius: 8px;
         }
 
         #display {
             width: 100%;
-            height: 70px;
-            font-size: 2.8rem;
+            height: 60px;
+            font-size: 2.4rem;
             text-align: right;
-            padding: 15px;
+            padding: 12px;
             border: none;
-            border-radius: 15px;
+            border-radius: 12px;
             background: rgba(255, 255, 255, 0.9);
             color: #2c3e50;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
         }
 
         .buttons-container {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 15px;
-            padding: 20px;
+            gap: 12px;
+            padding: 15px;
         }
 
         .button-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
         }
 
         .btn {
-            padding: 16px;
-            font-size: 1.4rem;
+            padding: 12px 8px;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 16px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             color: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .btn:hover::after {
-            opacity: 1;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .btn:active {
             transform: translateY(1px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .number {
@@ -171,49 +149,35 @@
 
         .scientific {
             background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
 
         .constant {
             background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            font-size: 1rem;
         }
 
         .memory-btn {
             background: linear-gradient(to bottom, #34495e, #2c3e50);
-            font-size: 1rem;
-            padding: 14px;
+            font-size: 0.9rem;
+            padding: 10px 8px;
         }
 
         .mode-toggle-btn {
             background: linear-gradient(to bottom, #f1c40f, #f39c12);
             color: #2c3e50;
             font-weight: bold;
-            padding: 12px;
+            padding: 10px;
             grid-column: span 2;
+            font-size: 0.9rem;
         }
 
         .calculator-footer {
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             background: rgba(0, 0, 0, 0.15);
-        }
-
-        @media (max-width: 480px) {
-            .calculator-container {
-                border-radius: 20px;
-            }
-            
-            .btn {
-                padding: 14px;
-                font-size: 1.2rem;
-            }
-            
-            #display {
-                height: 60px;
-                font-size: 2.4rem;
-            }
         }
 
         .scientific-panel {
@@ -231,7 +195,17 @@
         }
 
         .btn i {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
+        }
+
+        .button-press {
+            animation: buttonPress 0.2s ease;
+        }
+
+        @keyframes buttonPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
         }
 
         .theme-toggle {
@@ -254,16 +228,6 @@
         .theme-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
         }
-
-        .button-press {
-            animation: buttonPress 0.2s ease;
-        }
-
-        @keyframes buttonPress {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
     </style>
 </head>
 <body>
@@ -274,7 +238,7 @@
     <div class="calculator-container">
         <div class="calculator-header">
             <h1>Scientific Calculator</h1>
-            <button class="mode-toggle" id="modeToggle">SCI Mode</button>
+            <button class="mode-toggle" id="modeToggle">SCI</button>
         </div>
         
         <div class="display-container">
@@ -288,16 +252,27 @@
                 <button class="btn memory-btn" onclick="memoryRecall()">MR</button>
                 <button class="btn memory-btn" onclick="memoryAdd()">M+</button>
                 <button class="btn memory-btn" onclick="memorySubtract()">M-</button>
+                <button class="btn clear" onclick="clearDisplay()">C</button>
             </div>
             
             <div class="button-row">
-                <button class="btn clear" onclick="clearDisplay()">C</button>
+                <button class="btn scientific" onclick="calculateSquare()">x²</button>
+                <button class="btn scientific" onclick="calculateSquareRoot()">√</button>
+                <button class="btn scientific" onclick="calculateSin()">sin</button>
+                <button class="btn scientific" onclick="calculateCos()">cos</button>
                 <button class="btn delete" onclick="deleteLast()"><i class="fas fa-backspace"></i></button>
-                <button class="btn scientific" onclick="calculatePercentage()">%</button>
+            </div>
+            
+            <div class="button-row">
+                <button class="btn scientific" onclick="calculatePower()">x^y</button>
+                <button class="btn scientific" onclick="calculateLog()">log</button>
+                <button class="btn scientific" onclick="calculateLn()">ln</button>
+                <button class="btn scientific" onclick="calculateExp()">e^x</button>
                 <button class="btn operator" onclick="appendOperator('/')">/</button>
             </div>
             
             <div class="button-row">
+                <button class="btn constant" onclick="appendConstant('pi')">π</button>
                 <button class="btn number" onclick="appendNumber(7)">7</button>
                 <button class="btn number" onclick="appendNumber(8)">8</button>
                 <button class="btn number" onclick="appendNumber(9)">9</button>
@@ -305,6 +280,7 @@
             </div>
             
             <div class="button-row">
+                <button class="btn constant" onclick="appendConstant('e')">e</button>
                 <button class="btn number" onclick="appendNumber(4)">4</button>
                 <button class="btn number" onclick="appendNumber(5)">5</button>
                 <button class="btn number" onclick="appendNumber(6)">6</button>
@@ -312,6 +288,7 @@
             </div>
             
             <div class="button-row">
+                <button class="btn scientific" onclick="calculateFactorial()">x!</button>
                 <button class="btn number" onclick="appendNumber(1)">1</button>
                 <button class="btn number" onclick="appendNumber(2)">2</button>
                 <button class="btn number" onclick="appendNumber(3)">3</button>
@@ -319,6 +296,8 @@
             </div>
             
             <div class="button-row">
+                <button class="btn scientific" onclick="calculatePercentage()">%</button>
+                <button class="btn scientific" onclick="toggleSign()">±</button>
                 <button class="btn number" onclick="appendNumber(0)">0</button>
                 <button class="btn number" onclick="appendDecimal()">.</button>
                 <button class="btn equals" onclick="calculateResult()">=</button>
@@ -326,43 +305,22 @@
             
             <div class="button-row">
                 <button class="btn mode-toggle-btn" id="scientificToggle" onclick="toggleScientificMode()">
-                    Scientific Functions <i class="fas fa-calculator"></i>
+                    More Functions <i class="fas fa-calculator"></i>
                 </button>
             </div>
             
             <div class="scientific-panel" id="scientificPanel">
                 <div class="button-row">
-                    <button class="btn scientific" onclick="calculateSquare()">x²</button>
-                    <button class="btn scientific" onclick="calculateSquareRoot()">√</button>
-                    <button class="btn scientific" onclick="calculatePower()">x^y</button>
-                    <button class="btn scientific" onclick="calculateFactorial()">x!</button>
-                </div>
-                
-                <div class="button-row">
-                    <button class="btn scientific" onclick="calculateSin()">sin</button>
-                    <button class="btn scientific" onclick="calculateCos()">cos</button>
                     <button class="btn scientific" onclick="calculateTan()">tan</button>
-                    <button class="btn scientific" onclick="calculateLog()">log</button>
-                </div>
-                
-                <div class="button-row">
-                    <button class="btn scientific" onclick="calculateLn()">ln</button>
                     <button class="btn scientific" onclick="calculateReciprocal()">1/x</button>
                     <button class="btn scientific" onclick="absoluteValue()">|x|</button>
-                    <button class="btn scientific" onclick="calculateExp()">e^x</button>
-                </div>
-                
-                <div class="button-row">
-                    <button class="btn constant" onclick="appendConstant('pi')">π</button>
-                    <button class="btn constant" onclick="appendConstant('e')">e</button>
-                    <button class="btn scientific" onclick="toggleSign()">±</button>
                     <button class="btn scientific" onclick="calculateRandom()">rand</button>
                 </div>
             </div>
         </div>
         
         <div class="calculator-footer">
-            <p>Advanced Scientific Calculator with Smooth UI</p>
+            <p>Compact Scientific Calculator</p>
         </div>
     </div>
 
@@ -781,7 +739,7 @@
                 scientificToggle.innerHTML = 'Basic Functions <i class="fas fa-calculator"></i>';
             } else {
                 scientificPanel.classList.remove('visible');
-                scientificToggle.innerHTML = 'Scientific Functions <i class="fas fa-calculator"></i>';
+                scientificToggle.innerHTML = 'More Functions <i class="fas fa-calculator"></i>';
             }
         }
 
@@ -789,10 +747,10 @@
             isDarkMode = !isDarkMode;
             
             if (isDarkMode) {
-                document.body.style.background = "linear-gradient(135deg, #1a2980, #26d0ce)";
+                document.body.style.background = "linear-gradient(135deg, #4776E6, #8E54E9)";
                 themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
             } else {
-                document.body.style.background = "linear-gradient(135deg, #4776E6, #8E54E9)";
+                document.body.style.background = "linear-gradient(135deg, #1a2980, #26d0ce)";
                 themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
             }
         }
