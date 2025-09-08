@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Exam Scientific Calculator — v2.1</title>
+  <title>Exam Scientific Calculator — v2.2</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
   <style>
     /* ---------- Base / Reset ---------- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -162,7 +161,7 @@
     <div class="header">
       <div class="brand">EXAM-CALC</div>
       <div class="title" id="modeTitle">Scientific Calculator</div>
-      <div class="brand">v2.1</div>
+      <div class="brand">v2.2</div>
     </div>
 
     <div class="display-wrap">
@@ -276,9 +275,7 @@
   </div>
 
   <script>
-    /* =========================
-       State & element refs
-       ========================= */
+    // ========= Refs & State =========
     const calculator = document.getElementById('calculator');
     const displayEl = document.getElementById('display');
     const historyEl = document.getElementById('history');
@@ -286,54 +283,44 @@
     const modeToggle = document.getElementById('modeToggle');
     const modeTitle = document.getElementById('modeTitle');
 
-    // Internal state (keeps unformatted numeric strings)
-    let current = "";         // current operand as string
-    let previous = "";        // previous operand as string
-    let operator = "";        // operator token ( + - * / ^ % E logy √ etc )
+    let current = "";       // current operand string (unformatted)
+    let previous = "";      // previous operand string
+    let operator = "";      // operator token
     let memory = 0;
     let shiftActive = false;
     let isScientific = true;
 
-    /* =========================
-       Utility: safe formatting
-       - Format integer part with thousands separators
-       - Keep decimal part intact
-       - If value contains non-numeric characters (parentheses / functions) show raw
-       ========================= */
+    // Fast numeric check (allow -, digits, decimal and commas)
     function isSimpleNumber(s) {
-      // allow minus and digits and decimal and commas
-      return /^[\-\d.,]+$/.test(s);
+      return typeof s === 'string' && /^[\-\d.,]+$/.test(s);
     }
 
+    // Format only for display (do not change internal strings)
     function formatNumberString(s) {
       if (s === "" || s === null || s === undefined) return "0";
-      // if it's a raw expression or contains parens, return as-is
       if (!isSimpleNumber(s)) return s;
-      // clean commas then split on decimal
-      let raw = String(s).replace(/,/g, "");
+      const raw = String(s).replace(/,/g, "");
       if (raw === "-" || raw === ".") return raw;
       if (raw.includes('.')) {
-        let [intPart, decPart] = raw.split('.');
-        intPart = intPart === "" ? "0" : intPart;
-        // keep possible leading minus
-        let neg = "";
-        if (intPart.startsWith('-')) { neg = "-"; intPart = intPart.slice(1); }
-        let intNum = parseInt(intPart || "0", 10);
-        let formattedInt = intNum.toLocaleString();
+        const [intPart, decPart] = raw.split('.');
+        const neg = intPart.startsWith('-') ? '-' : '';
+        const intClean = neg ? intPart.slice(1) : intPart;
+        const intNum = intClean === "" ? 0 : parseInt(intClean, 10);
+        const formattedInt = intNum.toLocaleString();
         return neg + formattedInt + '.' + decPart;
       } else {
-        let neg = "";
-        if (raw.startsWith('-')) { neg = "-"; raw = raw.slice(1); }
-        if (raw === "") return "0";
-        let n = parseInt(raw, 10);
+        const neg = raw.startsWith('-') ? '-' : '';
+        const core = neg ? raw.slice(1) : raw;
+        if (core === "") return "0";
+        const n = parseInt(core, 10);
         if (isNaN(n)) return s;
-        return (neg + n.toLocaleString());
+        return neg + n.toLocaleString();
       }
     }
 
+    // Updates display + history in a single DOM write to reduce layout thrash
     function refreshDisplay() {
       displayEl.value = current ? formatNumberString(current) : "0";
-      // History: show previous operator current succinctly
       let hist = "";
       if (previous) hist += formatNumberString(previous) + " ";
       if (operator) hist += (operator === "*" ? "×" : operator === "/" ? "÷" : operator) + " ";
@@ -341,11 +328,8 @@
       historyEl.innerHTML = hist || "&nbsp;";
     }
 
-    /* =========================
-       Input helpers
-       ========================= */
+    // ========= Input helpers =========
     function appendNumber(digit) {
-      // keep digits and avoid multiple leading zeros
       if (current === "0" && digit === "0") return;
       if (current === "0" && digit !== ".") current = digit;
       else current += digit;
@@ -373,13 +357,11 @@
 
     function toggleSign() {
       if (!current) return;
-      if (current.startsWith('-')) current = current.slice(1);
-      else current = '-' + current;
+      current = current.startsWith('-') ? current.slice(1) : '-' + current;
       refreshDisplay();
     }
 
     function openParen() {
-      // allow parentheses in current when constructing expressions
       current += "(";
       refreshDisplay();
     }
@@ -388,37 +370,28 @@
       refreshDisplay();
     }
 
-    /* =========================
-       Memory functions
-       ========================= */
+    // ========= Memory =========
     function memoryClear() { memory = 0; }
-    function memoryRecall() {
-      current = String(memory);
-      refreshDisplay();
-    }
+    function memoryRecall() { current = String(memory); refreshDisplay(); }
     function memoryAdd() {
-      let val = parseFloat((current || "0").replace(/,/g,""));
+      const val = parseFloat((current || "0").replace(/,/g,""));
       if (!isNaN(val)) memory += val;
     }
     function memorySubtract() {
-      let val = parseFloat((current || "0").replace(/,/g,""));
+      const val = parseFloat((current || "0").replace(/,/g,""));
       if (!isNaN(val)) memory -= val;
     }
 
-    /* =========================
-       Operator / Modes
-       ========================= */
+    // ========= Operators & Modes =========
     function appendOperator(op) {
-      // if no current but previous present, allow changing operator
       if (!current && previous) {
         operator = op;
         refreshDisplay();
         return;
       }
       if (previous && operator && current) {
-        computeBinary(); // flush previous op first
+        computeBinary();
       }
-      // move current to previous and set operator
       if (current !== "") {
         previous = current;
         current = "";
@@ -427,23 +400,22 @@
       refreshDisplay();
     }
 
-    // Modes that set special operator tokens
     function powerMode() { appendOperator('^'); }
-    function nthRootMode() { appendOperator('√'); } // interpret as previous ^ (1/current) when computing
+    function nthRootMode() { appendOperator('√'); }
     function logBaseMode() { appendOperator('logy'); }
-    function expMode() { appendOperator('E'); } // treat as previous * 10^current when compute
-    function ePower() { // e^x applied immediately
+    function expMode() { appendOperator('E'); }
+    function ePower() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.exp(v);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.exp(v);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function tenPower() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.pow(10, v);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.pow(10, v);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
@@ -454,147 +426,131 @@
       refreshDisplay();
     }
 
-    /* =========================
-       Unary scientific ops
-       ========================= */
+    // ========= Scientific unary ops =========
     function square() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = v * v;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = v * v;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function squareRoot() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < 0) {
-        displayError("Invalid square root");
-        return;
-      }
-      let res = Math.sqrt(v);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < 0) { displayError("Invalid square root"); return; }
+      const res = Math.sqrt(v);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function sinDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.sin(v * Math.PI/180);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.sin(v * Math.PI/180);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function asinDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < -1 || v > 1) { displayError("Invalid value for arcsin"); return; }
-      let res = Math.asin(v) * 180/Math.PI;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < -1 || v > 1) { displayError("Invalid value for arcsin"); return; }
+      const res = Math.asin(v) * 180/Math.PI;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function cosDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.cos(v * Math.PI/180);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.cos(v * Math.PI/180);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function acosDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < -1 || v > 1) { displayError("Invalid value for arccos"); return; }
-      let res = Math.acos(v) * 180/Math.PI;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v < -1 || v > 1) { displayError("Invalid value for arccos"); return; }
+      const res = Math.acos(v) * 180/Math.PI;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function tanDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.tan(v * Math.PI/180);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.tan(v * Math.PI/180);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function atanDeg() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = Math.atan(v) * 180/Math.PI;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = Math.atan(v) * 180/Math.PI;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function ln() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v <= 0) { displayError("ln undefined"); return; }
-      let res = Math.log(v);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v <= 0) { displayError("ln undefined"); return; }
+      const res = Math.log(v);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function log10() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v <= 0) { displayError("log undefined"); return; }
-      let res = Math.log10(v);
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v <= 0) { displayError("log undefined"); return; }
+      const res = Math.log10(v);
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function factorial() {
       if (!current) return;
-      let n = parseInt(current.replace(/,/g,''), 10);
-      if (isNaN(n) || n < 0 || n > 170) { // >170 may overflow JS Number
-        displayError("Invalid factorial");
-        return;
-      }
+      const n = parseInt(current.replace(/,/g,''), 10);
+      if (isNaN(n) || n < 0 || n > 170) { displayError("Invalid factorial"); return; }
       let res = 1;
-      for (let i=2;i<=n;i++) res *= i;
+      for (let i = 2; i <= n; i++) res *= i;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function reciprocal() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v === 0) { displayError("Divide by zero"); return; }
-      let res = 1 / v;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v) || v === 0) { displayError("Divide by zero"); return; }
+      const res = 1 / v;
       current = String(Number.parseFloat(res.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
     function percent() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
-      let res = v / 100;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const res = v / 100;
       current = String(Number.parseFloat(res.toPrecision(12)));
       refreshDisplay();
     }
     function absVal() {
       if (!current) return;
-      let v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
+      const v = parseFloat(current.replace(/,/g,'')); if (isNaN(v)) return;
       current = String(Math.abs(v));
       refreshDisplay();
     }
     function random() {
-      let r = Math.random();
+      const r = Math.random();
       current = String(Number.parseFloat(r.toPrecision(12)));
       previous = ""; operator = "";
       refreshDisplay();
     }
 
-    /* =========================
-       Compute binary operations
-       Supports: + - * / % ^ √ logy E
-       Interpretation:
-         - ^ : power previous^current
-         - √ : nth root mode (previous is x, current is n) => result = x^(1/n)
-         - logy : previous is base, current is value -> result = log(value)/log(base)
-         - E : previous * 10^current
-    ========================= */
+    // ========= Compute binary =========
     function computeBinary() {
       try {
         if (!previous || !operator) return;
-        let a = parseFloat(previous.replace(/,/g,'')); // left
-        let b = parseFloat(current.replace(/,/g,'')); // right
+        const a = parseFloat(previous.replace(/,/g,'')); // left
+        const b = parseFloat(current.replace(/,/g,'')); // right
         if (isNaN(a) || isNaN(b)) { displayError("Invalid operands"); return; }
 
         let res;
@@ -605,24 +561,21 @@
           case '/':
             if (b === 0) { displayError("Division by zero"); return; }
             res = a / b; break;
-          case '%':
-            res = a % b; break;
-          case '^':
-            res = Math.pow(a, b); break;
-          case '√': // treat as previous ^ (1/current) or nth root: a is radicand, b is degree
+          case '%': res = a % b; break;
+          case '^': res = Math.pow(a, b); break;
+          case '√':
             if (b === 0) { displayError("Invalid root"); return; }
             res = Math.pow(a, 1 / b); break;
           case 'logy':
             if (a <= 0 || b <= 0) { displayError("Log arg error"); return; }
             res = Math.log(b) / Math.log(a); break;
-          case 'E': // previous E current => a * 10^b
+          case 'E':
             res = a * Math.pow(10, b); break;
           default:
             displayError("Unknown operator");
             return;
         }
 
-        // format and store results
         res = Number.parseFloat(res.toPrecision(12));
         current = String(res);
         previous = "";
@@ -635,34 +588,25 @@
 
     function calculate() {
       if (previous && operator && current) computeBinary();
-      else if (current && !previous) {
-        // nothing to compute, just keep current
-        refreshDisplay();
-      }
+      else refreshDisplay();
     }
 
-    /* =========================
-       Error UI helper
-    ========================= */
+    // ========= Error helper =========
     function displayError(msg) {
       displayEl.value = "Error";
       historyEl.textContent = msg || "Error";
-      // reset state after a short delay so user can see message
       setTimeout(() => {
         current = "";
         previous = "";
         operator = "";
         refreshDisplay();
-      }, 900);
+      }, 800);
     }
 
-    /* =========================
-       Shift and Mode toggles
-    ========================= */
+    // ========= Shift & Mode =========
     function toggleShift() {
       shiftActive = !shiftActive;
-      if (shiftActive) calculator.classList.add('shift-active');
-      else calculator.classList.remove('shift-active');
+      calculator.classList.toggle('shift-active', shiftActive);
       shiftBtn.classList.toggle('active', shiftActive);
     }
 
@@ -679,12 +623,8 @@
       }
     }
 
-    /* =========================
-       Keyboard support
-       - Numbers, . + - * / Enter Backspace Esc % ^ parentheses
-    ========================= */
+    // ========= Keyboard support =========
     document.addEventListener('keydown', (e) => {
-      // guard off form inputs etc
       if (e.key.length === 1 && /[0-9]/.test(e.key)) { appendNumber(e.key); return; }
       if (e.key === '.') { appendDecimal(); return; }
       if (e.key === '+' || e.key === '-') { appendOperator(e.key); return; }
@@ -698,9 +638,8 @@
       if (e.key === ')') { closeParen(); return; }
     });
 
-    /* Initialize */
+    // ========= Init =========
     refreshDisplay();
-    // set initial mode label
     modeToggle.innerHTML = '<i class="fas fa-flask"></i>&nbsp;Scientific';
   </script>
 </body>
