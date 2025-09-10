@@ -1,69 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Exam Scientific Calculator</title>
+  <title>DHTML Scientific Calculator</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    /* Base Reset */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     body {
+      background: linear-gradient(135deg, #eef2f3, #dfe9f3);
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #eef2f3, #dfe9f3);
-      padding: 20px;
     }
-
     .calculator-container {
-      width: 100%;
-      max-width: 400px;
+      width: 360px;
       background: #2c3e50;
       border-radius: 16px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.35);
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      position: absolute;
+      cursor: grab;
+      transition: box-shadow 0.3s ease;
     }
-
+    .calculator-container.dragging {
+      opacity: 0.9;
+      cursor: grabbing;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
     .calculator-header {
       background: #34495e;
-      padding: 16px 20px;
+      padding: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: white;
+      font-weight: bold;
+      user-select: none;
     }
-
-    .calculator-header h1 {
-      font-size: 1.2rem;
-    }
-
     .display-container {
       background: #2f445a;
-      padding: 16px;
+      padding: 12px;
     }
-
     #history {
       font-size: 0.85rem;
       color: rgba(255,255,255,0.6);
       text-align: right;
       min-height: 20px;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
-
+    #preview {
+      font-size: 0.9rem;
+      color: #f1c40f;
+      text-align: right;
+      min-height: 20px;
+    }
     #display {
       width: 100%;
-      height: 60px;
+      height: 55px;
       font-size: 2rem;
       text-align: right;
       padding: 10px;
@@ -73,19 +66,16 @@
       color: #2c3e50;
       box-shadow: inset 0 0 6px rgba(0,0,0,0.15);
     }
-
     .buttons-container {
       display: grid;
-      gap: 10px;
-      padding: 16px;
+      gap: 8px;
+      padding: 12px;
     }
-
     .button-row {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
-
     .btn {
       padding: 14px;
       font-size: 1rem;
@@ -95,97 +85,49 @@
       transition: all 0.15s ease;
       color: white;
       font-weight: 500;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.25);
     }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+    .btn:active, .btn.glow {
+      background: #f1c40f !important;
+      color: #2c3e50 !important;
+      transform: scale(0.95);
     }
-
-    .btn:active {
-      transform: scale(0.96);
-    }
-
-    .number {
-      background: linear-gradient(to bottom, #7f8c8d, #6c7a89);
-    }
-
-    .operator {
-      background: linear-gradient(to bottom, #f39c12, #d35400);
-    }
-
-    .equals {
-      background: linear-gradient(to bottom, #27ae60, #219653);
-      font-weight: bold;
-    }
-
-    .clear, .delete {
-      background: linear-gradient(to bottom, #e74c3c, #c0392b);
-    }
-
-    .scientific {
-      background: linear-gradient(to bottom, #3498db, #2980b9);
-      font-size: 0.9rem;
-    }
-
-    .memory-btn {
-      background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-    }
-
-    .mode-toggle-btn {
-      background: linear-gradient(to bottom, #f1c40f, #f39c12);
-      color: #2c3e50;
-      font-weight: bold;
-      grid-column: span 2;
-    }
-
-    .shift-btn {
-      background: linear-gradient(to bottom, #34495e, #2c3e50);
-    }
-
-    .shift-btn.active {
-      background: linear-gradient(to bottom, #f1c40f, #e67e22);
-      color: #2c3e50;
-    }
-
-    .calculator-footer {
-      text-align: center;
-      padding: 10px;
+    .number { background: #7f8c8d; }
+    .operator { background: #f39c12; }
+    .equals { background: #27ae60; font-weight: bold; }
+    .clear, .delete { background: #e74c3c; }
+    .memory-btn { background: #9b59b6; }
+    .scientific { background: #3498db; }
+    .mode-toggle-btn { background: #f1c40f; color: #2c3e50; font-weight: bold; }
+    .memory-indicator {
       font-size: 0.75rem;
-      color: rgba(255,255,255,0.7);
-      background: #34495e;
-      border-top: 1px solid rgba(255,255,255,0.1);
+      color: #f1c40f;
+      text-align: center;
+      margin-top: 4px;
+      min-height: 14px;
     }
-
-    @media (max-width: 400px) {
-      #display {
-        font-size: 1.6rem;
-        height: 50px;
-      }
-      .btn {
-        font-size: 0.85rem;
-        padding: 10px;
-      }
+    .theme-toggle {
+      cursor: pointer;
+      padding: 5px;
+      font-size: 1rem;
+    }
+    .dark-mode {
+      background: #1a252f !important;
+      color: white !important;
     }
   </style>
 </head>
 <body>
-  <div class="calculator-container">
-    <div class="calculator-header">
-      <div class="calculator-brand">EXAM-CALC</div>
-      <h1>Scientific</h1>
-      <div class="calculator-brand">v2.0</div>
+  <div class="calculator-container" id="calculator">
+    <div class="calculator-header" id="dragHandle">
+      <span>EXAM-CALC</span>
+      <span class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></span>
     </div>
-
     <div class="display-container">
       <div id="history"></div>
+      <div id="preview"></div>
       <input type="text" id="display" disabled value="0"/>
+      <div class="memory-indicator" id="memoryIndicator"></div>
     </div>
-
     <div class="buttons-container">
       <div class="button-row">
         <button class="btn clear" data-action="clear">C</button>
@@ -223,45 +165,62 @@
         <button class="btn memory-btn" data-action="m-">M-</button>
       </div>
     </div>
-
-    <div class="calculator-footer">
-      Exam-Ready Scientific Calculator
-    </div>
   </div>
 
   <script>
-    // Fast, optimized calculator logic
     const display = document.getElementById('display');
     const history = document.getElementById('history');
+    const preview = document.getElementById('preview');
+    const memoryIndicator = document.getElementById('memoryIndicator');
     const buttons = document.querySelectorAll('.btn');
     const scientificToggle = document.getElementById('scientificToggle');
+    const themeToggle = document.getElementById('themeToggle');
+    const calculator = document.getElementById('calculator');
+    const dragHandle = document.getElementById('dragHandle');
 
     let current = '';
     let memory = 0;
     let isScientific = false;
 
-    // Efficient update function
     function updateDisplay() {
       display.value = current || '0';
+      updatePreview();
     }
 
     function updateHistory(text) {
       history.textContent = text || '';
     }
 
-    // Safe evaluation with error handling
+    function updatePreview() {
+      try {
+        if (current.trim()) {
+          const result = Function('"use strict";return (' + current + ')')();
+          preview.textContent = '= ' + result;
+        } else {
+          preview.textContent = '';
+        }
+      } catch {
+        preview.textContent = '';
+      }
+    }
+
+    function updateMemoryIndicator() {
+      memoryIndicator.textContent = memory !== 0 ? `Memory: ${memory}` : '';
+    }
+
     function calculate(expr) {
       try {
-        // Replace unsafe characters or invalid inputs if needed
         return Function('"use strict";return (' + expr + ')')();
       } catch {
         return 'Error';
       }
     }
 
-    // Button event handling
     buttons.forEach(button => {
       button.addEventListener('click', () => {
+        button.classList.add('glow');
+        setTimeout(() => button.classList.remove('glow'), 200);
+
         const action = button.getAttribute('data-action');
         const value = button.getAttribute('data-value');
 
@@ -292,27 +251,47 @@
           updateDisplay();
           break;
         case 'mc':
-          memory = 0;
-          break;
+          memory = 0; updateMemoryIndicator(); break;
         case 'mr':
-          current += memory;
-          updateDisplay();
-          break;
+          current += memory; updateDisplay(); break;
         case 'm+':
-          memory += parseFloat(current) || 0;
-          break;
+          memory += parseFloat(current) || 0; updateMemoryIndicator(); break;
         case 'm-':
-          memory -= parseFloat(current) || 0;
-          break;
+          memory -= parseFloat(current) || 0; updateMemoryIndicator(); break;
       }
     }
 
     scientificToggle.addEventListener('click', () => {
       isScientific = !isScientific;
-      scientificToggle.innerHTML = isScientific
-        ? '<i class="fas fa-square-root-variable"></i>'
-        : '<i class="fas fa-flask"></i>';
-      // Optional: Extend calculator functions when scientific mode is on
+      scientificToggle.innerHTML = isScientific ? '<i class="fas fa-square-root-variable"></i>' : '<i class="fas fa-flask"></i>';
+    });
+
+    // Theme toggle
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      calculator.classList.toggle('dark-mode');
+      themeToggle.innerHTML = document.body.classList.contains('dark-mode')
+        ? '<i class="fas fa-sun"></i>'
+        : '<i class="fas fa-moon"></i>';
+    });
+
+    // Draggable calculator
+    let isDragging = false, offsetX, offsetY;
+    dragHandle.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      calculator.classList.add('dragging');
+      offsetX = e.clientX - calculator.offsetLeft;
+      offsetY = e.clientY - calculator.offsetTop;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        calculator.style.left = (e.clientX - offsetX) + 'px';
+        calculator.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      calculator.classList.remove('dragging');
     });
 
     updateDisplay();
