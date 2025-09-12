@@ -3,46 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DHTML — Enhanced Exam Scientific Calculator</title>
+<title>DHTML — Enhanced Exam Scientific Calculator (Autocomplete)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
   :root{
-    --bg1: #eef2f3;
-    --bg2: #dfe9f3;
-    --panel: #2c3e50;
-    --panel-2: #34495e;
-    --display-bg: #ecf0f1;
-    --accent: #f1c40f;
+    --bg1: #eef2f3; --bg2: #dfe9f3;
+    --panel: #2c3e50; --panel-2: #34495e; --display-bg: #ecf0f1; --accent: #f1c40f;
   }
   *{box-sizing:border-box;font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;}
   html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));}
   body{display:flex;align-items:center;justify-content:center;padding:20px;}
-  .calc {
-    width: 420px;
-    max-width:96vw;
-    background:var(--panel);
-    color:#fff;
-    border-radius:14px;
-    box-shadow:0 16px 48px rgba(0,0,0,0.45);
-    overflow:hidden;
-    position: absolute;
-    left: 20px;
-    top: 20px;
-    user-select:none;
-  }
-  .drag { cursor: grab; }
-  .dragging { cursor: grabbing; opacity:0.95; box-shadow:0 30px 70px rgba(0,0,0,0.6);}
-  .header {
-    display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-bottom:1px solid rgba(255,255,255,0.03);
-  }
+  .calc { width: 420px; max-width:96vw; background:var(--panel); color:#fff; border-radius:14px;
+         box-shadow:0 16px 48px rgba(0,0,0,0.45); overflow:hidden; position: absolute; left: 20px; top: 20px; user-select:none;}
+  .drag { cursor: grab; } .dragging { cursor: grabbing; opacity:0.95; box-shadow:0 30px 70px rgba(0,0,0,0.6); }
+  .header { display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
+           background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+           border-bottom:1px solid rgba(255,255,255,0.03); }
   .brand{font-weight:700;letter-spacing:0.6px}
   .header-controls{display:flex;gap:8px;align-items:center}
   .btn-icon{background:transparent;border:none;color:inherit;padding:6px;border-radius:8px;cursor:pointer}
   .display-area{padding:12px 14px;background:linear-gradient(180deg,#2f4558,#2b3d4f);}
   #history { font-size:0.85rem;color:rgba(255,255,255,0.7); text-align:right; min-height:20px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   #preview { font-size:0.85rem;color:var(--accent); text-align:right; min-height:18px; margin-top:4px; opacity:0.95; }
-  #display { width:100%; height:66px; margin-top:8px; border-radius:10px; border:none; padding:10px 12px; font-size:2rem; font-weight:700; text-align:right; background:var(--display-bg); color:#1f2b33; box-shadow: inset 0 6px 14px rgba(0,0,0,0.06);}
+  #display { width:100%; height:66px; margin-top:8px; border-radius:10px; border:none; padding:10px 12px; font-size:2rem; font-weight:700; text-align:right; background:var(--display-bg); color:#1f2b33; box-shadow: inset 0 6px 14px rgba(0,0,0,0.06); }
   .controls { padding:10px 12px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
   .left-controls{display:flex;gap:8px;align-items:center}
   .small { font-size:0.85rem; color:rgba(255,255,255,0.85); padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.03); }
@@ -61,25 +44,34 @@
   .glow { animation: flash 180ms ease; }
   @keyframes flash { from{ box-shadow:0 0 18px rgba(241,196,15,0.95);} to{ box-shadow:0 6px 14px rgba(0,0,0,0.18);} }
 
-  /* History pane */
   .history-panel { padding:10px; max-height:200px; overflow:auto; background:rgba(0,0,0,0.02); }
   .history-item{ padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:pointer; }
   .history-item:hover{ background: rgba(255,255,255,0.02); }
 
-  /* Footer */
   .footer { padding:10px 14px; background:var(--panel-2); display:flex; gap:10px; justify-content:space-between; align-items:center; font-size:0.85rem; color:rgba(255,255,255,0.8) }
 
-  /* Responsive */
-  @media (max-width:540px){
-    .row{grid-template-columns: repeat(4, 1fr);}
-    .keys{padding:10px}
-    #display{height:56px;font-size:1.6rem}
+  /* Autocomplete */
+  .autocomplete {
+    position: absolute;
+    right: 22px;
+    top: 142px; /* placed under preview/display; adjusted if layout changes */
+    background: #1f2b33;
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    min-width: 160px;
+    z-index: 60;
+    overflow: hidden;
+    display: none;
   }
+  .autocomplete.visible { display:block; }
+  .autocomplete .item { padding:8px 10px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .autocomplete .item:hover, .autocomplete .item.active { background: rgba(255,255,255,0.04); }
+  .autocomplete .type { opacity:0.7; font-size:0.85rem; }
+  .autocomplete .name { font-weight:700; }
 
-  /* Dark mode class toggles */
-  .dark body {}
-  .dark .calc { background:#0f1720; color:#ddd; }
-  .dark #display { background:#0f1720; color:#fff; box-shadow:none; border:1px solid rgba(255,255,255,0.03); }
+  @media (max-width:540px){ .row{grid-template-columns: repeat(4, 1fr);} .keys{padding:10px} #display{height:56px;font-size:1.6rem} }
+  .dark .calc { background:#0f1720; color:#ddd; } .dark #display { background:#0f1720; color:#fff; box-shadow:none; border:1px solid rgba(255,255,255,0.03); }
 </style>
 </head>
 <body>
@@ -97,6 +89,8 @@
       <div id="preview">&nbsp;</div>
       <input id="display" type="text" disabled value="0" />
       <div class="memory-indicator" id="memoryIndicator"></div>
+      <!-- Autocomplete box -->
+      <div class="autocomplete" id="autocomplete"></div>
     </div>
 
     <div class="controls">
@@ -120,7 +114,6 @@
     </div>
 
     <div class="keys" id="keys">
-      <!-- row 1 -->
       <div class="row">
         <button class="key clr" data-action="clear">AC</button>
         <button class="key clr" data-action="back">⌫</button>
@@ -130,7 +123,6 @@
         <button class="key mem" data-action="mc">MC</button>
       </div>
 
-      <!-- row 2 -->
       <div class="row">
         <button class="key sci" data-fn="sin">sin</button>
         <button class="key sci" data-fn="cos">cos</button>
@@ -140,7 +132,6 @@
         <button class="key mem" data-action="mr">MR</button>
       </div>
 
-      <!-- row 3 -->
       <div class="row">
         <button class="key num" data-val="7">7</button>
         <button class="key num" data-val="8">8</button>
@@ -150,7 +141,6 @@
         <button class="key mem" data-action="mplus">M+</button>
       </div>
 
-      <!-- row 4 -->
       <div class="row">
         <button class="key num" data-val="4">4</button>
         <button class="key num" data-val="5">5</button>
@@ -160,7 +150,6 @@
         <button class="key mem" data-action="mminus">M-</button>
       </div>
 
-      <!-- row 5 -->
       <div class="row">
         <button class="key num" data-val="1">1</button>
         <button class="key num" data-val="2">2</button>
@@ -170,7 +159,6 @@
         <button class="key sci" data-fn="rand">RND</button>
       </div>
 
-      <!-- row 6 -->
       <div class="row">
         <button class="key num" data-val="0">0</button>
         <button class="key num" data-val=".">.</button>
@@ -188,7 +176,7 @@
       <div style="display:flex;gap:8px;align-items:center">
         <button class="small" id="clearHistoryBtn">Clear History</button>
         <div style="width:8px"></div>
-        <div style="font-size:0.85rem;color:rgba(255,255,255,0.75)">v2.0</div>
+        <div style="font-size:0.85rem;color:rgba(255,255,255,0.75)">v2.1</div>
       </div>
     </div>
   </div>
@@ -211,14 +199,27 @@
   const themeBtn = document.getElementById('themeBtn');
   const copyBtn = document.getElementById('copyBtn');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const autocompleteEl = document.getElementById('autocomplete');
 
   // State
   let expr = '';
   let memory = parseFloat(localStorage.getItem('calc_memory') || '0') || 0;
   let historyArr = JSON.parse(localStorage.getItem('calc_history') || '[]');
-  let angleMode = localStorage.getItem('calc_angle') || 'deg'; // 'deg' or 'rad'
+  let angleMode = localStorage.getItem('calc_angle') || 'deg';
   let precision = parseInt(localStorage.getItem('calc_precision') || '6', 10);
   let themeDark = localStorage.getItem('calc_theme') === 'dark';
+
+  // Autocomplete state
+  const suggestionItems = [
+    {name:'sin', type:'fn'}, {name:'cos', type:'fn'}, {name:'tan', type:'fn'},
+    {name:'asin', type:'fn'}, {name:'acos', type:'fn'}, {name:'atan', type:'fn'},
+    {name:'ln', type:'fn'}, {name:'log', type:'fn'}, {name:'log10', type:'fn'},
+    {name:'sqrt', type:'fn'}, {name:'pow', type:'fn'}, {name:'abs', type:'fn'},
+    {name:'exp', type:'fn'}, {name:'rand', type:'fn'}, {name:'fact', type:'fn'},
+    {name:'PI', type:'const'}, {name:'E', type:'const'}
+  ];
+  let suggestions = [];
+  let suggestionIndex = -1;
 
   // UI init
   memValueEl.textContent = String(memory);
@@ -226,7 +227,7 @@
   precisionSelect.value = String(precision);
   if (themeDark) document.body.classList.add('dark');
 
-  // Utility: format number to precision (if numeric)
+  // Helpers
   function fmtNum(v) {
     if (v === null || v === undefined) return '';
     if (typeof v === 'number' && !isNaN(v) && isFinite(v)) {
@@ -236,7 +237,6 @@
     return String(v);
   }
 
-  // Helper math functions (exposed to sandboxed eval)
   function buildSandbox() {
     return {
       sin: (x) => (angleMode === 'deg' ? Math.sin(x * Math.PI/180) : Math.sin(x)),
@@ -256,7 +256,6 @@
       PI: Math.PI,
       E: Math.E,
       fact: (n) => {
-        // only integers 0..170 (beyond that JS overflows)
         const k = Math.floor(n);
         if (k < 0 || k !== n || k > 170) throw 'Invalid factorial';
         let r = 1;
@@ -266,12 +265,8 @@
     };
   }
 
-  // Preprocess: convert trailing factorial n! => fact(n) (simple substitution)
   function preprocessFactorial(s) {
-    // remove spaces around '!'
     s = s.replace(/\s+/g,'');
-    // pattern matches simple number or parenthesized expression followed by !
-    // repeated until no matches (handles nested like (2+1)!)
     const re = /(\d+(\.\d+)?|\([^()]*\))!/;
     while (re.test(s)) {
       s = s.replace(re, 'fact($1)');
@@ -279,41 +274,72 @@
     return s;
   }
 
-  // Safe evaluate expression using function with sandboxed helpers
   function evaluateExpression(input) {
     if (!input || input.trim() === '') return '';
     try {
       let processed = preprocessFactorial(input);
-
-      // Whitelist allowed characters to reduce injection risk (numbers, operators, letters, parentheses, decimals, commas, spaces)
-      // Note: We still use Function() to evaluate, but provide limited pre-defined helpers only.
-      const allowed = /^[0-9+\-*/%^().,!\sA-Za-z]*$/;
-      // percent sign is allowed but we will not use it directly in eval (we can replace x% with (x/100))
-      // replace percent X% with (X/100)
       processed = processed.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-
-      // Replace '^' with 'pow(...)' occurrences for convenience: a^b => pow(a,b)
-      // To keep it simple, replace a^b with pow(a,b) using a small parser approach:
-      // We'll do a regex: number/operator/paren tokens around ^ won't be trivial to parse fully,
-      // so we do a simple replacement for "base^exp" where base is either number or parenthesis or identifier.
-      // Use regex: ([\d\.]+|\([^()]*\)|[A-Za-z_]\w*)\^([\d\.]+|\([^()]*\)|[A-Za-z_]\w*)
       processed = processed.replace(/([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))\^([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))/g, 'pow($1,$3)');
-
-      // Build sandbox functions
       const sb = buildSandbox();
-
-      // Build parameter list and argument list for the Function constructor
       const keys = Object.keys(sb);
       const args = keys.map(k => sb[k]);
-
-      // Create function: (sin,cos,...) => return processed
       const fn = new Function(...keys, 'return (' + processed + ');');
-
       const result = fn(...args);
       return result;
     } catch (err) {
       return 'Error';
     }
+  }
+
+  // Autocomplete core
+  function getCurrentAlphaToken() {
+    // find trailing alphabetic token at end of expr
+    const m = expr.match(/[A-Za-z_]+$/);
+    return m ? m[0] : '';
+  }
+
+  function updateSuggestions() {
+    const token = getCurrentAlphaToken();
+    suggestions = [];
+    suggestionIndex = -1;
+    if (!token) { hideAutocomplete(); return; }
+    const lower = token.toLowerCase();
+    suggestions = suggestionItems.filter(s => s.name.toLowerCase().startsWith(lower));
+    renderAutocomplete();
+  }
+
+  function renderAutocomplete() {
+    autocompleteEl.innerHTML = '';
+    if (!suggestions.length) { hideAutocomplete(); return; }
+    suggestions.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'item' + (i===suggestionIndex ? ' active' : '');
+      div.dataset.index = String(i);
+      div.innerHTML = `<div class="name">${s.name}</div><div class="type">${s.type}</div>`;
+      autocompleteEl.appendChild(div);
+    });
+    autocompleteEl.classList.add('visible');
+  }
+
+  function hideAutocomplete() {
+    autocompleteEl.classList.remove('visible');
+    suggestions = [];
+    suggestionIndex = -1;
+  }
+
+  function acceptSuggestion(index) {
+    if (index < 0 || index >= suggestions.length) return;
+    const s = suggestions[index];
+    // replace trailing token with suggestion
+    const token = getCurrentAlphaToken();
+    if (token) expr = expr.slice(0, -token.length);
+    if (s.type === 'fn') {
+      expr += s.name + '(';
+    } else {
+      expr += s.name;
+    }
+    hideAutocomplete();
+    render(); updatePreviewDebounced();
   }
 
   // Debounced preview evaluation
@@ -326,7 +352,7 @@
     }, 120);
   }
 
-  // Render display & history text
+  // Render + history
   function render() {
     display.value = expr || '0';
     historyEl.textContent = historyArr.length ? historyArr[historyArr.length-1].expr + ' =' : '\u00A0';
@@ -335,7 +361,6 @@
     localStorage.setItem('calc_history', JSON.stringify(historyArr));
   }
 
-  // Add to history
   function pushHistory(e, r) {
     const item = {expr: e, result: r, ts: Date.now()};
     historyArr.push(item);
@@ -345,13 +370,9 @@
     render();
   }
 
-  // Build history panel DOM
   function renderHistoryPanel() {
     historyPanel.innerHTML = '';
-    if (!historyArr.length) {
-      historyPanel.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.6)">No history yet</div>';
-      return;
-    }
+    if (!historyArr.length) { historyPanel.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.6)">No history yet</div>'; return; }
     for (let i = historyArr.length - 1; i >= 0; i--) {
       const it = historyArr[i];
       const el = document.createElement('div');
@@ -365,7 +386,6 @@
     }
   }
 
-  // Click handlers for history panel (load/copy)
   historyPanel.addEventListener('click', (ev) => {
     const loadIndex = ev.target.getAttribute('data-load');
     const copyIndex = ev.target.getAttribute('data-copy');
@@ -374,40 +394,27 @@
       if (it) { expr = it.expr; render(); updatePreviewDebounced(); historyPanel.style.display = 'none'; }
     } else if (copyIndex !== null) {
       const it = historyArr[copyIndex];
-      if (it) {
-        navigator.clipboard?.writeText(String(it.result)).catch(()=>{});
-      }
+      if (it) navigator.clipboard?.writeText(String(it.result)).catch(()=>{});
     }
   });
 
-  // Key click behavior for calculator keys
+  // Click handlers for keys
   keys.addEventListener('click', (ev) => {
     const btn = ev.target.closest('.key');
     if (!btn) return;
-    btn.classList.add('glow');
-    setTimeout(()=>btn.classList.remove('glow'), 180);
+    btn.classList.add('glow'); setTimeout(()=>btn.classList.remove('glow'),180);
 
     const val = btn.getAttribute('data-val');
     const action = btn.getAttribute('data-action');
     const fn = btn.getAttribute('data-fn');
 
-    if (val) { expr += val; render(); updatePreviewDebounced(); return; }
+    if (val) { expr += val; render(); updateSuggestions(); updatePreviewDebounced(); return; }
     if (fn) {
-      // scientific named function: call evaluateExpression on function applied to current or insert function call
-      // For convenience:
-      // if current is empty => insert 'fn('
-      // else apply function to last number/parenthesis group by wrapping: fn(<expr>)
       if (!expr) {
-        // insert function call with empty parentheses
-        if (['pi'].includes(fn)) {
-          if (fn === 'pi') expr += 'PI';
-        } else if (fn === 'rand') {
-          expr += 'rand()';
-        } else {
-          expr += fn + '(';
-        }
+        if (fn === 'pi') expr += 'PI';
+        else if (fn === 'rand') expr += 'rand()';
+        else expr += fn + '(';
       } else {
-        // try to apply to entire current expression for immediate evaluation
         if (['fact','rand','pi'].includes(fn)) {
           if (fn === 'fact') expr = 'fact(' + expr + ')';
           else if (fn === 'rand') expr = 'rand()';
@@ -415,71 +422,133 @@
         } else if (fn === 'pow') {
           expr += '^';
         } else {
-          // wrap expression
           expr = fn + '(' + expr + ')';
         }
-        // after function insertion, evaluate immediately for speed
       }
-      render();
-      updatePreviewDebounced();
-      return;
+      render(); hideAutocomplete(); updatePreviewDebounced(); return;
     }
     if (action) {
       switch(action) {
-        case 'clear': expr=''; render(); preview.textContent=''; break;
-        case 'back': expr = expr.slice(0,-1); render(); updatePreviewDebounced(); break;
-        case 'equals':
-          {
+        case 'clear': expr=''; render(); preview.textContent=''; hideAutocomplete(); break;
+        case 'back': expr = expr.slice(0,-1); render(); updateSuggestions(); updatePreviewDebounced(); break;
+        case 'equals': {
             const v = evaluateExpression(expr);
             const out = (v === 'Error') ? v : fmtNum(v);
-            // Display result and push to history if valid
             if (v !== 'Error' && v !== '' && v !== undefined) {
               pushHistory(expr, v);
               expr = String(v);
               preview.textContent = '';
             } else {
-              // if error, show in preview briefly
               preview.textContent = 'Error';
             }
-            render();
+            render(); hideAutocomplete();
           }
           break;
         case 'mc': memory = 0; memValueEl.textContent = String(memory); localStorage.setItem('calc_memory', String(memory)); break;
-        case 'mr': expr += String(memory); render(); updatePreviewDebounced(); break;
+        case 'mr': expr += String(memory); render(); updateSuggestions(); updatePreviewDebounced(); break;
         case 'mplus': {
           const v = evaluateExpression(expr);
           if (typeof v === 'number' && isFinite(v)) memory += v;
-          localStorage.setItem('calc_memory', String(memory));
-          memValueEl.textContent = String(memory);
-          break;
+          localStorage.setItem('calc_memory', String(memory)); memValueEl.textContent = String(memory); break;
         }
         case 'mminus': {
           const v = evaluateExpression(expr);
           if (typeof v === 'number' && isFinite(v)) memory -= v;
-          localStorage.setItem('calc_memory', String(memory));
-          memValueEl.textContent = String(memory);
-          break;
+          localStorage.setItem('calc_memory', String(memory)); memValueEl.textContent = String(memory); break;
         }
       }
     }
   });
 
-  // Keyboard support
+  // Keyboard support with autocomplete navigation
   document.addEventListener('keydown', (e) => {
-    if (e.key >= '0' && e.key <= '9') { expr += e.key; render(); updatePreviewDebounced(); return; }
-    if (e.key === '.') { expr += '.'; render(); updatePreviewDebounced(); return; }
-    if ('+-*/%^()'.includes(e.key)) { expr += e.key; render(); updatePreviewDebounced(); return; }
+    // if autocomplete visible handle navigation first
+    if (autocompleteEl.classList.contains('visible')) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        suggestionIndex = (suggestionIndex + 1) % suggestions.length;
+        renderAutocomplete();
+        return;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        suggestionIndex = (suggestionIndex - 1 + suggestions.length) % suggestions.length;
+        renderAutocomplete();
+        return;
+      } else if (e.key === 'Enter') {
+        if (suggestionIndex >= 0) {
+          e.preventDefault();
+          acceptSuggestion(suggestionIndex);
+          return;
+        }
+      } else if (e.key === 'Escape') {
+        hideAutocomplete();
+        return;
+      }
+    }
+
+    if (e.key >= '0' && e.key <= '9') { expr += e.key; render(); updateSuggestions(); updatePreviewDebounced(); return; }
+    if (e.key === '.') { expr += '.'; render(); updateSuggestions(); updatePreviewDebounced(); return; }
+    if ('+-*/%^()'.includes(e.key)) { expr += e.key; render(); hideAutocomplete(); updatePreviewDebounced(); return; }
     if (e.key === 'Enter') { document.querySelector('[data-action="equals"]').click(); return; }
     if (e.key === 'Backspace') { document.querySelector('[data-action="back"]').click(); return; }
     if (e.key === 'Escape') { document.querySelector('[data-action="clear"]').click(); return; }
-    // quick function shortcuts (lowercase)
+
+    // letter input -> update token and show suggestions
+    if (/^[a-zA-Z]$/.test(e.key)) {
+      expr += e.key;
+      render();
+      updateSuggestions();
+      updatePreviewDebounced();
+      return;
+    }
+    if (e.key === '!') { expr += '!'; render(); updatePreviewDebounced(); return; }
+
+    // quick function shortcuts
     if (e.key.toLowerCase() === 's') { expr += 'sin('; render(); updatePreviewDebounced(); return; }
     if (e.key.toLowerCase() === 'c') { expr += 'cos('; render(); updatePreviewDebounced(); return; }
     if (e.key.toLowerCase() === 't') { expr += 'tan('; render(); updatePreviewDebounced(); return; }
-    if (e.key === '!') { expr += '!'; render(); updatePreviewDebounced(); return; }
   });
 
-  // Angle mode toggle
+  // Autocomplete click handling
+  autocompleteEl.addEventListener('click', (ev) => {
+    const it = ev.target.closest('.item');
+    if (!it) return;
+    const idx = parseInt(it.dataset.index, 10);
+    if (!isNaN(idx)) acceptSuggestion(idx);
+  });
+
+  function updateSuggestions() {
+    const token = getCurrentAlphaToken();
+    if (!token) { hideAutocomplete(); return; }
+    const lower = token.toLowerCase();
+    suggestions = suggestionItems.filter(s => s.name.toLowerCase().startsWith(lower));
+    suggestionIndex = suggestions.length ? 0 : -1;
+    renderAutocomplete();
+  }
+  function renderAutocomplete() {
+    autocompleteEl.innerHTML = '';
+    if (!suggestions.length) { hideAutocomplete(); return; }
+    suggestions.forEach((s,i) => {
+      const div = document.createElement('div');
+      div.className = 'item' + (i===suggestionIndex ? ' active' : '');
+      div.dataset.index = String(i);
+      div.innerHTML = `<div class="name">${s.name}</div><div class="type">${s.type}</div>`;
+      autocompleteEl.appendChild(div);
+    });
+    autocompleteEl.classList.add('visible');
+  }
+  function hideAutocomplete() { autocompleteEl.classList.remove('visible'); suggestions=[]; suggestionIndex=-1; }
+  function getCurrentAlphaToken() { const m = expr.match(/[A-Za-z_]+$/); return m ? m[0] : ''; }
+  function acceptSuggestion(index) {
+    if (index<0 || index>=suggestions.length) return;
+    const s = suggestions[index];
+    const token = getCurrentAlphaToken();
+    if (token) expr = expr.slice(0, -token.length);
+    if (s.type==='fn') expr += s.name + '('; else expr += s.name;
+    hideAutocomplete(); render(); updatePreviewDebounced();
+  }
+
+  // Angle toggle
   angleToggle.addEventListener('click', () => {
     angleMode = (angleMode === 'deg' ? 'rad' : 'deg');
     angleModeLabel.textContent = angleMode.toUpperCase();
@@ -487,77 +556,46 @@
     updatePreviewDebounced();
   });
 
-  // Precision control
   precisionSelect.addEventListener('change', () => {
     precision = parseInt(precisionSelect.value, 10);
     localStorage.setItem('calc_precision', String(precision));
     updatePreviewDebounced();
   });
 
-  // Theme toggle
   themeBtn.addEventListener('click', () => {
     themeDark = !themeDark;
     localStorage.setItem('calc_theme', themeDark ? 'dark' : 'light');
     document.body.classList.toggle('dark', themeDark);
   });
 
-  // Copy result
   copyBtn.addEventListener('click', async () => {
     const text = display.value || '';
     try { await navigator.clipboard.writeText(text); copyBtn.classList.add('glow'); setTimeout(()=>copyBtn.classList.remove('glow'),220); }
-    catch(e) { /* ignore */ }
+    catch(e) {}
   });
 
-  // Show / hide history
   showHistoryBtn.addEventListener('click', () => {
     historyPanel.style.display = historyPanel.style.display === 'none' ? 'block' : 'none';
     renderHistoryPanel();
   });
+  clearHistoryBtn.addEventListener('click', () => { historyArr = []; localStorage.removeItem('calc_history'); renderHistoryPanel(); });
 
-  clearHistoryBtn.addEventListener('click', () => {
-    historyArr = [];
-    localStorage.removeItem('calc_history');
-    renderHistoryPanel();
-  });
-
-  // Dragging logic for DHTML draggable window
+  // Dragging the calculator
   let dragging = false, dx=0, dy=0;
-  dragHandle.addEventListener('mousedown', (e)=> {
-    dragging = true;
-    calc.classList.add('dragging');
-    dx = e.clientX - calc.offsetLeft;
-    dy = e.clientY - calc.offsetTop;
-  });
-  document.addEventListener('mousemove', (e)=> {
-    if (!dragging) return;
-    calc.style.left = (e.clientX - dx) + 'px';
-    calc.style.top = (e.clientY - dy) + 'px';
-  });
-  document.addEventListener('mouseup', ()=> {
-    dragging = false;
-    calc.classList.remove('dragging');
-  });
+  dragHandle.addEventListener('mousedown', (e)=> { dragging=true; calc.classList.add('dragging'); dx=e.clientX-calc.offsetLeft; dy=e.clientY-calc.offsetTop; });
+  document.addEventListener('mousemove', (e)=> { if(!dragging) return; calc.style.left=(e.clientX-dx)+'px'; calc.style.top=(e.clientY-dy)+'px'; });
+  document.addEventListener('mouseup', ()=> { dragging=false; calc.classList.remove('dragging'); localStorage.setItem('calc_pos', JSON.stringify({ left: calc.offsetLeft, top: calc.offsetTop })); });
 
-  // Initialize UI
+  // Init
   function init() {
     render();
     updatePreviewDebounced();
     renderHistoryPanel();
     historyPanel.style.display = 'none';
-    // set saved calc position if any
     const pos = JSON.parse(localStorage.getItem('calc_pos') || 'null');
-    if (pos && Number.isFinite(pos.left) && Number.isFinite(pos.top)) {
-      calc.style.left = pos.left + 'px';
-      calc.style.top = pos.top + 'px';
-    }
-    // save position on mouseup occasionally
-    window.addEventListener('mouseup', () => {
-      localStorage.setItem('calc_pos', JSON.stringify({ left: calc.offsetLeft, top: calc.offsetTop }));
-    });
+    if (pos && Number.isFinite(pos.left) && Number.isFinite(pos.top)) { calc.style.left = pos.left + 'px'; calc.style.top = pos.top + 'px'; }
   }
-
   init();
-
 })();
 </script>
 </body>
