@@ -3,81 +3,65 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DHTML — Enhanced Exam Scientific Calculator (More functions)</title>
+<title>Exam Scientific Calculator — Enhanced (Autocomplete, Hints, Tooltips)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
-  :root{
-    --bg1: #eef2f3; --bg2: #dfe9f3;
-    --panel: #2c3e50; --panel-2: #34495e; --display-bg: #ecf0f1; --accent: #f1c40f;
-  }
-  *{box-sizing:border-box;font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;}
-  html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));}
-  body{display:flex;align-items:center;justify-content:center;padding:20px;}
-  .calc { width: 460px; max-width:96vw; background:var(--panel); color:#fff; border-radius:14px;
-         box-shadow:0 16px 48px rgba(0,0,0,0.45); overflow:hidden; position: absolute; left: 20px; top: 20px; user-select:none;}
-  .drag { cursor: grab; } .dragging { cursor: grabbing; opacity:0.95; box-shadow:0 30px 70px rgba(0,0,0,0.6); }
-  .header { display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
-           background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-           border-bottom:1px solid rgba(255,255,255,0.03); }
-  .brand{font-weight:700;letter-spacing:0.6px}
-  .header-controls{display:flex;gap:8px;align-items:center}
-  .btn-icon{background:transparent;border:none;color:inherit;padding:6px;border-radius:8px;cursor:pointer}
-  .display-area{padding:12px 14px;background:linear-gradient(180deg,#2f4558,#2b3d4f);}
-  #history { font-size:0.85rem;color:rgba(255,255,255,0.7); text-align:right; min-height:20px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #preview { font-size:0.85rem;color:var(--accent); text-align:right; min-height:18px; margin-top:4px; opacity:0.95; }
-  #display { width:100%; height:66px; margin-top:8px; border-radius:10px; border:none; padding:10px 12px; font-size:2rem; font-weight:700; text-align:right; background:var(--display-bg); color:#1f2b33; box-shadow: inset 0 6px 14px rgba(0,0,0,0.06); }
-  .controls { padding:10px 12px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-  .left-controls{display:flex;gap:8px;align-items:center}
-  .small { font-size:0.85rem; color:rgba(255,255,255,0.85); padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.03); }
-  .precision { display:flex; gap:6px; align-items:center; color:#fff; }
-  .memory-indicator{font-size:0.85rem;color:var(--accent);min-width:120px;text-align:right}
-  .keys { padding:10px; display:grid; gap:8px; }
-  .row { display:grid; grid-template-columns: repeat(8, 1fr); gap:8px; }
-  .key { padding:10px; border-radius:8px; border:none; cursor:pointer; font-weight:700; box-shadow:0 6px 14px rgba(0,0,0,0.18); transition:transform .12s ease, box-shadow .12s ease; color:#fff; font-size:0.95rem; }
-  .key:active{transform:scale(.98)}
-  .num{background:linear-gradient(180deg,#7f8c8d,#6c7a89)}
-  .op{background:linear-gradient(180deg,#f39c12,#d35400)}
-  .eq{background:linear-gradient(180deg,#27ae60,#1e8f4a)}
-  .clr{background:linear-gradient(180deg,#e74c3c,#c0392b)}
-  .sci{background:linear-gradient(180deg,#3498db,#2b7fb9)}
-  .mem{background:linear-gradient(180deg,#9b59b6,#8e44ad)}
-  .glow { animation: flash 180ms ease; }
-  @keyframes flash { from{ box-shadow:0 0 18px rgba(241,196,15,0.95);} to{ box-shadow:0 6px 14px rgba(0,0,0,0.18);} }
-
-  .history-panel { padding:10px; max-height:200px; overflow:auto; background:rgba(0,0,0,0.02); }
-  .history-item{ padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:pointer; }
-  .history-item:hover{ background: rgba(255,255,255,0.02); }
-
-  .footer { padding:10px 14px; background:var(--panel-2); display:flex; gap:10px; justify-content:space-between; align-items:center; font-size:0.85rem; color:rgba(255,255,255,0.8) }
-
-  /* Autocomplete */
-  .autocomplete {
-    position: absolute;
-    right: 22px;
-    top: 174px;
-    background: #1f2b33;
-    color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-    min-width: 200px;
-    z-index: 60;
-    overflow: hidden;
-    display: none;
-  }
-  .autocomplete.visible { display:block; }
-  .autocomplete .item { padding:8px 10px; cursor:pointer; display:flex; justify-content:space-between; gap:8px; align-items:center; }
-  .autocomplete .item:hover, .autocomplete .item.active { background: rgba(255,255,255,0.04); }
-  .autocomplete .type { opacity:0.7; font-size:0.85rem; }
-  .autocomplete .name { font-weight:700; }
-
-  @media (max-width:640px){ .row{grid-template-columns: repeat(4, 1fr);} .keys{padding:8px} #display{height:56px;font-size:1.6rem} }
-  .dark .calc { background:#0f1720; color:#ddd; } .dark #display { background:#0f1720; color:#fff; box-shadow:none; border:1px solid rgba(255,255,255,0.03); }
+:root{
+  --bg1:#eef2f3; --bg2:#dfe9f3;
+  --panel:#2c3e50; --panel-2:#34495e; --display-bg:#ecf0f1; --accent:#f1c40f;
+  --ui-radius:10px;
+}
+*{box-sizing:border-box;font-family:"Segoe UI",Segoe,Roboto,Arial,sans-serif}
+html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));}
+body{display:flex;align-items:center;justify-content:center;padding:18px;}
+.calc{width:94vw;max-width:780px;background:var(--panel);color:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.45);overflow:hidden;position:relative}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-bottom:1px solid rgba(255,255,255,0.03)}
+.brand{font-weight:700}
+.header-controls{display:flex;gap:8px;align-items:center}
+.btn-icon{background:transparent;border:none;color:inherit;padding:6px;border-radius:8px;cursor:pointer}
+.display-area{padding:12px 16px;background:linear-gradient(180deg,#2f4558,#2b3d4f)}
+#history{font-size:0.9rem;color:rgba(255,255,255,0.75);text-align:right;min-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#preview{font-size:0.9rem;color:var(--accent);text-align:right;min-height:18px;margin-top:6px;opacity:0.95}
+#display{width:100%;height:64px;margin-top:10px;border-radius:var(--ui-radius);border:none;padding:10px 14px;font-size:2rem;font-weight:700;text-align:right;background:var(--display-bg);color:#1f2b33;box-shadow:inset 0 6px 14px rgba(0,0,0,0.06)}
+.controls{padding:10px 12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.left-controls{display:flex;gap:10px;align-items:center}
+.small{font-size:0.9rem;color:rgba(255,255,255,0.9);padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)}
+.precision{display:flex;gap:6px;align-items:center;color:#fff}
+.memory-indicator{font-size:0.9rem;color:var(--accent);min-width:140px;text-align:right}
+.keys{padding:12px;display:grid;gap:10px}
+.row{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}
+.key{padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;box-shadow:0 6px 14px rgba(0,0,0,0.18);transition:transform .12s,box-shadow .12s;color:#fff;font-size:0.95rem}
+.key:active{transform:scale(.98)}
+.num{background:linear-gradient(180deg,#7f8c8d,#6c7a89)}
+.op{background:linear-gradient(180deg,#f39c12,#d35400)}
+.eq{background:linear-gradient(180deg,#27ae60,#1e8f4a)}
+.clr{background:linear-gradient(180deg,#e74c3c,#c0392b)}
+.sci{background:linear-gradient(180deg,#3498db,#2b7fb9)}
+.mem{background:linear-gradient(180deg,#9b59b6,#8e44ad)}
+.glow{animation:flash 180ms ease}
+@keyframes flash{from{box-shadow:0 0 18px rgba(241,196,15,0.95)} to{box-shadow:0 6px 14px rgba(0,0,0,0.18)}}
+.history-panel{padding:10px;max-height:220px;overflow:auto;background:rgba(0,0,0,0.02)}
+.history-item{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer}
+.history-item:hover{background:rgba(255,255,255,0.02)}
+.footer{padding:10px 14px;background:var(--panel-2);display:flex;gap:10px;justify-content:space-between;align-items:center;font-size:0.9rem;color:rgba(255,255,255,0.85)}
+.autocomplete{position:absolute;right:20px;top:140px;background:#172029;color:#fff;border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,0.5);min-width:200px;z-index:60;overflow:hidden;display:none}
+.autocomplete.visible{display:block}
+.autocomplete .item{padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.autocomplete .item:hover,.autocomplete .item.active{background:rgba(255,255,255,0.03)}
+.autocomplete .type{opacity:0.75;font-size:0.85rem}
+.hint{position:absolute;left:20px;top:120px;background:#101418;color:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,0.45);z-index:65;display:none;min-width:260px}
+.hint.visible{display:block}
+.tooltip{position:absolute;background:#0f1720;color:#fff;padding:6px 8px;border-radius:6px;font-size:0.9rem;box-shadow:0 8px 18px rgba(0,0,0,0.6);z-index:70;display:none}
+.tooltip.visible{display:block}
+@media (max-width:880px){.row{grid-template-columns:repeat(4,1fr)}.autocomplete{right:12px;top:200px}.hint{left:12px;top:178px}}
+.dark{--bg1:#0b1220;--bg2:#0f1720;--panel:#08101a;--panel-2:#0b1220;--display-bg:#02111a;--accent:#ffd166}
+.dark body{background:linear-gradient(135deg,var(--bg1),var(--bg2))}
 </style>
 </head>
 <body>
-  <div class="calc drag" id="calc">
+  <div class="calc" id="calc">
     <div class="header" id="dragHandle">
-      <div class="brand">EXAM-CALC — DHTML (Advanced)</div>
+      <div class="brand">EXAM-CALC — Pro</div>
       <div class="header-controls">
         <button class="btn-icon" id="themeBtn" title="Toggle theme"><i class="fas fa-moon"></i></button>
         <button class="btn-icon" id="copyBtn" title="Copy result"><i class="fas fa-copy"></i></button>
@@ -89,31 +73,28 @@
       <div id="preview">&nbsp;</div>
       <input id="display" type="text" disabled value="0" />
       <div class="memory-indicator" id="memoryIndicator"></div>
+
+      <!-- Autocomplete, argument hint, and tooltip elements -->
       <div class="autocomplete" id="autocomplete"></div>
+      <div class="hint" id="argHint"></div>
+      <div class="tooltip" id="tooltip"></div>
     </div>
 
     <div class="controls">
       <div class="left-controls">
-        <div class="small" id="modeLabel">Angle: <strong id="angleMode">DEG</strong></div>
+        <div class="small">Angle: <strong id="angleMode">DEG</strong></div>
         <button class="small" id="angleToggle">Deg / Rad</button>
         <div class="precision">
           <label class="small">Precision</label>
-          <select id="precisionSelect" class="small">
-            <option value="6">6</option>
-            <option value="4">4</option>
-            <option value="2">2</option>
-            <option value="0">0</option>
-            <option value="12">12</option>
-          </select>
+          <select id="precisionSelect" class="small"><option>6</option><option>4</option><option>2</option><option>0</option><option>12</option></select>
         </div>
       </div>
-
       <div class="small">History: <button id="showHistoryBtn" class="small">Show</button></div>
       <div class="memory-indicator" id="memValue">Memory: 0</div>
     </div>
 
     <div class="keys" id="keys">
-      <!-- row 1 -->
+      <!-- rows (compact for demo) -->
       <div class="row">
         <button class="key clr" data-action="clear">AC</button>
         <button class="key clr" data-action="back">⌫</button>
@@ -125,7 +106,6 @@
         <button class="key sci" data-fn="nPr">nPr</button>
       </div>
 
-      <!-- row 2 -->
       <div class="row">
         <button class="key sci" data-fn="sin">sin</button>
         <button class="key sci" data-fn="cos">cos</button>
@@ -137,7 +117,6 @@
         <button class="key sci" data-fn="cosh">cosh</button>
       </div>
 
-      <!-- row 3 -->
       <div class="row">
         <button class="key num" data-val="7">7</button>
         <button class="key num" data-val="8">8</button>
@@ -149,7 +128,6 @@
         <button class="key sci" data-fn="lcm">lcm</button>
       </div>
 
-      <!-- row 4 -->
       <div class="row">
         <button class="key num" data-val="4">4</button>
         <button class="key num" data-val="5">5</button>
@@ -161,7 +139,6 @@
         <button class="key sci" data-fn="pfactor">pfactor</button>
       </div>
 
-      <!-- row 5 -->
       <div class="row">
         <button class="key num" data-val="1">1</button>
         <button class="key num" data-val="2">2</button>
@@ -173,7 +150,6 @@
         <button class="key sci" data-fn="tanh">tanh</button>
       </div>
 
-      <!-- row 6 -->
       <div class="row">
         <button class="key num" data-val="0">0</button>
         <button class="key num" data-val=".">.</button>
@@ -189,20 +165,29 @@
     <div class="history-panel" id="historyPanel" style="display:none"></div>
 
     <div class="footer">
-      <div>Advanced DHTML Calculator</div>
+      <div>Pro DHTML Calculator — Autocomplete, Hints & Tooltips</div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="small" id="clearHistoryBtn">Clear History</button>
         <div style="width:8px"></div>
-        <div style="font-size:0.85rem;color:rgba(255,255,255,0.75)">v2.3</div>
+        <div style="font-size:0.9rem;color:rgba(255,255,255,0.75)">v3.0</div>
       </div>
     </div>
   </div>
 
 <script>
+/* =========================
+   Enhanced Calculator Script
+   Features added:
+   - Fuzzy autocomplete (substring matches)
+   - Argument hints (shows signature when typing func()
+   - Mini reference tooltip for buttons and suggestions
+   - All previous features kept (history, preview, deg/rad, precision, memory, draggable)
+   ========================= */
+
 (() => {
-  // Elements
+  // Element refs
   const calc = document.getElementById('calc');
-  const dragHandle = document.getElementById('dragHandle') || document.getElementById('dragHandle');
+  const dragHandle = document.getElementById('dragHandle');
   const display = document.getElementById('display');
   const preview = document.getElementById('preview');
   const historyEl = document.getElementById('history');
@@ -216,7 +201,10 @@
   const themeBtn = document.getElementById('themeBtn');
   const copyBtn = document.getElementById('copyBtn');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
   const autocompleteEl = document.getElementById('autocomplete');
+  const argHintEl = document.getElementById('argHint');
+  const tooltipEl = document.getElementById('tooltip');
 
   // State
   let expr = '';
@@ -226,399 +214,430 @@
   let precision = parseInt(localStorage.getItem('calc_precision') || '6', 10);
   let themeDark = localStorage.getItem('calc_theme') === 'dark';
 
-  // Autocomplete state & list (expanded)
-  const suggestionItems = [
-    {name:'sin', type:'fn'}, {name:'cos', type:'fn'}, {name:'tan', type:'fn'},
-    {name:'asin', type:'fn'}, {name:'acos', type:'fn'}, {name:'atan', type:'fn'},
-    {name:'sinh', type:'fn'}, {name:'cosh', type:'fn'}, {name:'tanh', type:'fn'},
-    {name:'asinh', type:'fn'}, {name:'acosh', type:'fn'}, {name:'atanh', type:'fn'},
-    {name:'ln', type:'fn'}, {name:'log', type:'fn'}, {name:'log10', type:'fn'},
-    {name:'sqrt', type:'fn'}, {name:'pow', type:'fn'}, {name:'abs', type:'fn'},
-    {name:'exp', type:'fn'}, {name:'rand', type:'fn'}, {name:'fact', type:'fn'},
-    {name:'nCr', type:'fn'}, {name:'nPr', type:'fn'}, {name:'gcd', type:'fn'}, {name:'lcm', type:'fn'},
-    {name:'isprime', type:'fn'}, {name:'pfactor', type:'fn'},
-    {name:'floor', type:'fn'}, {name:'ceil', type:'fn'}, {name:'round', type:'fn'},
-    {name:'PI', type:'const'}, {name:'E', type:'const'}
+  // Function & constant catalog with signatures + descriptions
+  const catalog = [
+    {name:'sin', type:'fn', sig:'sin(x)', desc:'Sine (deg/rad according to mode)'},
+    {name:'cos', type:'fn', sig:'cos(x)', desc:'Cosine'},
+    {name:'tan', type:'fn', sig:'tan(x)', desc:'Tangent'},
+    {name:'asin', type:'fn', sig:'asin(x)', desc:'Inverse sine'},
+    {name:'acos', type:'fn', sig:'acos(x)', desc:'Inverse cosine'},
+    {name:'atan', type:'fn', sig:'atan(x)', desc:'Inverse tangent'},
+    {name:'sinh', type:'fn', sig:'sinh(x)', desc:'Hyperbolic sine'},
+    {name:'cosh', type:'fn', sig:'cosh(x)', desc:'Hyperbolic cosine'},
+    {name:'tanh', type:'fn', sig:'tanh(x)', desc:'Hyperbolic tangent'},
+    {name:'asinh', type:'fn', sig:'asinh(x)', desc:'Inverse hyperbolic sine'},
+    {name:'acosh', type:'fn', sig:'acosh(x)', desc:'Inverse hyperbolic cosine'},
+    {name:'atanh', type:'fn', sig:'atanh(x)', desc:'Inverse hyperbolic tangent'},
+    {name:'ln', type:'fn', sig:'ln(x)', desc:'Natural logarithm'},
+    {name:'log', type:'fn', sig:'log(x)', desc:'Log base 10'},
+    {name:'log10', type:'fn', sig:'log10(x)', desc:'Log base 10'},
+    {name:'sqrt', type:'fn', sig:'sqrt(x)', desc:'Square root'},
+    {name:'pow', type:'fn', sig:'pow(a,b) or a^b', desc:'Power'},
+    {name:'abs', type:'fn', sig:'abs(x)', desc:'Absolute value'},
+    {name:'exp', type:'fn', sig:'exp(x)', desc:'e^x'},
+    {name:'rand', type:'fn', sig:'rand()', desc:'Random number 0..1'},
+    {name:'fact', type:'fn', sig:'fact(n)', desc:'Factorial (integer)'},
+    {name:'nCr', type:'fn', sig:'nCr(n,r)', desc:'Combinations'},
+    {name:'nPr', type:'fn', sig:'nPr(n,r)', desc:'Permutations'},
+    {name:'gcd', type:'fn', sig:'gcd(a,b)', desc:'Greatest common divisor'},
+    {name:'lcm', type:'fn', sig:'lcm(a,b)', desc:'Least common multiple'},
+    {name:'isprime', type:'fn', sig:'isprime(n)', desc:'Prime check (integer)'},
+    {name:'pfactor', type:'fn', sig:'pfactor(n)', desc:'Prime factorization (array)'},
+    {name:'floor', type:'fn', sig:'floor(x)', desc:'Floor'},
+    {name:'ceil', type:'fn', sig:'ceil(x)', desc:'Ceil'},
+    {name:'round', type:'fn', sig:'round(x)', desc:'Round to nearest'},
+    {name:'PI', type:'const', sig:'PI', desc:'Pi constant (3.1415...)'},
+    {name:'E', type:'const', sig:'E', desc:'Euler\'s number (2.71828...)'},
+    {name:'G', type:'const', sig:'G', desc:'Gravitational constant (6.67430e-11)'},
+    {name:'c', type:'const', sig:'c', desc:'Speed of light (299792458 m/s)'},
+    {name:'h', type:'const', sig:'h', desc:'Planck constant (6.626e-34)'}
   ];
-  let suggestions = [];
-  let suggestionIndex = -1;
 
-  // UI init
+  // Build quick lookup for sandbox
+  function gcd(a,b){a=Math.abs(Math.floor(a));b=Math.abs(Math.floor(b)); if(!a) return b; if(!b) return a; while(b){[a,b]=[b,a%b]} return a;}
+  function lcm(a,b){ if(a===0||b===0) return 0; return Math.abs(Math.floor(a)/gcd(a,b)*Math.floor(b));}
+  function isPrimeSimple(n){ n=Math.floor(n); if(n<=1) return false; if(n<=3) return true; if(n%2===0) return false; const r=Math.floor(Math.sqrt(n)); for(let i=3;i<=r;i+=2) if(n%i===0) return false; return true; }
+  function primeFactors(n){ n=Math.floor(Math.abs(n)); const out=[]; let d=2; while(d*d<=n){ while(n%d===0){ out.push(d); n/=d; } d=(d===2)?3:d+2; } if(n>1) out.push(n); return out; }
+  function factorial(n){ const k=Math.floor(n); if(k<0||k!==n||k>170) throw 'Invalid factorial'; let r=1; for(let i=2;i<=k;i++) r*=i; return r; }
+
+  function buildSandbox(){
+    return {
+      sin:x => angleMode==='deg'?Math.sin(x*Math.PI/180):Math.sin(x),
+      cos:x => angleMode==='deg'?Math.cos(x*Math.PI/180):Math.cos(x),
+      tan:x => angleMode==='deg'?Math.tan(x*Math.PI/180):Math.tan(x),
+      asin:x => angleMode==='deg'?Math.asin(x)*180/Math.PI:Math.asin(x),
+      acos:x => angleMode==='deg'?Math.acos(x)*180/Math.PI:Math.acos(x),
+      atan:x => angleMode==='deg'?Math.atan(x)*180/Math.PI:Math.atan(x),
+      sinh:x => Math.sinh?Math.sinh(x):(Math.exp(x)-Math.exp(-x))/2,
+      cosh:x => Math.cosh?Math.cosh(x):(Math.exp(x)+Math.exp(-x))/2,
+      tanh:x => Math.tanh?Math.tanh(x):((Math.exp(x)-Math.exp(-x))/(Math.exp(x)+Math.exp(-x))),
+      asinh:x => Math.asinh?Math.asinh(x):Math.log(x+Math.sqrt(x*x+1)),
+      acosh:x => Math.acosh?Math.acosh(x):Math.log(x+Math.sqrt(x*x-1)),
+      atanh:x => Math.atanh?Math.atanh(x):0.5*Math.log((1+x)/(1-x)),
+      ln:x => Math.log(x),
+      log:x => Math.log10?Math.log10(x):Math.log(x)/Math.LN10,
+      log10:x => Math.log10?Math.log10(x):Math.log(x)/Math.LN10,
+      sqrt:x => Math.sqrt(x),
+      pow:(a,b)=>Math.pow(a,b),
+      abs:x => Math.abs(x),
+      exp:x => Math.exp(x),
+      rand:()=>Math.random(),
+      PI:Math.PI, E:Math.E,
+      G:6.67430e-11, c:299792458, h:6.62607015e-34,
+      fact: factorial,
+      nCr:(n,r)=>{ n=Math.floor(n); r=Math.floor(r); if(r<0||n<0||r>n) return 0; if(r>n-r) r=n-r; let num=1,den=1; for(let i=1;i<=r;i++){ num*=(n-r+i); den*=i; } return Math.round(num/den); },
+      nPr:(n,r)=>{ n=Math.floor(n); r=Math.floor(r); if(r<0||n<0||r>n) return 0; let res=1; for(let i=0;i<r;i++) res*=(n-i); return res; },
+      gcd:(a,b)=>gcd(a,b),
+      lcm:(a,b)=>lcm(a,b),
+      isprime:(n)=>isPrimeSimple(n),
+      pfactor:(n)=>primeFactors(n),
+      floor:x=>Math.floor(x),
+      ceil:x=>Math.ceil(x),
+      round:x=>Math.round(x)
+    };
+  }
+
+  // Local state init
   memValueEl.textContent = String(memory);
   angleModeLabel.textContent = angleMode.toUpperCase();
   precisionSelect.value = String(precision);
-  if (themeDark) document.body.classList.add('dark');
+  if(themeDark) document.body.classList.add('dark');
 
-  // Helpers
-  function fmtNum(v) {
-    if (v === null || v === undefined) return '';
-    if (typeof v === 'number' && !isNaN(v) && isFinite(v)) {
-      if (precision === 0) return String(Math.round(v));
+  // Display helpers
+  function fmtNum(v){
+    if(v===null||v===undefined) return '';
+    if(typeof v==='number' && !isNaN(v) && isFinite(v)){
+      if(precision===0) return String(Math.round(v));
       return Number.parseFloat(v).toFixed(precision).replace(/\.?0+$/,'');
     }
     return String(v);
   }
 
-  // Sandbox math helpers
-  function gcd(a,b) {
-    a = Math.abs(Math.floor(a)); b = Math.abs(Math.floor(b));
-    if (!a) return b; if (!b) return a;
-    while (b) { const t = b; b = a % b; a = t; }
-    return a;
-  }
-  function lcm(a,b) {
-    if (a === 0 || b === 0) return 0;
-    return Math.abs(Math.floor(a) / gcd(a,b) * Math.floor(b));
-  }
-  function isPrimeSimple(n) {
-    n = Math.floor(n);
-    if (n <= 1) return false;
-    if (n <= 3) return true;
-    if (n % 2 === 0) return false;
-    const r = Math.floor(Math.sqrt(n));
-    for (let i=3;i<=r;i+=2) if (n % i === 0) return false;
-    return true;
-  }
-  function primeFactors(n) {
-    n = Math.floor(Math.abs(n));
-    const res = [];
-    let d = 2;
-    while (n >= 2 && d * d <= n) {
-      while (n % d === 0) { res.push(d); n = n / d; }
-      d = (d === 2) ? 3 : d + 2;
-    }
-    if (n > 1) res.push(n);
-    return res;
-  }
-
-  function buildSandbox() {
-    return {
-      sin: (x) => (angleMode === 'deg' ? Math.sin(x * Math.PI/180) : Math.sin(x)),
-      cos: (x) => (angleMode === 'deg' ? Math.cos(x * Math.PI/180) : Math.cos(x)),
-      tan: (x) => (angleMode === 'deg' ? Math.tan(x * Math.PI/180) : Math.tan(x)),
-      asin: (x) => (angleMode === 'deg' ? Math.asin(x) * 180/Math.PI : Math.asin(x)),
-      acos: (x) => (angleMode === 'deg' ? Math.acos(x) * 180/Math.PI : Math.acos(x)),
-      atan: (x) => (angleMode === 'deg' ? Math.atan(x) * 180/Math.PI : Math.atan(x)),
-      sinh: (x) => Math.sinh ? Math.sinh(x) : (Math.exp(x)-Math.exp(-x))/2,
-      cosh: (x) => Math.cosh ? Math.cosh(x) : (Math.exp(x)+Math.exp(-x))/2,
-      tanh: (x) => Math.tanh ? Math.tanh(x) : (Math.sinh(x)/Math.cosh(x)),
-      asinh: (x) => Math.asinh ? Math.asinh(x) : Math.log(x + Math.sqrt(x*x + 1)),
-      acosh: (x) => Math.acosh ? Math.acosh(x) : Math.log(x + Math.sqrt(x*x - 1)),
-      atanh: (x) => Math.atanh ? Math.atanh(x) : 0.5 * Math.log((1+x)/(1-x)),
-      ln: (x) => Math.log(x),
-      log: (x) => Math.log10 ? Math.log10(x) : Math.log(x)/Math.LN10,
-      log10: (x) => (Math.log10 ? Math.log10(x) : Math.log(x)/Math.LN10),
-      sqrt: (x) => Math.sqrt(x),
-      pow: (a,b) => Math.pow(a,b),
-      abs: (x) => Math.abs(x),
-      exp: (x) => Math.exp(x),
-      rand: () => Math.random(),
-      PI: Math.PI,
-      E: Math.E,
-      fact: (n) => {
-        const k = Math.floor(n);
-        if (k < 0 || k !== n || k > 170) throw 'Invalid factorial';
-        let r = 1;
-        for (let i=2;i<=k;i++) r *= i;
-        return r;
-      },
-      nCr: (n,r) => {
-        n = Math.floor(n); r = Math.floor(r);
-        if (r < 0 || n < 0 || r > n) return 0;
-        // compute nCr efficiently
-        if (r > n - r) r = n - r;
-        let num = 1, den = 1;
-        for (let i=1;i<=r;i++) { num *= (n - r + i); den *= i; }
-        return Math.round(num/den);
-      },
-      nPr: (n,r) => {
-        n = Math.floor(n); r = Math.floor(r);
-        if (r < 0 || n < 0 || r > n) return 0;
-        let res = 1;
-        for (let i=0;i<r;i++) res *= (n - i);
-        return res;
-      },
-      gcd: (a,b) => gcd(a,b),
-      lcm: (a,b) => lcm(a,b),
-      isprime: (n) => isPrimeSimple(n),
-      pfactor: (n) => primeFactors(n),
-      floor: (x) => Math.floor(x),
-      ceil: (x) => Math.ceil(x),
-      round: (x) => Math.round(x)
-    };
-  }
-
-  // Preprocess factorial like "5!" => fact(5)
-  function preprocessFactorial(s) {
+  // Expression preprocess & evaluate (sandbox)
+  function preprocessFactorial(s){
     s = s.replace(/\s+/g,'');
     const re = /(\d+(\.\d+)?|\([^()]*\))!/;
-    while (re.test(s)) {
-      s = s.replace(re, 'fact($1)');
+    while(re.test(s)){
+      s = s.replace(re,'fact($1)');
     }
+    s = s.replace(/(\d+(\.\d+)?)%/g,'($1/100)');
+    // Convert a^b to pow(a,b)
+    s = s.replace(/([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))\^([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))/g,'pow($1,$3)');
     return s;
   }
 
-  function evaluateExpression(input) {
-    if (!input || input.trim() === '') return '';
-    try {
-      let processed = preprocessFactorial(input);
-      processed = processed.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-      processed = processed.replace(/([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))\^([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))/g, 'pow($1,$3)');
+  function evaluateExpression(input){
+    if(!input || input.trim()==='') return '';
+    try{
+      const processed = preprocessFactorial(input);
       const sb = buildSandbox();
       const keys = Object.keys(sb);
       const args = keys.map(k => sb[k]);
       const fn = new Function(...keys, 'return (' + processed + ');');
       const result = fn(...args);
       return result;
-    } catch (err) {
+    } catch(err){
       return 'Error';
     }
   }
 
-  // Autocomplete functions (same as previous, with expanded list)
-  function getCurrentAlphaToken() {
-    const m = expr.match(/[A-Za-z_]+$/);
-    return m ? m[0] : '';
-  }
-  function updateSuggestions() {
-    const token = getCurrentAlphaToken();
-    suggestions = []; suggestionIndex = -1;
-    if (!token) { hideAutocomplete(); return; }
-    const lower = token.toLowerCase();
-    suggestions = suggestionItems.filter(s => s.name.toLowerCase().startsWith(lower));
-    suggestionIndex = suggestions.length ? 0 : -1;
-    renderAutocomplete();
-  }
-  function renderAutocomplete() {
-    autocompleteEl.innerHTML = '';
-    if (!suggestions.length) { hideAutocomplete(); return; }
-    suggestions.forEach((s,i) => {
-      const div = document.createElement('div');
-      div.className = 'item' + (i===suggestionIndex ? ' active' : '');
-      div.dataset.index = String(i);
-      div.innerHTML = `<div class="name">${s.name}</div><div class="type">${s.type}</div>`;
-      autocompleteEl.appendChild(div);
-    });
-    autocompleteEl.classList.add('visible');
-  }
-  function hideAutocomplete() { autocompleteEl.classList.remove('visible'); suggestions=[]; suggestionIndex=-1; }
-  function acceptSuggestion(index) {
-    if (index<0 || index>=suggestions.length) return;
-    const s = suggestions[index];
-    const token = getCurrentAlphaToken();
-    if (token) expr = expr.slice(0, -token.length);
-    if (s.type==='fn') expr += s.name + '('; else expr += s.name;
-    hideAutocomplete(); render(); updatePreviewDebounced();
+  // History
+  function pushHistory(e,r){
+    historyArr.push({expr:e,result:r,ts:Date.now()});
+    if(historyArr.length>400) historyArr.shift();
+    localStorage.setItem('calc_history', JSON.stringify(historyArr));
+    renderHistoryPanel();
+    render();
   }
 
-  // Debounced preview
-  let previewTimer = null;
-  function updatePreviewDebounced() {
-    if (previewTimer) clearTimeout(previewTimer);
-    previewTimer = setTimeout(() => {
-      const v = evaluateExpression(expr);
-      preview.textContent = (v === 'Error' || v === '' ? '' : '= ' + fmtNum(v));
-    }, 120);
+  function renderHistoryPanel(){
+    historyPanel.innerHTML = '';
+    if(!historyArr.length){
+      historyPanel.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.6)">No history yet</div>';
+      return;
+    }
+    for(let i=historyArr.length-1;i>=0;i--){
+      const it = historyArr[i];
+      const el = document.createElement('div');
+      el.className='history-item';
+      el.innerHTML = `<div style="flex:1"><strong>${it.expr}</strong><div style="font-size:0.85rem;color:rgba(255,255,255,0.6)">${fmtNum(it.result)}</div></div>
+        <div style="display:flex;gap:8px"><button data-load="${i}" class="small">Load</button><button data-copy="${i}" class="small">Copy</button></div>`;
+      historyPanel.appendChild(el);
+    }
   }
 
-  // Render & history
-  function render() {
+  historyPanel.addEventListener('click', e=>{
+    const load = e.target.getAttribute('data-load');
+    const copy = e.target.getAttribute('data-copy');
+    if(load!==null){ const it = historyArr[load]; if(it){ expr = it.expr; render(); updatePreviewDebounced(); historyPanel.style.display='none'; } }
+    if(copy!==null){ const it = historyArr[copy]; if(it) navigator.clipboard?.writeText(String(it.result)).catch(()=>{}); }
+  });
+
+  // Render main display / preview / memory
+  function render(){
     display.value = expr || '0';
     historyEl.textContent = historyArr.length ? historyArr[historyArr.length-1].expr + ' =' : '\u00A0';
     document.getElementById('memValue').textContent = String(memory);
     localStorage.setItem('calc_memory', String(memory));
     localStorage.setItem('calc_history', JSON.stringify(historyArr));
   }
-  function pushHistory(e, r) {
-    const item = {expr: e, result: r, ts: Date.now()};
-    historyArr.push(item);
-    if (historyArr.length > 300) historyArr.shift();
-    localStorage.setItem('calc_history', JSON.stringify(historyArr));
-    renderHistoryPanel();
-    render();
+
+  // ----------------------------
+  // AUTOCOMPLETE (fuzzy substrings), ARGUMENT HINTS, TOOLTIP
+  // ----------------------------
+  let suggestions = [];
+  let suggestionIndex = -1;
+
+  function getCurrentAlphaToken(){
+    const m = expr.match(/[A-Za-z_]+$/);
+    return m?m[0]:'';
   }
-  function renderHistoryPanel() {
-    historyPanel.innerHTML = '';
-    if (!historyArr.length) { historyPanel.innerHTML = '<div style="padding:10px;color:rgba(255,255,255,0.6)">No history yet</div>'; return; }
-    for (let i = historyArr.length - 1; i >= 0; i--) {
-      const it = historyArr[i];
-      const el = document.createElement('div');
-      el.className = 'history-item';
-      el.innerHTML = `<div style="flex:1"><strong>${it.expr}</strong><div style="font-size:0.85rem;color:rgba(255,255,255,0.6)">${fmtNum(it.result)}</div></div>
-                      <div style="display:flex;gap:8px">
-                        <button title="Load" data-load="${i}" class="small">Load</button>
-                        <button title="Copy" data-copy="${i}" class="small">Copy</button>
-                      </div>`;
-      historyPanel.appendChild(el);
-    }
+
+  function fuzzyMatch(token){
+    if(!token) return [];
+    const low = token.toLowerCase();
+    // score: name includes token — prefer startsWith then contains
+    const matches = catalog.map(c=>{
+      const name = c.name.toLowerCase();
+      let score = 0;
+      if(name === low) score = 100;
+      else if(name.startsWith(low)) score = 80;
+      else if(name.includes(low)) score = 60;
+      return {...c, score};
+    }).filter(x=>x.score>0).sort((a,b)=>b.score - a.score).slice(0,10);
+    return matches;
   }
-  historyPanel.addEventListener('click', (ev) => {
-    const loadIndex = ev.target.getAttribute('data-load');
-    const copyIndex = ev.target.getAttribute('data-copy');
-    if (loadIndex !== null) {
-      const it = historyArr[loadIndex];
-      if (it) { expr = it.expr; render(); updatePreviewDebounced(); historyPanel.style.display = 'none'; }
-    } else if (copyIndex !== null) {
-      const it = historyArr[copyIndex];
-      if (it) navigator.clipboard?.writeText(String(it.result)).catch(()=>{});
+
+  function renderAutocomplete(){
+    autocompleteEl.innerHTML = '';
+    if(!suggestions.length){ autocompleteEl.classList.remove('visible'); return; }
+    suggestions.forEach((s,i)=>{
+      const div = document.createElement('div');
+      div.className = 'item' + (i===suggestionIndex? ' active':'');
+      div.dataset.index = i;
+      div.innerHTML = `<div style="display:flex;flex-direction:column"><span style="font-weight:700">${s.name}</span><span style="font-size:0.82rem;opacity:0.8">${s.desc}</span></div><div class="type">${s.type}</div>`;
+      autocompleteEl.appendChild(div);
+    });
+    autocompleteEl.classList.add('visible');
+  }
+
+  function hideAutocomplete(){ suggestions=[]; suggestionIndex=-1; autocompleteEl.classList.remove('visible'); }
+
+  function acceptSuggestion(i){
+    if(i<0 || i>=suggestions.length) return;
+    const s = suggestions[i];
+    const token = getCurrentAlphaToken();
+    if(token) expr = expr.slice(0,-token.length);
+    if(s.type==='fn') expr += s.name + '(';
+    else expr += s.name;
+    hideAutocomplete();
+    render(); updatePreviewDebounced();
+  }
+
+  // Argument hint: when expr ends with funcName( show the signature and quick docs
+  function updateArgHint(){
+    const m = expr.match(/([A-Za-z_]\w*)\([^()]*$/);
+    if(!m){ argHintEl.classList.remove('visible'); return; }
+    const fname = m[1];
+    const entry = catalog.find(c => c.name === fname);
+    if(!entry){ argHintEl.classList.remove('visible'); return; }
+    argHintEl.innerHTML = `<strong>${entry.sig}</strong><div style="font-size:0.9rem;opacity:0.9;margin-top:6px">${entry.desc}</div>`;
+    argHintEl.classList.add('visible');
+  }
+
+  function hideArgHint(){ argHintEl.classList.remove('visible'); }
+
+  // Tooltip near mouse for hovered buttons / suggestions
+  let tooltipTimer = null;
+  function showTooltip(text,x,y){
+    clearTimeout(tooltipTimer);
+    tooltipEl.style.left = x + 'px';
+    tooltipEl.style.top = y + 'px';
+    tooltipEl.textContent = text;
+    tooltipEl.classList.add('visible');
+  }
+  function hideTooltip(){ tooltipEl.classList.remove('visible'); clearTimeout(tooltipTimer); }
+
+  // ----------------------------
+  // KEY HANDLING (buttons + keyboard)
+  // ----------------------------
+  keys.addEventListener('mousemove', e=>{
+    // show tooltips for hovered key with data-fn or data-val
+    const btn = e.target.closest('.key');
+    if(!btn){ hideTooltip(); return; }
+    const fn = btn.getAttribute('data-fn');
+    const val = btn.getAttribute('data-val');
+    if(fn){
+      const entry = catalog.find(c=>c.name===fn);
+      if(entry) showTooltip(`${entry.sig} — ${entry.desc}`, e.clientX+12, e.clientY+12);
+      else showTooltip(fn, e.clientX+12, e.clientY+12);
+    } else if(val){
+      showTooltip(val, e.clientX+12, e.clientY+12);
+    } else {
+      hideTooltip();
     }
   });
+  keys.addEventListener('mouseleave', hideTooltip);
 
-  // Key clicks
-  keys.addEventListener('click', (ev) => {
-    const btn = ev.target.closest('.key');
-    if (!btn) return;
+  keys.addEventListener('click', e=>{
+    const btn = e.target.closest('.key');
+    if(!btn) return;
     btn.classList.add('glow'); setTimeout(()=>btn.classList.remove('glow'),180);
 
     const val = btn.getAttribute('data-val');
     const action = btn.getAttribute('data-action');
     const fn = btn.getAttribute('data-fn');
 
-    if (val) { expr += val; render(); updateSuggestions(); updatePreviewDebounced(); return; }
-    if (fn) {
-      if (!expr) {
-        if (fn === 'pi') expr += 'PI';
-        else if (fn === 'rand') expr += 'rand()';
+    if(val){ expr += val; render(); updateAutocompleteAndPreview(); return; }
+    if(fn){
+      if(!expr){
+        if(fn==='pi') expr += 'PI';
+        else if(fn==='rand') expr += 'rand()';
         else expr += fn + '(';
       } else {
-        if (['fact','rand','pi','isprime','pfactor'].includes(fn)) {
-          if (fn === 'fact') expr = 'fact(' + expr + ')';
-          else if (fn === 'rand') expr = 'rand()';
-          else if (fn === 'pi') expr += 'PI';
-          else if (fn === 'isprime') expr = 'isprime(' + expr + ')';
-          else if (fn === 'pfactor') expr = 'pfactor(' + expr + ')';
-        } else if (fn === 'pow') {
-          expr += '^';
-        } else {
-          expr = fn + '(' + expr + ')';
-        }
+        if(['fact','rand','pi','isprime','pfactor'].includes(fn)){
+          if(fn==='fact') expr = 'fact(' + expr + ')';
+          else if(fn==='rand') expr = 'rand()';
+          else if(fn==='pi') expr += 'PI';
+          else if(fn==='isprime') expr = 'isprime(' + expr + ')';
+          else if(fn==='pfactor') expr = 'pfactor(' + expr + ')';
+        } else if(fn==='pow'){ expr += '^'; }
+        else { expr = fn + '(' + expr + ')'; }
       }
-      render(); hideAutocomplete(); updatePreviewDebounced(); return;
+      render(); hideAutocomplete(); updatePreviewDebounced(); updateArgHint(); return;
     }
-    if (action) {
-      switch(action) {
-        case 'clear': expr=''; render(); preview.textContent=''; hideAutocomplete(); break;
-        case 'back': expr = expr.slice(0,-1); render(); updateSuggestions(); updatePreviewDebounced(); break;
+    if(action){
+      switch(action){
+        case 'clear': expr=''; render(); preview.textContent=''; hideAutocomplete(); hideArgHint(); break;
+        case 'back': expr = expr.slice(0,-1); render(); updateAutocompleteAndPreview(); break;
         case 'equals': {
-            const v = evaluateExpression(expr);
-            const out = (v === 'Error') ? v : fmtNum(v);
-            if (v !== 'Error' && v !== '' && v !== undefined) {
-              pushHistory(expr, v);
-              expr = String(v);
-              preview.textContent = '';
-            } else {
-              preview.textContent = 'Error';
-            }
-            render(); hideAutocomplete();
-          }
-          break;
+          const v = evaluateExpression(expr);
+          const out = (v==='Error')?v:fmtNum(v);
+          if(v!=='Error' && v!=='' && v!==undefined){ pushHistory(expr,v); expr = String(v); preview.textContent=''; }
+          else preview.textContent = 'Error';
+          render(); hideAutocomplete(); hideArgHint();
+        } break;
         case 'mc': memory = 0; document.getElementById('memValue').textContent = String(memory); localStorage.setItem('calc_memory', String(memory)); break;
-        case 'mr': expr += String(memory); render(); updateSuggestions(); updatePreviewDebounced(); break;
+        case 'mr': expr += String(memory); render(); updateAutocompleteAndPreview(); break;
         case 'mplus': {
           const v = evaluateExpression(expr);
-          if (typeof v === 'number' && isFinite(v)) memory += v;
-          localStorage.setItem('calc_memory', String(memory));
-          document.getElementById('memValue').textContent = String(memory);
-          break;
-        }
+          if(typeof v==='number' && isFinite(v)) memory += v;
+          localStorage.setItem('calc_memory', String(memory)); document.getElementById('memValue').textContent = String(memory);
+        } break;
         case 'mminus': {
           const v = evaluateExpression(expr);
-          if (typeof v === 'number' && isFinite(v)) memory -= v;
-          localStorage.setItem('calc_memory', String(memory));
-          document.getElementById('memValue').textContent = String(memory);
-          break;
-        }
+          if(typeof v==='number' && isFinite(v)) memory -= v;
+          localStorage.setItem('calc_memory', String(memory)); document.getElementById('memValue').textContent = String(memory);
+        } break;
       }
     }
   });
 
-  // Keyboard & autocomplete nav
-  document.addEventListener('keydown', (e) => {
-    // Autocomplete nav
-    if (autocompleteEl.classList.contains('visible')) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); suggestionIndex = (suggestionIndex + 1) % suggestions.length; renderAutocomplete(); return; }
-      if (e.key === 'ArrowUp') { e.preventDefault(); suggestionIndex = (suggestionIndex - 1 + suggestions.length) % suggestions.length; renderAutocomplete(); return; }
-      if (e.key === 'Enter') { if (suggestionIndex >= 0) { e.preventDefault(); acceptSuggestion(suggestionIndex); return; } }
-      if (e.key === 'Escape') { hideAutocomplete(); return; }
+  // Keyboard handling with autocomplete nav & fuzzy entry
+  document.addEventListener('keydown', e=>{
+    if(autocompleteEl.classList.contains('visible')){
+      if(e.key==='ArrowDown'){ e.preventDefault(); suggestionIndex = (suggestionIndex+1)%suggestions.length; renderAutocomplete(); return; }
+      if(e.key==='ArrowUp'){ e.preventDefault(); suggestionIndex = (suggestionIndex-1 + suggestions.length)%suggestions.length; renderAutocomplete(); return; }
+      if(e.key==='Enter'){ if(suggestionIndex>=0){ e.preventDefault(); acceptSuggestion(suggestionIndex); return; } }
+      if(e.key==='Escape'){ hideAutocomplete(); return; }
     }
 
-    if (e.key >= '0' && e.key <= '9') { expr += e.key; render(); updateSuggestions(); updatePreviewDebounced(); return; }
-    if (e.key === '.') { expr += '.'; render(); updateSuggestions(); updatePreviewDebounced(); return; }
-    if ('+-*/%^()'.includes(e.key)) { expr += e.key; render(); hideAutocomplete(); updatePreviewDebounced(); return; }
-    if (e.key === 'Enter') { document.querySelector('[data-action="equals"]').click(); return; }
-    if (e.key === 'Backspace') { document.querySelector('[data-action="back"]').click(); return; }
-    if (e.key === 'Escape') { document.querySelector('[data-action="clear"]').click(); return; }
-
-    if (/^[a-zA-Z]$/.test(e.key)) { expr += e.key; render(); updateSuggestions(); updatePreviewDebounced(); return; }
-    if (e.key === '!') { expr += '!'; render(); updatePreviewDebounced(); return; }
+    if(e.key>='0' && e.key<='9'){ expr+=e.key; render(); updateAutocompleteAndPreview(); return; }
+    if(e.key==='.') { expr+='.'; render(); updateAutocompleteAndPreview(); return; }
+    if('+-*/%^()'.includes(e.key)){ expr+=e.key; render(); hideAutocomplete(); updatePreviewDebounced(); updateArgHint(); return; }
+    if(e.key==='Enter'){ document.querySelector('[data-action="equals"]').click(); return; }
+    if(e.key==='Backspace'){ document.querySelector('[data-action="back"]').click(); return; }
+    if(e.key==='Escape'){ document.querySelector('[data-action="clear"]').click(); return; }
+    if(/^[a-zA-Z]$/.test(e.key)){ expr+=e.key; render(); updateAutocompleteAndPreview(); return; }
+    if(e.key==='!'){ expr+='!'; render(); updatePreviewDebounced(); return; }
   });
 
-  // Autocomplete handlers
-  autocompleteEl.addEventListener('click', (ev) => {
-    const it = ev.target.closest('.item');
-    if (!it) return;
-    const idx = parseInt(it.dataset.index, 10);
-    if (!isNaN(idx)) acceptSuggestion(idx);
-  });
-  function renderAutocomplete() {
-    autocompleteEl.innerHTML = '';
-    if (!suggestions.length) { hideAutocomplete(); return; }
-    suggestions.forEach((s,i) => {
-      const div = document.createElement('div');
-      div.className = 'item' + (i===suggestionIndex ? ' active' : '');
-      div.dataset.index = String(i);
-      div.innerHTML = `<div class="name">${s.name}</div><div class="type">${s.type}</div>`;
-      autocompleteEl.appendChild(div);
-    });
-    autocompleteEl.classList.add('visible');
+  // Autocomplete helpers
+  function updateAutocompleteAndPreview(){
+    const token = getCurrentAlphaToken();
+    if(!token){ hideAutocomplete(); updatePreviewDebounced(); hideArgHint(); return; }
+    suggestions = fuzzyMatch(token);
+    suggestionIndex = suggestions.length?0:-1;
+    renderAutocomplete();
+    updatePreviewDebounced();
+    updateArgHint();
   }
 
-  // Angle toggle, precision, theme, copy, history visibility
-  angleToggle.addEventListener('click', () => {
-    angleMode = (angleMode === 'deg' ? 'rad' : 'deg');
-    angleModeLabel.textContent = angleMode.toUpperCase();
-    localStorage.setItem('calc_angle', angleMode);
-    updatePreviewDebounced();
-  });
-  precisionSelect.addEventListener('change', () => {
-    precision = parseInt(precisionSelect.value, 10);
-    localStorage.setItem('calc_precision', String(precision));
-    updatePreviewDebounced();
-  });
-  themeBtn.addEventListener('click', () => {
-    themeDark = !themeDark;
-    localStorage.setItem('calc_theme', themeDark ? 'dark' : 'light');
-    document.body.classList.toggle('dark', themeDark);
-  });
-  copyBtn.addEventListener('click', async () => {
-    const text = display.value || '';
-    try { await navigator.clipboard.writeText(text); copyBtn.classList.add('glow'); setTimeout(()=>copyBtn.classList.remove('glow'),220); } catch(e) {}
-  });
-  showHistoryBtn.addEventListener('click', () => {
-    historyPanel.style.display = historyPanel.style.display === 'none' ? 'block' : 'none';
-    renderHistoryPanel();
-  });
-  clearHistoryBtn.addEventListener('click', () => { historyArr = []; localStorage.removeItem('calc_history'); renderHistoryPanel(); });
+  function fuzzyMatch(token){
+    if(!token) return [];
+    const low = token.toLowerCase();
+    // simple fuzzy: substring match and score by startsWith > contains; returning up to 12
+    return catalog.filter(c => c.name.toLowerCase().includes(low))
+      .map(c => ({...c, score: c.name.toLowerCase().startsWith(low)?2:1}))
+      .sort((a,b)=>b.score-a.score || a.name.localeCompare(b.name))
+      .slice(0,12);
+  }
 
-  // Dragging
-  let dragging = false, dx=0, dy=0;
-  dragHandle.addEventListener('mousedown', (e)=> { dragging=true; calc.classList.add('dragging'); dx=e.clientX-calc.offsetLeft; dy=e.clientY-calc.offsetTop; });
-  document.addEventListener('mousemove', (e)=> { if(!dragging) return; calc.style.left=(e.clientX-dx)+'px'; calc.style.top=(e.clientY-dy)+'px'; });
-  document.addEventListener('mouseup', ()=> { dragging=false; calc.classList.remove('dragging'); localStorage.setItem('calc_pos', JSON.stringify({ left: calc.offsetLeft, top: calc.offsetTop })); });
+  // Debounced preview evaluation
+  let previewTimer = null;
+  function updatePreviewDebounced(){
+    if(previewTimer) clearTimeout(previewTimer);
+    previewTimer = setTimeout(()=>{
+      const v = evaluateExpression(expr);
+      preview.textContent = (v==='Error' || v==='' ? '' : '= ' + fmtNum(v));
+    },120);
+  }
 
-  // Init
-  function init() {
-    render();
+  // tooltip on suggestion hover (re-use tooltipEl)
+  autocompleteEl.addEventListener('mousemove', e=>{
+    const item = e.target.closest('.item');
+    if(!item) return;
+    const idx = parseInt(item.dataset.index,10);
+    if(!isNaN(idx) && suggestions[idx]) showTooltip(`${suggestions[idx].sig || suggestions[idx].name} — ${suggestions[idx].desc}`, e.clientX+12, e.clientY+12);
+  });
+  autocompleteEl.addEventListener('mouseleave', hideTooltip);
+  autocompleteEl.addEventListener('click', e=>{
+    const it = e.target.closest('.item');
+    if(!it) return;
+    const idx = parseInt(it.dataset.index,10);
+    if(!isNaN(idx)) acceptSuggestion(idx);
+  });
+
+  // Tooltip functions
+  function showTooltip(text,x,y){
+    tooltipEl.textContent = text;
+    tooltipEl.style.left = (x+8) + 'px';
+    tooltipEl.style.top = (y+8) + 'px';
+    tooltipEl.classList.add('visible');
+  }
+  function hideTooltip(){ tooltipEl.classList.remove('visible'); }
+
+  // ----------------------------
+  // UI controls: angle, precision, theme, copy, history toggle
+  // ----------------------------
+  angleToggle.addEventListener('click', ()=>{
+    angleMode = (angleMode==='deg'?'rad':'deg'); angleModeLabel.textContent = angleMode.toUpperCase(); localStorage.setItem('calc_angle', angleMode);
     updatePreviewDebounced();
-    renderHistoryPanel();
-    historyPanel.style.display = 'none';
-    const pos = JSON.parse(localStorage.getItem('calc_pos') || 'null');
-    if (pos && Number.isFinite(pos.left) && Number.isFinite(pos.top)) { calc.style.left = pos.left + 'px'; calc.style.top = pos.top + 'px'; }
+  });
+  precisionSelect.addEventListener('change', ()=>{ precision = parseInt(precisionSelect.value,10); localStorage.setItem('calc_precision', String(precision)); updatePreviewDebounced(); });
+
+  themeBtn.addEventListener('click', ()=>{ themeDark = !themeDark; localStorage.setItem('calc_theme', themeDark? 'dark':'light'); document.body.classList.toggle('dark', themeDark); });
+  copyBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(display.value||''); copyBtn.classList.add('glow'); setTimeout(()=>copyBtn.classList.remove('glow'),220);}catch{} });
+
+  showHistoryBtn.addEventListener('click', ()=>{ historyPanel.style.display = historyPanel.style.display==='none' ? 'block':'none'; renderHistoryPanel(); });
+  clearHistoryBtn.addEventListener('click', ()=>{ historyArr=[]; localStorage.removeItem('calc_history'); renderHistoryPanel(); });
+
+  // Dragging the calculator
+  let dragging=false,dx=0,dy=0;
+  dragHandle.addEventListener('mousedown', e=>{ dragging=true; calc.classList.add('dragging'); dx=e.clientX-calc.offsetLeft; dy=e.clientY-calc.offsetTop; });
+  document.addEventListener('mousemove', e=>{ if(!dragging) return; calc.style.left=(e.clientX-dx)+'px'; calc.style.top=(e.clientY-dy)+'px'; });
+  document.addEventListener('mouseup', ()=>{ if(dragging) localStorage.setItem('calc_pos', JSON.stringify({left:calc.offsetLeft, top:calc.offsetTop})); dragging=false; calc.classList.remove('dragging'); });
+
+  // Initial render + position restore
+  function init(){
+    render(); updatePreviewDebounced(); renderHistoryPanel(); historyPanel.style.display='none';
+    const pos = JSON.parse(localStorage.getItem('calc_pos')||'null'); if(pos && typeof pos.left==='number') { calc.style.left = pos.left+'px'; calc.style.top = pos.top+'px'; }
   }
   init();
 
-  // Expose some helpers to console for debugging (optional)
-  window._calc = { evaluateExpression, exprState: () => expr, history: historyArr, memory: () => memory };
+  // Expose for debug (optional)
+  window._calc = { evaluateExpression, exprState:()=>expr, history:historyArr, memory:()=>memory };
+
 })();
 </script>
 </body>
