@@ -3,29 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Exam-Calc — Ultimate 2 (Units+, Validation Hints, LaTeX)</title>
+<title>Exam-Calc — Ultimate 3 (Conversion Autocomplete)</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
-<!-- MathJax config: prettier SVG output, adjust scale and font -->
+<!-- MathJax config for prettier output -->
 <script>
   window.MathJax = {
     loader: {load: ['input/tex','output/svg']},
-    tex: {
-      inlineMath: [['$', '$'], ['\\(', '\\)']],
-      macros: { RR: '\\mathbb{R}', bold: ['{\\bf #1}',1] }
-    },
-    svg: {
-      font: 'STIX-Web',
-      scale: 1.0
-    },
-    options: {
-      renderActions: {
-        addMenu: []
-      }
-    }
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], macros: { RR: '\\mathbb{R}', bold: ['{\\bf #1}',1] } },
+    svg: { font: 'STIX-Web', scale: 1.0 },
+    options: { renderActions: { addMenu: [] } }
   };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
@@ -39,7 +29,7 @@
   --bg-1:#f3f6f9; --bg-2:#eef3f7;
   --panel:#223244; --accent:#f6b042; --muted:#90a4ae;
   --radius:14px; --shadow-1:0 10px 30px rgba(34,50,68,0.12);
-  --math-color: #123447;
+  --math-color:#123447;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg-1),var(--bg-2));font-family:'Inter',system-ui,Arial,sans-serif;color:#0b2336}
@@ -70,9 +60,10 @@ body{display:flex;align-items:center;justify-content:center;padding:18px;-webkit
 .history-item{padding:8px;border-bottom:1px solid rgba(3,17,28,0.04);display:flex;justify-content:space-between;gap:8px;align-items:center}
 .history-item:last-child{border-bottom:none}
 .history-item small{color:#446;display:block;margin-top:4px}
-.autocomplete{position:absolute;right:120px;top:140px;min-width:340px;background:#0f1a20;color:#fff;border-radius:10px;box-shadow:0 18px 36px rgba(0,0,0,0.5);padding:6px;display:none;z-index:150}
-.autocomplete .suggest{padding:8px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.autocomplete{position:absolute;right:120px;top:140px;min-width:360px;background:#0f1a20;color:#fff;border-radius:10px;box-shadow:0 18px 36px rgba(0,0,0,0.5);padding:6px;display:none;z-index:150;max-height:320px;overflow:auto}
+.autocomplete .suggest{padding:8px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .autocomplete .suggest:hover{background:rgba(255,255,255,0.03)}
+.autocomplete .unit-preview{font-size:0.9rem;opacity:0.9;color:#9ed}
 .hint{position:absolute;left:26px;top:140px;min-width:320px;background:#f6fffb;color:#0b3b3a;padding:10px;border-radius:10px;display:none;box-shadow:0 12px 30px rgba(3,17,28,0.06);z-index:150}
 .hint.warning{background:#fff1f0;color:#4b0b09;border:1px solid rgba(200,60,60,0.12)}
 .tooltip{position:fixed;pointer-events:none;padding:8px 10px;border-radius:8px;background:#0f1720;color:#fff;font-size:0.87rem;box-shadow:0 12px 30px rgba(3,17,28,0.5);display:none;z-index:160}
@@ -82,7 +73,6 @@ body{display:flex;align-items:center;justify-content:center;padding:18px;-webkit
 .footer{grid-column:1/-1;padding-top:8px;display:flex;justify-content:space-between;color:var(--muted);font-size:0.85rem}
 .notebook-mode .calc{background:linear-gradient(180deg,#fbf9f1,#f7f6ec)}
 .notebook-mode #display{font-family:'Patrick Hand',cursive;color:#123447;background:linear-gradient(180deg,#fffdf6,#fff9ec)}
-/* MathJax rendered SVG tweaks */
 mjx-container[display="true"] svg { max-width:100%; height:auto; color:var(--math-color); }
 mjx-container { color:var(--math-color); }
 @media (max-width:1000px){ .calc{grid-template-columns:1fr; } .autocomplete{right:18px;top:220px} .hint{left:18px;top:200px} .side{order:2} .main{order:1} }
@@ -96,7 +86,7 @@ mjx-container { color:var(--math-color); }
       <div class="brand">
         <div>
           <h1>Exam-Calc</h1>
-          <small>ultimate toolkit — units, validation, LaTeX, PDF, sounds</small>
+          <small>ultimate toolkit — conversion autocomplete added</small>
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -108,7 +98,7 @@ mjx-container { color:var(--math-color); }
     <div class="main" id="mainArea">
       <div class="display" id="displayArea">
         <div id="history">&nbsp;</div>
-        <div id="preview">Type an expression — validation and preview will appear here.</div>
+        <div id="preview">Type an expression or conversion — suggestions will appear while you type.</div>
         <input id="display" type="text" disabled value="0" aria-label="Calculator display"/>
         <div id="validationMessage" class="hint" style="display:none"></div>
       </div>
@@ -188,7 +178,7 @@ mjx-container { color:var(--math-color); }
     <aside class="side">
       <div class="sticky">
         <h4>Quick tips</h4>
-        <p>Type math expressions like <code>sin(30)</code>, factorial <code>5!</code>, or unit conversions like <code>10 km to m</code>. Hints show examples and warnings (e.g. domain rules) while you type.</p>
+        <p>Type math expressions like <code>sin(30)</code>, factorial <code>5!</code>, or unit conversions like <code>10 km to m</code>. When you type `to` the autocomplete will suggest compatible units with a preview — try it now.</p>
       </div>
 
       <div>
@@ -231,7 +221,7 @@ mjx-container { color:var(--math-color); }
 
     <div class="footer">
       <div>Designed with care — built for students and curious minds.</div>
-      <div style="opacity:.8">vUltimate • 4.1</div>
+      <div style="opacity:.8">vUltimate • 4.2</div>
     </div>
   </div>
 </div>
@@ -244,7 +234,7 @@ mjx-container { color:var(--math-color); }
 <div class="modal-backdrop" id="onboardingModal">
   <div class="modal" role="dialog" aria-modal="true">
     <h2>Welcome to Exam-Calc — Quick tour</h2>
-    <p>Type expressions: <code>sin(30)</code>, <code>5!</code>, <code>nCr(10,3)</code>. For unit conversion type: <code>10 km to m</code>. Hints now include example valid values and will warn if arguments are out-of-domain.</p>
+    <p>Type expressions: <code>sin(30)</code>, <code>5!</code>, <code>nCr(10,3)</code>. For unit conversion type: <code>10 km to m</code>. When you type `to`, suggestions appear — click one to convert instantly.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
       <button id="closeOnboarding" class="key sci" style="background:#9ecb8b;padding:8px 12px">Got it — thanks</button>
     </div>
@@ -270,11 +260,10 @@ mjx-container { color:var(--math-color); }
 
 <script>
 /* =========================
-   Exam-Calc Ultimate 2
-   - Added unit categories (pressure, energy, time)
-   - Live validation with example values in the arg hint
-   - MathJax tweaks for prettier LaTeX
-   - Everything else preserved (export, sounds, notebook mode, autocomplete)
+   Exam-Calc Ultimate 3
+   - Conversion autocomplete: when typing "10 km to " suggestions appear
+   - Click or keyboard-select suggestion to complete conversion immediately
+   - All features from Ultimate 2 preserved
    ========================= */
 
 (() => {
@@ -386,12 +375,9 @@ mjx-container { color:var(--math-color); }
 
   function preprocess(expression){
     let s = String(expression).replace(/\s+/g,'');
-    // factorial: 5! => fact(5)
     const reFact = /(\d+(\.\d+)?|\([^()]*\))!/;
     while (reFact.test(s)) s = s.replace(reFact, 'fact($1)');
-    // percent: 50% => (50/100)
     s = s.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-    // ^ operator => pow(a,b)
     s = s.replace(/([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))\^([A-Za-z_]\w*|\d+(\.\d+)?|\([^()]*\))/g, 'pow($1,$3)');
     return s;
   }
@@ -411,27 +397,15 @@ mjx-container { color:var(--math-color); }
   }
 
   // -------------------------
-  // Unit conversion utilities (added pressure, energy, time)
+  // Unit conversion utilities (length, mass, temp, pressure, energy, time)
   // -------------------------
   const units = {
-    length: {
-      m:1, km:1000, cm:0.01, mm:0.001, in:0.0254, ft:0.3048, yd:0.9144, mi:1609.344
-    },
-    mass: {
-      g:1, kg:1000, mg:0.001, lb:453.59237, oz:28.349523125
-    },
-    temp: {
-      c:'C', f:'F', k:'K'
-    },
-    pressure: {
-      pa:1, bar:100000, atm:101325, psi:6894.75729
-    },
-    energy: {
-      j:1, kj:1000, cal:4.184, kcal:4184, ev:1.602176634e-19
-    },
-    time: {
-      s:1, ms:0.001, min:60, h:3600, day:86400
-    }
+    length: { m:1, km:1000, cm:0.01, mm:0.001, in:0.0254, ft:0.3048, yd:0.9144, mi:1609.344 },
+    mass: { g:1, kg:1000, mg:0.001, lb:453.59237, oz:28.349523125 },
+    temp: { c:'C', f:'F', k:'K' },
+    pressure: { pa:1, bar:100000, atm:101325, psi:6894.75729, torr:133.322368 },
+    energy: { j:1, kj:1000, cal:4.184, kcal:4184, ev:1.602176634e-19 },
+    time: { s:1, ms:0.001, min:60, h:3600, day:86400 }
   };
 
   function isTempUnit(u){ return ['c','f','k','°c','°f'].includes(u.toLowerCase()); }
@@ -439,7 +413,6 @@ mjx-container { color:var(--math-color); }
   function convertUnits(value, from, to){
     from = from.trim().toLowerCase();
     to = to.trim().toLowerCase();
-    // temperature special handling
     if (isTempUnit(from) || isTempUnit(to)) {
       const f = from[0].toLowerCase();
       const t = to[0].toLowerCase();
@@ -452,7 +425,6 @@ mjx-container { color:var(--math-color); }
       if (t === 'f') return c * 9/5 + 32;
       if (t === 'k') return c + 273.15;
     }
-    // search in groups
     for (const key of ['length','mass','pressure','energy','time']) {
       if (units[key][from] && units[key][to]) {
         return value * units[key][from] / units[key][to];
@@ -462,18 +434,30 @@ mjx-container { color:var(--math-color); }
   }
 
   function tryParseConversion(input){
-    // formats: "10 km to m", "5mi to km"
+    // Accept formats like "10 km to m", "5mi to km", "10km to"
     const m = input.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s+([A-Za-z°]+)$/i);
-    if (m){
-      const v = parseFloat(m[1]);
-      const from = m[3];
-      const to = m[4];
-      return {value:v, from, to};
-    }
+    if (m) return {value:parseFloat(m[1]), from:m[3], to:m[4]};
     const m2 = input.match(/^(-?\d+(\.\d+)?)([A-Za-z°]+)\s+to\s+([A-Za-z°]+)$/i);
-    if(m2){
-      const v = parseFloat(m2[1]);
-      return {value:v, from:m2[3], to:m2[4]};
+    if (m2) return {value:parseFloat(m2[1]), from:m2[3], to:m2[4]};
+    // partial match where target unit is empty (user typed "10 km to ")
+    const m3 = input.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*$/i);
+    if (m3) return {value:parseFloat(m3[1]), from:m3[3], to:null};
+    // partial match where user started target unit, like "10 km to m"
+    const m4 = input.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*([A-Za-z°]+)$/i);
+    if (m4) return {value:parseFloat(m4[1]), from:m4[3], to:m4[4]};
+    return null;
+  }
+
+  // Return family name and list of units for a given unit (string)
+  function findUnitFamily(unit){
+    unit = unit.trim().toLowerCase();
+    for (const family of Object.keys(units)){
+      if (units[family][unit]) return family;
+    }
+    // allow °C/°F variants
+    const norm = unit.replace('°','');
+    for (const family of Object.keys(units)){
+      if (units[family][norm]) return family;
     }
     return null;
   }
@@ -483,35 +467,21 @@ mjx-container { color:var(--math-color); }
   // -------------------------
   function validateExpression(expr){
     const warnings = [];
-    // factor patterns
     const factCalls = expr.matchAll(/fact\(([^()]+)\)|(\d+)!/g);
     for (const f of factCalls){
       const arg = f[1] || f[2];
       if (arg){
         const val = Number(arg);
-        if (!Number.isFinite(val) || val < 0 || Math.floor(val) !== val) warnings.push('factorial requires a non-negative integer (e.g. 5 or 6)');
+        if (!Number.isFinite(val) || val < 0 || Math.floor(val) !== val) warnings.push('factorial requires a non-negative integer (e.g. 5)');
         if (val > 170) warnings.push('factorial may overflow (n > 170)');
       }
     }
-    // sqrt
     const sqrtCalls = expr.matchAll(/sqrt\(([^()]+)\)/g);
-    for (const s of sqrtCalls){
-      const val = Number(s[1]);
-      if (Number.isFinite(val) && val < 0) warnings.push('sqrt requires non-negative argument (e.g. sqrt(4))');
-    }
-    // ln/log
+    for (const s of sqrtCalls){ const val = Number(s[1]); if (Number.isFinite(val) && val < 0) warnings.push('sqrt requires non-negative argument'); }
     const logCalls = expr.matchAll(/(?:ln|log|log10)\(([^()]+)\)/g);
-    for (const l of logCalls){
-      const val = Number(l[1]);
-      if (Number.isFinite(val) && val <= 0) warnings.push('log/ln require positive argument (e.g. ln(10))');
-    }
-    // asin/acos
+    for (const l of logCalls){ const val = Number(l[1]); if (Number.isFinite(val) && val <= 0) warnings.push('log/ln require positive argument'); }
     const asinCalls = expr.matchAll(/(?:asin|acos)\(([^()]+)\)/g);
-    for (const a of asinCalls){
-      const val = Number(a[1]);
-      if (Number.isFinite(val) && (val < -1 || val > 1)) warnings.push('asin/acos require values between -1 and 1 (e.g. asin(0.5))');
-    }
-    // division by zero (obvious)
+    for (const a of asinCalls){ const val = Number(a[1]); if (Number.isFinite(val) && (val < -1 || val > 1)) warnings.push('asin/acos require values between -1 and 1'); }
     if (/[\/]\s*0(?!\d)/.test(expr)) warnings.push('possible division by zero');
     return [...new Set(warnings)];
   }
@@ -536,49 +506,105 @@ mjx-container { color:var(--math-color); }
 
   function renderHistoryList(){
     historyList.innerHTML = '';
-    if (!history.length){
-      historyList.innerHTML = '<div style="padding:10px;color:#456">No history yet.</div>';
-      return;
-    }
+    if (!history.length){ historyList.innerHTML = '<div style="padding:10px;color:#456">No history yet.</div>'; return; }
     for (let i = history.length - 1; i >= 0; i--){
       const item = history[i];
       const el = document.createElement('div');
       el.className = 'history-item';
-      // Use MathJax for expression/result rendering
       const safeExpr = escapeHtml(item.expr);
       const safeRes = escapeHtml(fmtNum(item.result));
       el.innerHTML = `<div style="flex:1"><strong>\\(${safeExpr}\\)</strong><small>\\(${safeRes}\\)</small></div>
-        <div style="display:flex;gap:6px">
-          <button data-load="${i}">Load</button>
-          <button data-copy="${i}">Copy</button>
-        </div>`;
+        <div style="display:flex;gap:6px"><button data-load="${i}">Load</button><button data-copy="${i}">Copy</button></div>`;
       historyList.appendChild(el);
-      // typeset after adding element
       MathJax.typesetPromise([el]).catch(()=>{});
     }
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\/g,'\\');
-  }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\/g,'\\'); }
 
   // -------------------------
-  // Autocomplete + arg hints (now show examples)
+  // Conversion-autocomplete logic
   // -------------------------
   let suggestions = [], suggestionIndex = -1;
 
-  function getAlphaToken(){ const m = expr.match(/[A-Za-z_]+$/); return m ? m[0] : ''; }
-
   function updateAutocomplete(){
+    // If user is currently editing the conversion unit in the main text (expr),
+    // detect patterns like "10 km to " or "10km to " or "10 km to m"
+    const convPartial = expr.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*([A-Za-z°]*)$/i);
+    if (convPartial){
+      const value = parseFloat(convPartial[1]);
+      const from = convPartial[3];
+      const partialTarget = convPartial[4] || '';
+      const family = findUnitFamily(from);
+      if (!family){
+        renderConversionSuggestions([]); return;
+      }
+      // list candidate units in same family except identical to 'from'
+      const unitsList = Object.keys(units[family]).filter(u => u.toLowerCase() !== from.toLowerCase());
+      // If partialTarget exists, filter by prefix
+      const filtered = partialTarget ? unitsList.filter(u => u.toLowerCase().startsWith(partialTarget.toLowerCase())) : unitsList;
+      // Build suggestions with conversion preview
+      const out = filtered.map(u => {
+        try {
+          const convVal = convertUnits(value, from, u);
+          return {unit: u, preview: fmtNum(convVal)};
+        } catch (e) {
+          return {unit: u, preview: 'err'};
+        }
+      });
+      renderConversionSuggestions(out, value, from);
+      return;
+    }
+
+    // Otherwise, default fuzzy function autocomplete
     const token = getAlphaToken();
     if (!token) { hideAutocomplete(); hideArgHint(); return; }
     const low = token.toLowerCase();
     suggestions = catalog.filter(c => c.name.toLowerCase().includes(low)).slice(0, 12);
     suggestionIndex = suggestions.length ? 0 : -1;
-    renderAutocomplete();
+    renderFunctionAutocomplete();
   }
 
-  function renderAutocomplete(){
+  function renderConversionSuggestions(list, value=0, from=''){
+    autocomplete.innerHTML = '';
+    if (!list.length){ autocomplete.style.display = 'none'; return; }
+    list.forEach((s,i) => {
+      const d = document.createElement('div');
+      d.className = 'suggest';
+      d.dataset.index = i;
+      d.innerHTML = `<div><strong>${s.unit}</strong><div style="font-size:0.85rem;color:#9fd3ff">convert ${value} ${from} → ${s.preview} ${s.unit}</div></div><div class="unit-preview">${s.preview}</div>`;
+      d.addEventListener('click', ()=> acceptConversionSuggestion(value, from, s.unit));
+      d.addEventListener('mousemove', (ev)=> showTooltip(`Convert ${value} ${from} → ${s.preview} ${s.unit}`, ev.clientX+10, ev.clientY+10));
+      d.addEventListener('mouseleave', hideTooltip);
+      autocomplete.appendChild(d);
+    });
+    autocomplete.style.display = 'block';
+    autocomplete.setAttribute('aria-hidden','false');
+    // keep suggestions array for keyboard navigation
+    suggestions = list;
+    suggestionIndex = 0;
+    highlightSuggestion();
+  }
+
+  function acceptConversionSuggestion(value, from, to){
+    // Build expression like "10 km to m" and immediately evaluate conversion
+    expr = `${value} ${from} to ${to}`;
+    renderMain();
+    // Evaluate conversion and show result
+    try {
+      const res = convertUnits(value, from, to);
+      pushHistory(expr, res);
+      expr = String(res);
+      renderMain();
+      preview.textContent = '= ' + fmtNum(res);
+    } catch (e) {
+      preview.textContent = 'Conversion error';
+    }
+    hideAutocomplete();
+    hideArgHint();
+  }
+
+  function renderFunctionAutocomplete(){
     autocomplete.innerHTML = '';
     if (!suggestions.length){ autocomplete.style.display = 'none'; return; }
     suggestions.forEach((s,i) => {
@@ -586,16 +612,26 @@ mjx-container { color:var(--math-color); }
       d.className = 'suggest';
       d.dataset.index = i;
       d.innerHTML = `<div><strong>${s.name}</strong><div style="font-size:0.85rem;color:#9fd3ff">${s.desc}</div></div><div style="opacity:.9">${s.sig||''}</div>`;
-      d.addEventListener('click', ()=> acceptSuggestion(i));
+      d.addEventListener('click', ()=> acceptFunctionSuggestion(i));
       d.addEventListener('mousemove', (ev)=> showTooltip((s.sig||s.name)+' — '+s.desc, ev.clientX+10, ev.clientY+10));
       d.addEventListener('mouseleave', hideTooltip);
       autocomplete.appendChild(d);
     });
     autocomplete.style.display = 'block';
+    autocomplete.setAttribute('aria-hidden','false');
+    suggestionIndex = Math.max(0, suggestionIndex);
+    highlightSuggestion();
   }
 
-  function hideAutocomplete(){ autocomplete.style.display = 'none'; suggestions=[]; suggestionIndex=-1; }
-  function acceptSuggestion(i){
+  function highlightSuggestion(){
+    const children = Array.from(autocomplete.children);
+    children.forEach((c, idx) => {
+      c.style.background = (idx === suggestionIndex) ? 'rgba(255,255,255,0.03)' : 'transparent';
+      c.scrollIntoView({block:'nearest'});
+    });
+  }
+
+  function acceptFunctionSuggestion(i){
     if (i < 0 || i >= suggestions.length) return;
     const s = suggestions[i];
     const token = getAlphaToken();
@@ -606,25 +642,9 @@ mjx-container { color:var(--math-color); }
     updateArgHint();
   }
 
-  function updateArgHint(){
-    const m = expr.match(/([A-Za-z_]\w*)\([^()]*$/);
-    if (!m){ hideArgHint(); return; }
-    const name = m[1];
-    const item = catalog.find(c => c.name === name);
-    if (!item){ hideArgHint(); return; }
-    const warnings = validateExpression(expr);
-    let html = `<strong>${item.sig}</strong><div style="margin-top:6px">${item.desc}</div>`;
-    if (item.examples && item.examples.length){
-      html += `<div style="margin-top:10px;font-size:0.9rem;color:#1a5">${'Examples: ' + item.examples.slice(0,2).join(' , ')}</div>`;
-    }
-    if (warnings.length) {
-      html += `<div style="margin-top:8px;color:#8b0000">Warning: ${warnings.join('; ')}</div>`;
-      argHint.classList.add('warning');
-    } else argHint.classList.remove('warning');
-    argHint.innerHTML = html;
-    argHint.style.display = 'block';
-  }
-  function hideArgHint(){ argHint.style.display = 'none'; argHint.classList.remove('warning'); }
+  function hideAutocomplete(){ autocomplete.style.display = 'none'; suggestions=[]; suggestionIndex=-1; autocomplete.setAttribute('aria-hidden','true'); }
+  function showTooltip(text,x,y){ tooltip.textContent = text; tooltip.style.left = (x+8)+'px'; tooltip.style.top = (y+8)+'px'; tooltip.style.display = 'block'; }
+  function hideTooltip(){ tooltip.style.display = 'none'; }
 
   // -------------------------
   // Validation UI & evaluate
@@ -645,7 +665,7 @@ mjx-container { color:var(--math-color); }
   function evaluateAndShow(){
     // conversion
     const conv = tryParseConversion(expr);
-    if (conv){
+    if (conv && conv.to){
       try {
         const val = convertUnits(conv.value, conv.from, conv.to);
         const out = fmtNum(val);
@@ -737,11 +757,17 @@ mjx-container { color:var(--math-color); }
   }
 
   function schedulePreview(){
+    // check for conversion partial and show suggestions live
+    updateAutocomplete();
+
+    // preview conversion if fully specified
     const conv = tryParseConversion(expr);
-    if (conv) {
+    if (conv && conv.to){
       try { const val = convertUnits(conv.value, conv.from, conv.to); preview.textContent = '= ' + fmtNum(val); } catch(e){ preview.textContent = 'Conversion error'; }
       return;
     }
+
+    // validation and eval preview
     const warnings = validateExpression(expr);
     if (warnings.length){
       preview.textContent = '⚠ ' + warnings.join('; ');
@@ -767,7 +793,7 @@ mjx-container { color:var(--math-color); }
     // play sound
     playTheme(soundThemeVal);
 
-    if (val){ expr += val; renderMain(); schedulePreview(); updateAutocomplete(); }
+    if (val){ expr += val; renderMain(); schedulePreview(); }
     else if (fn){
       if (!expr){
         if (fn === 'pi') expr += 'PI';
@@ -786,11 +812,11 @@ mjx-container { color:var(--math-color); }
           expr = fn + '(' + expr + ')';
         }
       }
-      renderMain(); schedulePreview(); updateAutocomplete(); updateArgHint();
+      renderMain(); schedulePreview(); updateArgHint();
     }
     else if (action){
       if (action === 'clear'){ expr = ''; renderMain(); preview.textContent = 'Type an expression'; hideAutocomplete(); hideArgHint(); }
-      else if (action === 'back'){ expr = expr.slice(0,-1); renderMain(); schedulePreview(); updateAutocomplete(); updateArgHint(); }
+      else if (action === 'back'){ expr = expr.slice(0,-1); renderMain(); schedulePreview(); }
       else if (action === 'equals'){ evaluateAndShow(); hideAutocomplete(); hideArgHint(); }
       else if (action === 'mc'){ memory = 0; localStorage.setItem('exam_calc_memory', String(memory)); }
       else if (action === 'mr'){ expr += String(memory); renderMain(); schedulePreview(); }
@@ -807,39 +833,61 @@ mjx-container { color:var(--math-color); }
     if (copy !== null){ const it = history[copy]; if (it) navigator.clipboard?.writeText(String(it.result)).catch(()=>{}); }
   });
 
-  // keyboard
+  // keyboard navigation (including conversion suggestions)
   document.addEventListener('keydown', e=>{
-    if (autocomplete.style.display === 'block'){
-      if (e.key === 'ArrowDown'){ e.preventDefault(); suggestionIndex = (suggestionIndex + 1) % suggestions.length; return; }
-      if (e.key === 'ArrowUp'){ e.preventDefault(); suggestionIndex = (suggestionIndex - 1 + suggestions.length) % suggestions.length; return; }
-      if (e.key === 'Enter' && suggestionIndex >= 0) { acceptSuggestion(suggestionIndex); return; }
+    if (autocomplete.style.display === 'block' && suggestions.length){
+      if (e.key === 'ArrowDown'){ e.preventDefault(); suggestionIndex = (suggestionIndex + 1) % suggestions.length; highlightSuggestion(); return; }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); suggestionIndex = (suggestionIndex - 1 + suggestions.length) % suggestions.length; highlightSuggestion(); return; }
+      if (e.key === 'Enter' && suggestionIndex >= 0){
+        // determine whether suggestions are conversion suggestions (have .unit) or function suggestions
+        const first = suggestions[0];
+        if (first && first.unit !== undefined){
+          // conversion suggestion: suggestions entries are {unit, preview}
+          const sel = suggestions[suggestionIndex];
+          // find convPartial to get value/from
+          const convPartial = expr.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*([A-Za-z°]*)$/i);
+          if (convPartial){
+            acceptConversionSuggestion(parseFloat(convPartial[1]), convPartial[3], sel.unit);
+            e.preventDefault();
+            return;
+          }
+        } else {
+          acceptFunctionSuggestion(suggestionIndex);
+          e.preventDefault();
+          return;
+        }
+      }
       if (e.key === 'Escape'){ hideAutocomplete(); hideArgHint(); return; }
     }
-    if (e.key >= '0' && e.key <= '9'){ expr += e.key; renderMain(); schedulePreview(); updateAutocomplete(); return; }
-    if (e.key === '.') { expr += '.'; renderMain(); schedulePreview(); updateAutocomplete(); return; }
+
+    // Normal keys (numbers, letters, operators)
+    if (e.key >= '0' && e.key <= '9'){ expr += e.key; renderMain(); schedulePreview(); return; }
+    if (e.key === '.') { expr += '.'; renderMain(); schedulePreview(); return; }
     if ('+-*/%^()'.includes(e.key)){ expr += e.key; renderMain(); schedulePreview(); updateArgHint(); return; }
     if (e.key === 'Enter'){ evaluateAndShow(); return; }
     if (e.key === 'Backspace'){ expr = expr.slice(0,-1); renderMain(); schedulePreview(); return; }
-    if (e.key === 'Escape'){ expr = ''; renderMain(); preview.textContent = ''; return; }
+    if (e.key === 'Escape'){ expr = ''; renderMain(); preview.textContent = ''; hideAutocomplete(); hideArgHint(); return; }
     if (/^[a-zA-Z]$/.test(e.key)){ expr += e.key; renderMain(); updateAutocomplete(); schedulePreview(); return; }
     if (e.key === '!'){ expr += '!'; renderMain(); schedulePreview(); return; }
   });
 
-  // autocomplete helper functions used above
-  function hideAutocomplete(){ autocomplete.style.display = 'none'; suggestions=[]; suggestionIndex=-1; autocomplete.setAttribute('aria-hidden','true'); }
-  function acceptSuggestion(i){
-    if (i < 0 || i >= suggestions.length) return;
-    const s = suggestions[i];
-    const token = getAlphaToken();
-    if (token) expr = expr.slice(0, -token.length);
-    expr += (s.sig && s.name !== 'PI' && s.name !== 'E') ? s.name + '(' : s.name;
-    renderMain(); hideAutocomplete(); updateArgHint();
+  // argument hint with examples
+  function updateArgHint(){
+    const m = expr.match(/([A-Za-z_]\w*)\([^()]*$/);
+    if (!m){ hideArgHint(); return; }
+    const name = m[1];
+    const item = catalog.find(c => c.name === name);
+    if (!item){ hideArgHint(); return; }
+    const warnings = validateExpression(expr);
+    let html = `<strong>${item.sig}</strong><div style="margin-top:6px">${item.desc}</div>`;
+    if (item.examples && item.examples.length){
+      html += `<div style="margin-top:10px;font-size:0.9rem;color:#1a5">Examples: ${item.examples.slice(0,2).join(' , ')}</div>`;
+    }
+    if (warnings.length) html += `<div style="margin-top:8px;color:#8b0000">Warning: ${warnings.join('; ')}</div>`;
+    argHint.innerHTML = html;
+    argHint.style.display = 'block';
   }
-  function getAlphaToken(){ const m = expr.match(/[A-Za-z_]+$/); return m ? m[0] : ''; }
-  function showTooltip(text,x,y){ tooltip.textContent = text; tooltip.style.left = (x+8)+'px'; tooltip.style.top = (y+8)+'px'; tooltip.style.display = 'block'; }
-  function hideTooltip(){ tooltip.style.display = 'none'; }
 
-  // argument hint hide function
   function hideArgHint(){ argHint.style.display = 'none'; argHint.classList.remove('warning'); }
 
   // convert button
@@ -882,14 +930,14 @@ mjx-container { color:var(--math-color); }
   exportPng.addEventListener('click', async ()=> { try{ await exportPNG(); } catch(e){ alert('PNG export failed'); } });
   exportPdf.addEventListener('click', async ()=> { try{ await exportPDF(); } catch(e){ alert('PDF export failed'); } });
 
-  // init UI state
+  // init UI
   function init(){
     display.value = '0';
     angleLabel.textContent = angleMode.toUpperCase();
     precisionSelect.value = String(precision);
     if (notebookMode) document.body.classList.add('notebook-mode');
     renderHistoryList();
-    preview.textContent = 'Type an expression — validation and preview will appear here.';
+    preview.textContent = 'Type an expression or conversion — suggestions will appear while you type.';
     onboardingModal.style.display = 'none';
     shortcutsModal.style.display = 'none';
   }
