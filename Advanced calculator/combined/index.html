@@ -1,15 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Exam-Calc — Ultimate 3.1</title>
+<title>Exam-Calc — Ultimate 3.1 (Ready)</title>
 
-<!-- fonts -->
+<!-- ----  fonts & icons  ---- -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
-<!-- mathjax -->
+<!-- ----  MathJax  ---- -->
 <script>
 window.MathJax={
   loader:{load:['input/tex','output/svg']},
@@ -20,7 +20,7 @@ window.MathJax={
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-<!-- export libs -->
+<!-- ----  export libs  ---- -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -326,20 +326,23 @@ mjx-container{color:var(--math-color)}
 
 <script>
 /* =========================
-   Exam-Calc Ultimate 3.1
-   Same bones, sharper suit.
+   Exam-Calc Ultimate 3.1  (ready-to-run)
    ========================= */
 (()=>{
-  // elements
+  /* ----------  helpers  ---------- */
+  const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
+  const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  /* ----------  elements  ---------- */
   const display=$('display'),preview=$('preview'),validationMessage=$('validationMessage'),historyList=$('historyList'),autocomplete=$('autocomplete'),argHint=$('argHint'),tooltip=$('tooltip');
   const openOnboarding=$('openOnboarding'),onboardingModal=$('onboardingModal'),closeOnboarding=$('closeOnboarding'),showShortcuts=$('showShortcuts'),shortcutsModal=$('shortcutsModal'),closeShortcuts=$('closeShortcuts');
   const angleToggle=$('angleToggle'),angleLabel=$('angleLabel'),precisionSelect=$('precision'),notebookToggle=$('notebookToggle'),soundTheme=$('soundTheme'),testSound=$('testSound');
   const exportTxt=$('exportTxt'),exportPng=$('exportPng'),exportPdf=$('exportPdf'),unitInput=$('unitInput'),convertBtn=$('convertBtn'),keys=$('keys');
 
-  // state
+  /* ----------  state  ---------- */
   let expr='',memory=parseFloat(localStorage.getItem('exam_calc_memory')||'0')||0,history=JSON.parse(localStorage.getItem('exam_calc_history')||'[]'),angleMode=localStorage.getItem('exam_calc_angle')||'deg',precision=parseInt(localStorage.getItem('exam_calc_precision')||'6',10),notebookMode=localStorage.getItem('exam_calc_notebook')==='1',soundThemeVal=localStorage.getItem('exam_calc_sound')||'none';
 
-  // catalog
+  /* ----------  catalog  ---------- */
   const catalog=[
     {name:'sin',sig:'sin(x)',desc:'Sine — respects DEG/RAD',examples:['sin(30)','sin(π/6)']},
     {name:'cos',sig:'cos(x)',desc:'Cosine — respects DEG/RAD',examples:['cos(60)','cos(π/3)']},
@@ -365,13 +368,12 @@ mjx-container{color:var(--math-color)}
     {name:'ceil',sig:'ceil(x)',desc:'Round up',examples:['ceil(3.2)']}
   ];
 
-  // math sandbox
+  /* ----------  math sandbox  ---------- */
   function factorial(n){const k=Math.floor(n);if(k<0||k!==n||k>170)throw new Error('Invalid factorial');let r=1;for(let i=2;i<=k;i++)r*=i;return r}
   function gcd(a,b){a=Math.abs(Math.floor(a));b=Math.abs(Math.floor(b));if(!a)return b;if(!b)return a;while(b){const t=b;b=a%b;a=t}return a}
   function lcm(a,b){if(a===0||b===0)return 0;return Math.abs(Math.floor(a)/gcd(a,b)*Math.floor(b))}
   function isPrimeSimple(n){n=Math.floor(n);if(n<=1)return false;if(n<=3)return true;if(n%2===0)return false;const r=Math.floor(Math.sqrt(n));for(let i=3;i<=r;i+=2)if(n%i===0)return false;return true}
   function primeFactors(n){n=Math.abs(Math.floor(n));const out=[];let d=2;while(d*d<=n){while(n%d===0){out.push(d);n/=d}d=(d===2)?3:d+2}if(n>1)out.push(n);return out}
-
   function buildSandbox(){
     return{
       sin:x=>angleMode==='deg'?Math.sin(x*Math.PI/180):Math.sin(x),
@@ -408,7 +410,7 @@ mjx-container{color:var(--math-color)}
     }catch(err){return 'Error'}
   }
 
-  // units
+  /* ----------  units  ---------- */
   const units={
     length:{m:1,km:1000,cm:0.01,mm:0.001,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344},
     mass:{g:1,kg:1000,mg:0.001,lb:453.59237,oz:28.349523125},
@@ -447,7 +449,7 @@ mjx-container{color:var(--math-color)}
     return null
   }
 
-  // validation
+  /* ----------  validation  ---------- */
   function validateExpression(expr){
     const warnings=[];
     const factCalls=expr.matchAll(/fact\(([^()]+)\)|(\d+)!/g);
@@ -464,7 +466,7 @@ mjx-container{color:var(--math-color)}
     return[...new Set(warnings)]
   }
 
-  // ui helpers
+  /* ----------  ui helpers  ---------- */
   function fmtNum(v){
     if(typeof v==='number'&&isFinite(v)){
       if(precision===0)return String(Math.round(v));
@@ -490,10 +492,10 @@ mjx-container{color:var(--math-color)}
     }
     MathJax.typesetPromise([historyList]).catch(()=>{})
   }
-  function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-  // autocomplete
+  /* ----------  autocomplete  ---------- */
   let suggestions=[],suggestionIndex=-1;
+  function getAlphaToken(){const m=expr.match(/[A-Za-z_]\w*$/);return m?m[0]:''}
   function updateAutocomplete(){
     const convPartial=expr.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*([A-Za-z°]*)$/i);
     if(convPartial){
@@ -562,9 +564,8 @@ mjx-container{color:var(--math-color)}
   function hideAutocomplete(){autocomplete.style.display='none';suggestions=[];suggestionIndex=-1;autocomplete.setAttribute('aria-hidden','true')}
   function showTooltip(text,x,y){tooltip.textContent=text;tooltip.style.left=(x+8)+'px';tooltip.style.top=(y+8)+'px';tooltip.style.display='block'}
   function hideTooltip(){tooltip.style.display='none'}
-  function getAlphaToken(){const m=expr.match(/[A-Za-z_]\w*$/);return m?m[0]:''}
 
-  // validation & evaluate
+  /* ----------  validation & evaluate  ---------- */
   function checkAndShowValidation(currentExpr){
     const warnings=validateExpression(currentExpr);
     if(warnings.length){
@@ -584,7 +585,7 @@ mjx-container{color:var(--math-color)}
     hideAutocomplete();hideArgHint()
   }
 
-  // sound
+  /* ----------  sound  ---------- */
   let audioCtx=null;
   function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
   function playTheme(theme){
@@ -600,7 +601,7 @@ mjx-container{color:var(--math-color)}
     }catch(e){}
   }
 
-  // export
+  /* ----------  export  ---------- */
   async function exportPNG(){
     const node=document.querySelector('.calc');
     try{const canvas=await html2canvas(node,{scale:2,backgroundColor:null});const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='exam-calc.png';a.click()}catch(e){alert('Export PNG failed: '+(e&&e.message?e.message:'unknown'))}
@@ -610,7 +611,7 @@ mjx-container{color:var(--math-color)}
     try{const canvas=await html2canvas(node,{scale:2,backgroundColor:null});const imgData=canvas.toDataURL('image/png');const{jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:[canvas.width,canvas.height]});pdf.addImage(imgData,'PNG',0,0,canvas.width,canvas.height);pdf.save('exam-calc.pdf')}catch(e){alert('Export PDF failed: '+(e&&e.message?e.message:'unknown'))}
   }
 
-  // ui wiring
+  /* ----------  ui wiring  ---------- */
   function renderMain(){
     display.value=expr||'0';
     $('history').textContent=history.length?history[history.length-1].expr+' =':'\u00A0';
@@ -633,8 +634,20 @@ mjx-container{color:var(--math-color)}
     }
     updateArgHint()
   }
+  function updateArgHint(){
+    const m=expr.match(/([A-Za-z_]\w*)\([^()]*$/);
+    if(!m){hideArgHint();return}
+    const name=m[1],item=catalog.find(c=>c.name===name);
+    if(!item){hideArgHint();return}
+    const warnings=validateExpression(expr);
+    let html=`<strong>${item.sig}</strong><div style="margin-top:6px">${item.desc}</div>`;
+    if(item.examples&&item.examples.length)html+=`<div style="margin-top:10px;font-size:0.9rem;color:#1a5">Examples: ${item.examples.slice(0,2).join(' , ')}</div>`;
+    if(warnings.length)html+=`<div style="margin-top:8px;color:#8b0000">Warning: ${warnings.join('; ')}</div>`;
+    argHint.innerHTML=html;argHint.style.display='block'
+  }
+  function hideArgHint(){argHint.style.display='none';argHint.classList.remove('warning')}
 
-  // events
+  /* ----------  events  ---------- */
   keys.addEventListener('click',e=>{
     const btn=e.target.closest('.key');if(!btn)return;
     const val=btn.getAttribute('data-val'),fn=btn.getAttribute('data-fn'),action=btn.getAttribute('data-action');
@@ -688,18 +701,6 @@ mjx-container{color:var(--math-color)}
     if(/^[a-zA-Z]$/.test(e.key)){expr+=e.key;renderMain();updateAutocomplete();schedulePreview();return}
     if(e.key==='!'){expr+='!';renderMain();schedulePreview();return}
   });
-  function updateArgHint(){
-    const m=expr.match(/([A-Za-z_]\w*)\([^()]*$/);
-    if(!m){hideArgHint();return}
-    const name=m[1],item=catalog.find(c=>c.name===name);
-    if(!item){hideArgHint();return}
-    const warnings=validateExpression(expr);
-    let html=`<strong>${item.sig}</strong><div style="margin-top:6px">${item.desc}</div>`;
-    if(item.examples&&item.examples.length)html+=`<div style="margin-top:10px;font-size:0.9rem;color:#1a5">Examples: ${item.examples.slice(0,2).join(' , ')}</div>`;
-    if(warnings.length)html+=`<div style="margin-top:8px;color:#8b0000">Warning: ${warnings.join('; ')}</div>`;
-    argHint.innerHTML=html;argHint.style.display='block'
-  }
-  function hideArgHint(){argHint.style.display='none';argHint.classList.remove('warning')}
 
   convertBtn.addEventListener('click',()=>{
     const v=unitInput.value.trim();if(!v)return;
@@ -728,7 +729,7 @@ mjx-container{color:var(--math-color)}
   exportPng.addEventListener('click',async()=>{try{await exportPNG()}catch(e){alert('PNG export failed')}});
   exportPdf.addEventListener('click',async()=>{try{await exportPDF()}catch(e){alert('PDF export failed')}});
 
-  // init
+  /* ----------  init  ---------- */
   function init(){
     display.value='0';angleLabel.textContent=angleMode.toUpperCase();precisionSelect.value=String(precision);
     if(notebookMode)document.body.classList.add('notebook-mode');
@@ -737,11 +738,7 @@ mjx-container{color:var(--math-color)}
   }
   init();
 
-  // expose debug
-  window.examCalc={evaluate:evaluateExpression,convertUnits,validateExpression,getState:()=>({expr,history,angleMode,precision})};
-
-  // =====  micro-polish  =====
-  const $$=q=>[...document.querySelectorAll(q)];
+  /* ----------  polish  ---------- */
   [$('#onboardingModal'),$('#shortcutsModal')].forEach(m=>{
     m.addEventListener('transitionend',e=>{if(e.target===m&&m.style.opacity==='0')m.style.display='none'})
   });
@@ -760,6 +757,9 @@ mjx-container{color:var(--math-color)}
       setTimeout(()=>{it.style.transition='all .35s var(--ease)';it.style.opacity=1;it.style.transform='translateY(0)'},i*40)
     })
   };
+
+  /* ----------  public debug  ---------- */
+  window.examCalc={evaluate:evaluateExpression,convertUnits,validateExpression,getState:()=>({expr,history,angleMode,precision})};
 
 })()
 </script>
