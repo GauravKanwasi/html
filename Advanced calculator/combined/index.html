@@ -166,7 +166,8 @@ mjx-container{color:var(--math-color)}
       <div class="display" id="displayArea">
         <div id="history">&nbsp;</div>
         <div id="preview">Type an expression or conversion — suggestions will appear while you type.</div>
-        <input id="display" type="text" disabled value="0" aria-label="Calculator display"/>
+        <!-- ******  FIXED: readonly instead of disabled  ****** -->
+        <input id="display" type="text" readonly value="0" aria-label="Calculator display"/>
         <div id="validationMessage" class="hint" style="display:none"></div>
       </div>
 
