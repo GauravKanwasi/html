@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Exam-Calc — Ready</title>
+<title>Exam-Calc — Ready (Usable)</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -62,7 +62,8 @@ box-shadow:inset 0 2px 8px rgba(16,40,60,.03);transition:background .3s var(--ea
 #preview{text-align:right;color:var(--accent);min-height:18px;margin-top:6px;font-size:.92rem}
 #display{width:100%;height:76px;border-radius:10px;border:none;padding:12px 14px;font-size:2rem;font-weight:700;
 text-align:right;background:rgba(255,255,255,.85);color:#0a2230;box-shadow:inset 0 6px 18px rgba(16,40,60,.03);
-transition:all .25s var(--ease)}
+transition:all .25s var(--ease);outline:2px solid transparent}
+#display:focus{outline:2px solid rgba(30,120,180,.12)}
 @media (prefers-color-scheme:dark){#display{background:rgba(0,0,0,.2);color:#e1e8f0}}
 
 .keys{margin-top:12px;display:grid;gap:10px}
@@ -133,12 +134,14 @@ mjx-container{color:var(--math-color)}
   .main{order:1}
 }
 
-/* =====  ripple + micro-polish  ===== */
+/* ripple + micro-polish */
 .key{position:relative;overflow:hidden}
-.key::after{
-  content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;
+.key::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;
   background:rgba(255,255,255,.45);transform:translate(-50%,-50%);transition:width .4s var(--ease),height .4s var(--ease)}
 .key:active::after{width:300px;height:300px;opacity:0}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.25);transform:scale(0);animation:rip .6s linear;pointer-events:none}
+@keyframes rip{to{transform:scale(1);opacity:0}}
+
 </style>
 </head>
 
@@ -162,8 +165,8 @@ mjx-container{color:var(--math-color)}
       <div class="display" id="displayArea">
         <div id="history">&nbsp;</div>
         <div id="preview">Type an expression or conversion — suggestions will appear while you type.</div>
-        <!-- ******  FIXED: readonly instead of disabled  ****** -->
-        <input id="display" type="text" readonly value="0" aria-label="Calculator display"/>
+        <!-- editable display so users can type directly (improved usability) -->
+        <input id="display" type="text" value="0" aria-label="Calculator display" autocomplete="off"/>
         <div id="validationMessage" class="hint" style="display:none"></div>
       </div>
 
@@ -323,23 +326,24 @@ mjx-container{color:var(--math-color)}
 
 <script>
 /* =========================
-   Exam-Calc Ultimate 3.1  (ready-to-run)
+   Exam-Calc Ultimate 3.1  (usable tweaks)
+   - editable display
+   - Enter to evaluate when typing in display
+   - safer MathJax call for history
+   - added kPa support and small unit tweaks
+   - ripple CSS added
    ========================= */
 (()=>{
-  /* ----------  helpers  ---------- */
   const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
   const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  /* ----------  elements  ---------- */
-  const display=$('display'),preview=$('preview'),validationMessage=$('validationMessage'),historyList=$('historyList'),autocomplete=$('autocomplete'),argHint=$('argHint'),tooltip=$('tooltip');
+  const display=$('#display'),preview=$('#preview'),validationMessage=$('#validationMessage'),historyList=$('#historyList'),autocomplete=$('#autocomplete'),argHint=$('#argHint'),tooltip=$('#tooltip');
   const openOnboarding=$('openOnboarding'),onboardingModal=$('onboardingModal'),closeOnboarding=$('closeOnboarding'),showShortcuts=$('showShortcuts'),shortcutsModal=$('shortcutsModal'),closeShortcuts=$('closeShortcuts');
   const angleToggle=$('angleToggle'),angleLabel=$('angleLabel'),precisionSelect=$('precision'),notebookToggle=$('notebookToggle'),soundTheme=$('soundTheme'),testSound=$('testSound');
   const exportTxt=$('exportTxt'),exportPng=$('exportPng'),exportPdf=$('exportPdf'),unitInput=$('unitInput'),convertBtn=$('convertBtn'),keys=$('keys');
 
-  /* ----------  state  ---------- */
   let expr='',memory=parseFloat(localStorage.getItem('exam_calc_memory')||'0')||0,history=JSON.parse(localStorage.getItem('exam_calc_history')||'[]'),angleMode=localStorage.getItem('exam_calc_angle')||'deg',precision=parseInt(localStorage.getItem('exam_calc_precision')||'6',10),notebookMode=localStorage.getItem('exam_calc_notebook')==='1',soundThemeVal=localStorage.getItem('exam_calc_sound')||'none';
 
-  /* ----------  catalog  ---------- */
   const catalog=[
     {name:'sin',sig:'sin(x)',desc:'Sine — respects DEG/RAD',examples:['sin(30)','sin(π/6)']},
     {name:'cos',sig:'cos(x)',desc:'Cosine — respects DEG/RAD',examples:['cos(60)','cos(π/3)']},
@@ -365,7 +369,6 @@ mjx-container{color:var(--math-color)}
     {name:'ceil',sig:'ceil(x)',desc:'Round up',examples:['ceil(3.2)']}
   ];
 
-  /* ----------  math sandbox  ---------- */
   function factorial(n){const k=Math.floor(n);if(k<0||k!==n||k>170)throw new Error('Invalid factorial');let r=1;for(let i=2;i<=k;i++)r*=i;return r}
   function gcd(a,b){a=Math.abs(Math.floor(a));b=Math.abs(Math.floor(b));if(!a)return b;if(!b)return a;while(b){const t=b;b=a%b;a=t}return a}
   function lcm(a,b){if(a===0||b===0)return 0;return Math.abs(Math.floor(a)/gcd(a,b)*Math.floor(b))}
@@ -407,12 +410,11 @@ mjx-container{color:var(--math-color)}
     }catch(err){return 'Error'}
   }
 
-  /* ----------  units  ---------- */
   const units={
     length:{m:1,km:1000,cm:0.01,mm:0.001,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344},
     mass:{g:1,kg:1000,mg:0.001,lb:453.59237,oz:28.349523125},
     temp:{c:'C',f:'F',k:'K'},
-    pressure:{pa:1,bar:100000,atm:101325,psi:6894.75729,torr:133.322368},
+    pressure:{pa:1,kpa:1000,bar:100000,atm:101325,psi:6894.75729,torr:133.322368},
     energy:{j:1,kj:1000,cal:4.184,kcal:4184,ev:1.602176634e-19},
     time:{s:1,ms:0.001,min:60,h:3600,day:86400}
   };
@@ -425,14 +427,14 @@ mjx-container{color:var(--math-color)}
       if(t==='c')return c;if(t==='f')return c*9/5+32;if(t==='k')return c+273.15
     }
     for(const key of['length','mass','pressure','energy','time']){
-      if(units[key][from]&&units[key][to])return value*units[key][from]/units[key][to]
+      if(units[key][from]!==undefined&&units[key][to]!==undefined)return value*units[key][from]/units[key][to]
     }
     throw'Incompatible or unknown units'
   }
   function tryParseConversion(input){
     const m=input.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s+([A-Za-z°]+)$/i);
     if(m)return{value:parseFloat(m[1]),from:m[3],to:m[4]};
-    const m2=input.match(/^(-?\d+(\.\d+)?)([A-Za-z°]+)\s+to\s+([A-Za-z°]+)$/i);
+    const m2=input.match(/^(-?\d+(\.\d)?)([A-Za-z°]+)\s+to\s+([A-Za-z°]+)$/i);
     if(m2)return{value:parseFloat(m2[1]),from:m2[3],to:m2[4]};
     const m3=input.match(/^(-?\d+(\.\d+)?)\s*([A-Za-z°]+)\s+to\s*$/i);
     if(m3)return{value:parseFloat(m3[1]),from:m3[3],to:null};
@@ -440,19 +442,16 @@ mjx-container{color:var(--math-color)}
   }
   function findUnitFamily(unit){
     unit=unit.trim().toLowerCase();
-    for(const family of Object.keys(units)){if(units[family][unit])return family}
+    for(const family of Object.keys(units)){if(units[family][unit]!==undefined)return family}
     const norm=unit.replace('°','');
-    for(const family of Object.keys(units)){if(units[family][norm])return family}
+    for(const family of Object.keys(units)){if(units[family][norm]!==undefined)return family}
     return null
   }
 
-  /* ----------  validation  ---------- */
   function validateExpression(expr){
     const warnings=[];
     const factCalls=expr.matchAll(/fact\(([^()]+)\)|(\d+)!/g);
-    for(const f of factCalls){
-      const arg=f[1]||f[2];if(arg){const val=Number(arg);if(!Number.isFinite(val)||val<0||Math.floor(val)!==val)warnings.push('factorial requires a non-negative integer');if(val>170)warnings.push('factorial may overflow (n > 170)')}
-    }
+    for(const f of factCalls){const arg=f[1]||f[2];if(arg){const val=Number(arg);if(!Number.isFinite(val)||val<0||Math.floor(val)!==val)warnings.push('factorial requires a non-negative integer');if(val>170)warnings.push('factorial may overflow (n > 170)')}}
     const sqrtCalls=expr.matchAll(/sqrt\(([^()]+)\)/g);
     for(const s of sqrtCalls){const val=Number(s[1]);if(Number.isFinite(val)&&val<0)warnings.push('sqrt requires non-negative argument')}
     const logCalls=expr.matchAll(/(?:ln|log|log10)\(([^()]+)\)/g);
@@ -463,7 +462,6 @@ mjx-container{color:var(--math-color)}
     return[...new Set(warnings)]
   }
 
-  /* ----------  ui helpers  ---------- */
   function fmtNum(v){
     if(typeof v==='number'&&isFinite(v)){
       if(precision===0)return String(Math.round(v));
@@ -487,10 +485,10 @@ mjx-container{color:var(--math-color)}
         <div style="display:flex;gap:6px"><button data-load="${i}">Load</button><button data-copy="${i}">Copy</button></div>`;
       historyList.appendChild(el)
     }
-    MathJax.typesetPromise([historyList]).catch(()=>{})
+    // guard: only call MathJax if available
+    try{if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([historyList]).catch(()=>{})}catch(e){}
   }
 
-  /* ----------  autocomplete  ---------- */
   let suggestions=[],suggestionIndex=-1;
   function getAlphaToken(){const m=expr.match(/[A-Za-z_]\w*$/);return m?m[0]:''}
   function updateAutocomplete(){
@@ -562,7 +560,6 @@ mjx-container{color:var(--math-color)}
   function showTooltip(text,x,y){tooltip.textContent=text;tooltip.style.left=(x+8)+'px';tooltip.style.top=(y+8)+'px';tooltip.style.display='block'}
   function hideTooltip(){tooltip.style.display='none'}
 
-  /* ----------  validation & evaluate  ---------- */
   function checkAndShowValidation(currentExpr){
     const warnings=validateExpression(currentExpr);
     if(warnings.length){
@@ -582,7 +579,6 @@ mjx-container{color:var(--math-color)}
     hideAutocomplete();hideArgHint()
   }
 
-  /* ----------  sound  ---------- */
   let audioCtx=null;
   function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
   function playTheme(theme){
@@ -598,7 +594,6 @@ mjx-container{color:var(--math-color)}
     }catch(e){}
   }
 
-  /* ----------  export  ---------- */
   async function exportPNG(){
     const node=document.querySelector('.calc');
     try{const canvas=await html2canvas(node,{scale:2,backgroundColor:null});const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='exam-calc.png';a.click()}catch(e){alert('Export PNG failed: '+(e&&e.message?e.message:'unknown'))}
@@ -608,9 +603,9 @@ mjx-container{color:var(--math-color)}
     try{const canvas=await html2canvas(node,{scale:2,backgroundColor:null});const imgData=canvas.toDataURL('image/png');const{jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape',unit:'pt',format:[canvas.width,canvas.height]});pdf.addImage(imgData,'PNG',0,0,canvas.width,canvas.height);pdf.save('exam-calc.pdf')}catch(e){alert('Export PDF failed: '+(e&&e.message?e.message:'unknown'))}
   }
 
-  /* ----------  ui wiring  ---------- */
   function renderMain(){
-    display.value=expr||'0';
+    // avoid overwriting user's typing focus
+    if(document.activeElement!==display) display.value=expr||'0';
     $('history').textContent=history.length?history[history.length-1].expr+' =':'\u00A0';
     localStorage.setItem('exam_calc_history',JSON.stringify(history));
     localStorage.setItem('exam_calc_memory',String(memory))
@@ -644,7 +639,6 @@ mjx-container{color:var(--math-color)}
   }
   function hideArgHint(){argHint.style.display='none';argHint.classList.remove('warning')}
 
-  /* ----------  events  ---------- */
   keys.addEventListener('click',e=>{
     const btn=e.target.closest('.key');if(!btn)return;
     const val=btn.getAttribute('data-val'),fn=btn.getAttribute('data-fn'),action=btn.getAttribute('data-action');
@@ -655,7 +649,7 @@ mjx-container{color:var(--math-color)}
         if(fn==='pi')expr+='PI';else if(fn==='rand')expr+='rand()';else expr+=fn+'('
       }else{
         if(['fact','rand','pi','isprime','pfactor'].includes(fn)){
-          if(fn==='fact')expr='fact('+expr+')';else if(fn==='rand')expr='rand()';else if(fn==='pi')expr+='PI';else if(fn==='isprime')expr='isprime('+expr+')';else if(fn==='pfactor')expr='pfactor('+expr+')'
+          if(fn==='fact')expr='fact('+expr+')';else if(fn==='rand')expr+='rand()';else if(fn==='pi')expr+='PI';else if(fn==='isprime')expr='isprime('+expr+')';else if(fn==='pfactor')expr='pfactor('+expr+')'
         }else if(fn==='pow')expr+='^';else expr=fn+'('+expr+')'
       }
       renderMain();schedulePreview();updateArgHint()
@@ -675,6 +669,8 @@ mjx-container{color:var(--math-color)}
     if(load!==null){const it=history[load];if(it){expr=it.expr;renderMain();schedulePreview()}}
     if(copy!==null){const it=history[copy];if(it)navigator.clipboard?.writeText(String(it.result)).catch(()=>{})}
   });
+
+  // keyboard global handlers (keeps the original behaviour) + autocomplete navigation
   document.addEventListener('keydown',e=>{
     if(autocomplete.style.display==='block'&&suggestions.length){
       if(e.key==='ArrowDown'){e.preventDefault();suggestionIndex=(suggestionIndex+1)%suggestions.length;highlightSuggestion();return}
@@ -689,15 +685,19 @@ mjx-container{color:var(--math-color)}
       }
       if(e.key==='Escape'){hideAutocomplete();hideArgHint();return}
     }
-    if(e.key>='0'&&e.key<='9'){expr+=e.key;renderMain();schedulePreview();return}
-    if(e.key==='.'){expr+='.';renderMain();schedulePreview();return}
-    if('+-*/%^()'.includes(e.key)){expr+=e.key;renderMain();schedulePreview();updateArgHint();return}
-    if(e.key==='Enter'){evaluateAndShow();return}
-    if(e.key==='Backspace'){expr=expr.slice(0,-1);renderMain();schedulePreview();return}
-    if(e.key==='Escape'){expr='';renderMain();preview.textContent='';hideAutocomplete();hideArgHint();return}
-    if(/^[a-zA-Z]$/.test(e.key)){expr+=e.key;renderMain();updateAutocomplete();schedulePreview();return}
-    if(e.key==='!'){expr+='!';renderMain();schedulePreview();return}
+    if(e.key>='0'&&e.key<='9'&&document.activeElement!==display){expr+=e.key;renderMain();schedulePreview();return}
+    if(e.key==='.'){if(document.activeElement!==display){expr+='.';renderMain();schedulePreview();}return}
+    if('+-*/%^()'.includes(e.key)&&document.activeElement!==display){expr+=e.key;renderMain();schedulePreview();updateArgHint();return}
+    if(e.key==='Enter'&&document.activeElement!==display){evaluateAndShow();return}
+    if(e.key==='Backspace'&&document.activeElement!==display){expr=expr.slice(0,-1);renderMain();schedulePreview();return}
+    if(e.key==='Escape'&&document.activeElement!==display){expr='';renderMain();preview.textContent='';hideAutocomplete();hideArgHint();return}
+    if(/^[a-zA-Z]$/.test(e.key)&&document.activeElement!==display){expr+=e.key;renderMain();updateAutocomplete();schedulePreview();return}
+    if(e.key==='!'&&document.activeElement!==display){expr+='!';renderMain();schedulePreview();return}
   });
+
+  // allow typing directly into the display input
+  display.addEventListener('input',()=>{expr=display.value;updateAutocomplete();schedulePreview();});
+  display.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();evaluateAndShow();}});
 
   convertBtn.addEventListener('click',()=>{
     const v=unitInput.value.trim();if(!v)return;
@@ -726,7 +726,6 @@ mjx-container{color:var(--math-color)}
   exportPng.addEventListener('click',async()=>{try{await exportPNG()}catch(e){alert('PNG export failed')}});
   exportPdf.addEventListener('click',async()=>{try{await exportPDF()}catch(e){alert('PDF export failed')}});
 
-  /* ----------  init  ---------- */
   function init(){
     display.value='0';angleLabel.textContent=angleMode.toUpperCase();precisionSelect.value=String(precision);
     if(notebookMode)document.body.classList.add('notebook-mode');
@@ -735,7 +734,6 @@ mjx-container{color:var(--math-color)}
   }
   init();
 
-  /* ----------  polish  ---------- */
   [$('#onboardingModal'),$('#shortcutsModal')].forEach(m=>{
     m.addEventListener('transitionend',e=>{if(e.target===m&&m.style.opacity==='0')m.style.display='none'})
   });
@@ -755,10 +753,9 @@ mjx-container{color:var(--math-color)}
     })
   };
 
-  /* ----------  public debug  ---------- */
   window.examCalc={evaluate:evaluateExpression,convertUnits,validateExpression,getState:()=>({expr,history,angleMode,precision})};
 
-})()
+})();
 </script>
 </body>
 </html>
