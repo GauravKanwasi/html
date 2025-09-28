@@ -77,6 +77,27 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-content{display:none;padding:10px 0}
 .tab-content.active{display:block}
+
+/* NEW: Enhanced styles */
+.graph-container { height: 200px; background: rgba(255,255,255,.8); border-radius: 8px; margin-top: 10px; overflow: hidden; }
+.quick-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.quick-action { background: rgba(255,255,255,.7); border: 1px solid rgba(0,0,0,.1); border-radius: 6px; padding: 6px 10px; font-size: .85rem; cursor: pointer; transition: all .2s; }
+.quick-action:hover { background: rgba(255,255,255,.9); transform: translateY(-1px); }
+.stats-display { display: flex; gap: 10px; margin-top: 10px; }
+.stat-box { flex: 1; background: rgba(255,255,255,.7); border-radius: 8px; padding: 8px; text-align: center; border-left: 3px solid var(--accent); }
+.stat-value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: .75rem; color: var(--muted); }
+.session-timer { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.1); padding: 4px 8px; border-radius: 4px; font-size: .8rem; }
+.tutorial-highlight { position: absolute; background: rgba(246, 176, 66, 0.2); border: 2px dashed var(--accent); border-radius: 8px; z-index: 100; pointer-events: none; display: none; }
+.session-progress { height: 4px; background: rgba(0,0,0,.1); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.session-progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width .5s ease; }
+.expression-builder { background: rgba(255,255,255,.7); border-radius: 8px; padding: 10px; margin-top: 10px; }
+.builder-step { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.builder-step select, .builder-step input { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid rgba(0,0,0,.1); }
+.favorite-items { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.favorite-item { background: rgba(255,255,255,.8); border: 1px solid rgba(0,0,0,.1); border-radius: 6px; padding: 4px 8px; font-size: .8rem; cursor: pointer; }
+.favorite-item:hover { background: rgba(255,255,255,1); }
+
 @media (max-width:900px){.calc{grid-template-columns:1fr}.autocomplete{right:18px;top:220px}.hint{left:18px;top:200px}.row{grid-template-columns:repeat(4,1fr)}.side{order:2}.main{order:1}}
 </style>
 </head>
@@ -94,6 +115,8 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
     </div>
 
     <div class="main" id="mainArea">
+      <div class="session-timer" id="sessionTimer">Session: 0:00</div>
+      
       <div class="display" id="displayArea">
         <div id="history" aria-hidden="true">&nbsp;</div>
         <div id="preview" aria-live="polite">Type an expression or conversion — suggestions will appear while you type.</div>
@@ -105,6 +128,32 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
         <div id="memoryStatus">Memory: 0</div>
         <div id="angleStatus">Angle: DEG</div>
         <div id="precisionStatus">Precision: 6</div>
+      </div>
+
+      <!-- NEW: Quick actions -->
+      <div class="quick-actions">
+        <div class="quick-action" data-action="quadratic">Quadratic Formula</div>
+        <div class="quick-action" data-action="pythagorean">Pythagorean</div>
+        <div class="quick-action" data-action="circle-area">Circle Area</div>
+        <div class="quick-action" data-action="sphere-volume">Sphere Volume</div>
+        <div class="quick-action" data-action="derivative">Derivative</div>
+        <div class="quick-action" data-action="integral">Integral</div>
+      </div>
+
+      <!-- NEW: Stats display -->
+      <div class="stats-display">
+        <div class="stat-box">
+          <div class="stat-value" id="calcCount">0</div>
+          <div class="stat-label">Calculations</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="sessionTime">0m</div>
+          <div class="stat-label">Session Time</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="accuracyRate">100%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
       </div>
 
       <div class="keys" id="keys" style="margin-top:12px">
@@ -175,6 +224,24 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
           <button id="convertBtn" class="key sci">Convert</button>
         </div>
 
+        <!-- NEW: Expression builder -->
+        <div class="expression-builder">
+          <strong>Expression Builder</strong>
+          <div class="builder-step">
+            <select id="builderFunction">
+              <option value="">Select function...</option>
+              <option value="sin">sin(x)</option>
+              <option value="cos">cos(x)</option>
+              <option value="tan">tan(x)</option>
+              <option value="sqrt">sqrt(x)</option>
+              <option value="log">log(x)</option>
+              <option value="ln">ln(x)</option>
+            </select>
+            <input type="text" id="builderValue" placeholder="Value" style="width: 80px;">
+            <button id="builderAdd" class="key sci" style="padding: 6px 10px;">Add</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -188,12 +255,17 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
           <div class="tab active" data-tab="history">History</div>
           <div class="tab" data-tab="constants">Constants</div>
           <div class="tab" data-tab="formulas">Formulas</div>
+          <div class="tab" data-tab="favorites">Favorites</div> <!-- NEW: Favorites tab -->
         </div>
         
         <div class="tab-content active" id="history-tab">
+          <div class="session-progress">
+            <div class="session-progress-bar" id="sessionProgress"></div>
+          </div>
           <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:6px">
             <button id="clearHistory" class="key clr" style="padding:6px">Clear</button>
             <button id="copyHistory" class="key" style="padding:6px">Copy All</button>
+            <button id="saveFavorite" class="key" style="padding:6px">⭐ Save</button> <!-- NEW: Save favorite -->
           </div>
           <div class="history-list" id="historyList" aria-live="polite"></div>
         </div>
@@ -239,6 +311,15 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
             </div>
           </div>
         </div>
+        
+        <!-- NEW: Favorites tab -->
+        <div class="tab-content" id="favorites-tab">
+          <div class="history-list">
+            <div class="favorite-items" id="favoriteItems">
+              <!-- Favorites will be loaded here -->
+            </div>
+          </div>
+        </div>
       </div>
 
       <div style="margin-top:8px">
@@ -265,17 +346,22 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
             <button id="exportPng" class="key">PNG</button>
             <button id="exportPdf" class="key">PDF</button>
           </div>
+          
+          <!-- NEW: Reset session button -->
+          <label style="margin-top:6px">Session</label>
+          <button id="resetSession" class="key clr">Reset Session</button>
         </div>
       </div>
     </aside>
 
-    <div class="footer"><div>Made for learners</div><div style="opacity:.8">vEnhanced Pro • 3.3</div></div>
+    <div class="footer"><div>Made for learners</div><div style="opacity:.8">vEnhanced Pro • 3.4</div></div>
   </div>
 </div>
 
 <div class="autocomplete" id="autocomplete" role="listbox" aria-hidden="true"></div>
 <div class="hint" id="argHint" aria-hidden="true"></div>
 <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+<div class="tutorial-highlight" id="tutorialHighlight"></div> <!-- NEW: Tutorial highlight -->
 
 <!-- modals -->
 <div class="modal-backdrop" id="onboardingModal"><div class="modal" role="dialog"><h2>Welcome to Exam-Calc Pro</h2><p>Try typing <code>10 km to m</code> or <code>sin(30)</code>. Use Enter to evaluate. Autocomplete appears when typing functions or "to" conversions.</p><p>Check out the Constants and Formulas tabs for quick reference.</p><div style="text-align:right;margin-top:12px"><button id="closeOnboarding" class="key">Close</button></div></div></div>
@@ -291,14 +377,91 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
   const clearHistoryBtn=$('#clearHistory'),copyHistoryBtn=$('#copyHistory'),darkToggle=$('#darkToggle');
   const memoryStatus=$('#memoryStatus'),angleStatus=$('#angleStatus'),precisionStatus=$('#precisionStatus');
   const tabs=$$('.tab'),tabContents=$$('.tab-content');
+  
+  // NEW: Enhanced variables
+  const sessionTimer=$('#sessionTimer'), calcCount=$('#calcCount'), sessionTime=$('#sessionTime'), 
+        accuracyRate=$('#accuracyRate'), sessionProgress=$('#sessionProgress'), resetSession=$('#resetSession'),
+        tutorialHighlight=$('#tutorialHighlight'), quickActions=$$('.quick-action'), saveFavorite=$('#saveFavorite'),
+        builderFunction=$('#builderFunction'), builderValue=$('#builderValue'), builderAdd=$('#builderAdd'),
+        favoriteItems=$('#favoriteItems');
 
   let expr='',memory=Number(localStorage.getItem('exam_calc_memory')||0),history=JSON.parse(localStorage.getItem('exam_calc_history')||'[]'),angleMode=localStorage.getItem('exam_calc_angle')||'deg',precision=Number(localStorage.getItem('exam_calc_precision')||6),notebookMode=localStorage.getItem('exam_calc_notebook')==='1',soundThemeVal=localStorage.getItem('exam_calc_sound')||'none';
+  
+  // NEW: Enhanced session tracking
+  let sessionStart = Date.now(), sessionCalculations = 0, sessionErrors = 0, sessionHistory = [];
+  let favorites = JSON.parse(localStorage.getItem('exam_calc_favorites') || '[]');
 
   // Update status bar
   function updateStatusBar() {
     memoryStatus.textContent = `Memory: ${fmtNum(memory)}`;
     angleStatus.textContent = `Angle: ${angleMode.toUpperCase()}`;
     precisionStatus.textContent = `Precision: ${precision}`;
+  }
+
+  // NEW: Update session stats
+  function updateSessionStats() {
+    const now = Date.now();
+    const sessionDuration = Math.floor((now - sessionStart) / 1000);
+    const minutes = Math.floor(sessionDuration / 60);
+    const seconds = sessionDuration % 60;
+    
+    sessionTimer.textContent = `Session: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+    sessionTime.textContent = `${minutes}m`;
+    calcCount.textContent = sessionCalculations;
+    
+    const accuracy = sessionCalculations > 0 ? 
+      Math.round((sessionCalculations - sessionErrors) / sessionCalculations * 100) : 100;
+    accuracyRate.textContent = `${accuracy}%`;
+    
+    // Update progress bar (based on calculations, max 50)
+    const progress = Math.min(sessionCalculations / 50 * 100, 100);
+    sessionProgress.style.width = `${progress}%`;
+  }
+
+  // NEW: Save favorite
+  function saveCurrentAsFavorite() {
+    if (!expr) return;
+    
+    const name = prompt("Name for this favorite:", expr.substring(0, 20));
+    if (name) {
+      favorites.push({
+        name,
+        expression: expr,
+        timestamp: Date.now()
+      });
+      localStorage.setItem('exam_calc_favorites', JSON.stringify(favorites));
+      renderFavorites();
+      alert(`Saved "${name}" to favorites!`);
+    }
+  }
+
+  // NEW: Render favorites
+  function renderFavorites() {
+    favoriteItems.innerHTML = '';
+    if (favorites.length === 0) {
+      favoriteItems.innerHTML = '<div style="padding:10px;color:#456">No favorites yet. Click the "⭐ Save" button to save current expression.</div>';
+      return;
+    }
+    
+    favorites.forEach((fav, i) => {
+      const el = document.createElement('div');
+      el.className = 'favorite-item';
+      el.innerHTML = `<div>${fav.name}</div><small>${fav.expression}</small>`;
+      el.addEventListener('click', () => {
+        expr = fav.expression;
+        renderMain();
+        evaluateAndShow();
+      });
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (confirm(`Delete "${fav.name}" from favorites?`)) {
+          favorites.splice(i, 1);
+          localStorage.setItem('exam_calc_favorites', JSON.stringify(favorites));
+          renderFavorites();
+        }
+      });
+      favoriteItems.appendChild(el);
+    });
   }
 
   // Tab functionality
@@ -309,6 +472,11 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
       
       tab.classList.add('active');
       $(`#${tab.dataset.tab}-tab`).classList.add('active');
+      
+      // NEW: Render favorites when tab is activated
+      if (tab.dataset.tab === 'favorites') {
+        renderFavorites();
+      }
     });
   });
 
@@ -415,7 +583,18 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
 
   function fmtNum(v){if(typeof v==='number'&&isFinite(v)){if(precision===0)return String(Math.round(v));return Number.parseFloat(v).toFixed(precision).replace(/\.?0+$/,'')}return String(v)}
 
-  function pushHistory(e,r){history.push({expr:e,result:r,ts:Date.now()});if(history.length>1000)history.shift();localStorage.setItem('exam_calc_history',JSON.stringify(history));renderHistoryList()}
+  function pushHistory(e,r){
+    history.push({expr:e,result:r,ts:Date.now()});
+    if(history.length>1000)history.shift();
+    localStorage.setItem('exam_calc_history',JSON.stringify(history));
+    renderHistoryList();
+    
+    // NEW: Track session statistics
+    sessionCalculations++;
+    if (r === 'Error') sessionErrors++;
+    sessionHistory.push({expr:e,result:r,ts:Date.now()});
+    updateSessionStats();
+  }
 
   function renderHistoryList(){historyList.innerHTML='';if(!history.length){historyList.innerHTML='<div style="padding:10px;color:#456">No history yet.</div>';return}for(let i=history.length-1;i>=0;i--){const item=history[i],el=document.createElement('div');el.className='history-item';el.innerHTML=`<div style="flex:1"><strong>${escapeHtml(item.expr)}</strong><small>= ${escapeHtml(fmtNum(item.result))}</small></div><div style="display:flex;gap:6px"><button data-load="${i}" aria-label="load">Load</button><button data-copy="${i}" aria-label="copy">Copy</button></div>`;historyList.appendChild(el)}try{if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([historyList]).catch(()=>{})}catch(e){}
   }
@@ -506,7 +685,78 @@ body{display:flex;align-items:center;justify-content:center;padding:16px}
 
   darkToggle.addEventListener('click',()=>{document.documentElement.classList.toggle('dark');const pressed=darkToggle.getAttribute('aria-pressed')==='true';darkToggle.setAttribute('aria-pressed',!pressed)});
 
-  function init(){display.value='0';angleLabel.textContent=angleMode.toUpperCase();precisionSelect.value=String(precision);if(notebookMode)document.body.classList.add('notebook-mode');renderHistoryList();updateStatusBar();}
+  // NEW: Enhanced event listeners
+  saveFavorite.addEventListener('click', saveCurrentAsFavorite);
+  
+  resetSession.addEventListener('click', () => {
+    if (confirm('Reset session statistics?')) {
+      sessionStart = Date.now();
+      sessionCalculations = 0;
+      sessionErrors = 0;
+      sessionHistory = [];
+      updateSessionStats();
+    }
+  });
+  
+  // NEW: Quick actions
+  quickActions.forEach(action => {
+    action.addEventListener('click', () => {
+      const actionType = action.dataset.action;
+      switch(actionType) {
+        case 'quadratic':
+          expr = '(-b + sqrt(b^2 - 4*a*c))/(2*a)';
+          break;
+        case 'pythagorean':
+          expr = 'sqrt(a^2 + b^2)';
+          break;
+        case 'circle-area':
+          expr = 'PI * r^2';
+          break;
+        case 'sphere-volume':
+          expr = '(4/3) * PI * r^3';
+          break;
+        case 'derivative':
+          expr = '(f(x+h) - f(x))/h';
+          break;
+        case 'integral':
+          expr = 'sum(f(x)*dx, a, b)';
+          break;
+      }
+      renderMain();
+      updateAutocomplete();
+    });
+  });
+  
+  // NEW: Expression builder
+  builderAdd.addEventListener('click', () => {
+    const func = builderFunction.value;
+    const value = builderValue.value;
+    
+    if (!func) return;
+    
+    if (value) {
+      expr += `${func}(${value})`;
+    } else {
+      expr += `${func}(`;
+    }
+    
+    renderMain();
+    updateAutocomplete();
+  });
+
+  function init(){
+    display.value='0';
+    angleLabel.textContent=angleMode.toUpperCase();
+    precisionSelect.value=String(precision);
+    if(notebookMode)document.body.classList.add('notebook-mode');
+    renderHistoryList();
+    updateStatusBar();
+    
+    // NEW: Initialize enhanced features
+    updateSessionStats();
+    setInterval(updateSessionStats, 1000);
+    renderFavorites();
+  }
   init();
 
   $$('.key').forEach(btn=>{btn.addEventListener('click',function(e){const r=document.createElement('span'),d=Math.max(this.offsetWidth,this.offsetHeight);r.style.width=r.style.height=d+'px';r.style.left=(e.offsetX-d/2)+'px';r.style.top=(e.offsetY-d/2)+'px';r.className='ripple';this.appendChild(r);setTimeout(()=>r.remove(),550)})});
