@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Enhanced Pro Calculator</title>
+    <title>Fast & Smooth Pro Calculator</title>
     <style>
         :root {
+            /* Color Palette */
             --bg-grad-start: #667eea;
             --bg-grad-end: #764ba2;
             --calc-bg: rgba(255, 255, 255, 0.95);
             --display-bg: #f8f9fa;
             --text-primary: #2d3748;
-            --text-secondary: #666;
+            --text-secondary: #6c757d;
             --btn-bg: #f7fafc;
-            --btn-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            --btn-hover-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            --btn-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            --btn-hover-shadow: 0 7px 18px rgba(0,0,0,0.1);
             --operator-bg: #4299e1;
             --equals-bg: #48bb78;
             --clear-bg: #f56565;
             --function-bg: #ed8936;
             --btn-text-light: white;
+
+            /* Animation & Sizing */
+            --transition-speed: 0.15s;
         }
 
         [data-theme="dark"] {
@@ -37,8 +41,10 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
             min-height: 100vh;
             display: flex;
@@ -46,6 +52,11 @@
             justify-content: center;
             padding: 20px;
             transition: background 0.3s ease;
+            /* Performance: Improve font rendering and prevent mobile tap artifacts */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            -webkit-tap-highlight-color: transparent;
         }
         .calculator {
             background: var(--calc-bg);
@@ -131,18 +142,23 @@
             font-size: 1.2rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
             background: var(--btn-bg);
             color: var(--text-primary);
             box-shadow: var(--btn-shadow);
+            user-select: none; /* Prevents text selection on rapid clicks */
+            /* Performance: Animate GPU-accelerated properties and hint to the browser */
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            will-change: transform, box-shadow;
         }
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: var(--btn-hover-shadow);
         }
         .btn:active {
-            transform: translateY(0);
+            /* Provide immediate feedback on click */
+            transform: translateY(-1px);
             filter: brightness(0.9);
+            transition-duration: 0.05s;
         }
         .btn[data-action="operator"] { background: var(--operator-bg); color: var(--btn-text-light); }
         .btn[data-action="equals"] { background: var(--equals-bg); color: var(--btn-text-light); grid-column: span 2; }
@@ -181,51 +197,45 @@
                 <div class="ball"></div>
             </div>
         </div>
-
         <div class="display">
             <div id="expression">&nbsp;</div>
             <div id="result">0</div>
         </div>
-
         <div class="buttons">
-            <button class="btn" data-key="sqrt" data-action="function">√</button>
+            <button class="btn" data-key="sqrt(" data-action="function">√</button>
             <button class="btn" data-key="^" data-action="function">xʸ</button>
             <button class="btn" data-key="(" data-action="function">(</button>
             <button class="btn" data-key=")" data-action="function">)</button>
             <button class="btn" data-action="backspace">⌫</button>
-
             <button class="btn" data-key="sin(" data-action="function">sin</button>
             <button class="btn" data-value="7">7</button>
             <button class="btn" data-value="8">8</button>
             <button class="btn" data-value="9">9</button>
             <button class="btn" data-key="/" data-action="operator">÷</button>
-            
             <button class="btn" data-key="cos(" data-action="function">cos</button>
             <button class="btn" data-value="4">4</button>
             <button class="btn" data-value="5">5</button>
             <button class="btn" data-value="6">6</button>
             <button class="btn" data-key="*" data-action="operator">×</button>
-
             <button class="btn" data-key="tan(" data-action="function">tan</button>
             <button class="btn" data-value="1">1</button>
             <button class="btn" data-value="2">2</button>
             <button class="btn" data-value="3">3</button>
             <button class="btn" data-key="-" data-action="operator">-</button>
-
             <button class="btn" data-key="log(" data-action="function">log</button>
             <button class="btn" data-value="0">0</button>
             <button class="btn" data-key="." data-action="decimal">.</button>
             <button class="btn" data-key="+" data-action="operator">+</button>
-            
             <button class="btn" data-key="%" data-action="function">%</button>
             <button class="btn" data-action="clear">C</button>
             <button class="btn" data-action="equals">=</button>
         </div>
-
         <div class="history" id="historyContainer"></div>
     </div>
 
 <script>
+// The JavaScript remains largely the same as it is already efficient.
+// A minor tweak is made to the keyboard event listener for better practice.
 document.addEventListener('DOMContentLoaded', () => {
     const displayResult = document.getElementById('result');
     const displayExpression = document.getElementById('expression');
@@ -240,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateDisplay = () => {
         displayResult.textContent = currentInput || '0';
-        displayExpression.textContent = lastExpression || '\u00A0'; // non-breaking space
+        displayExpression.textContent = lastExpression || '\u00A0';
     };
     
     const updateHistory = () => {
@@ -260,13 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/÷/g, '/')
                 .replace(/\^/g, '**')
                 .replace(/√\(/g, 'Math.sqrt(')
-                .replace(/sin\(/g, 'Math.sin(Math.PI/180 *') // Deg to Rad
-                .replace(/cos\(/g, 'Math.cos(Math.PI/180 *') // Deg to Rad
-                .replace(/tan\(/g, 'Math.tan(Math.PI/180 *') // Deg to Rad
+                .replace(/sin\(/g, 'Math.sin(Math.PI/180 *')
+                .replace(/cos\(/g, 'Math.cos(Math.PI/180 *')
+                .replace(/tan\(/g, 'Math.tan(Math.PI/180 *')
                 .replace(/log\(/g, 'Math.log10(')
                 .replace(/(\d+)%/g, '($1/100)');
 
-            // A safer way to evaluate than direct eval()
             const answer = Function('"use strict"; return (' + expressionToEval + ')')();
             
             if (isNaN(answer) || !isFinite(answer)) {
@@ -278,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
             lastExpression = currentInput;
             currentInput = roundedAnswer.toString();
 
-            // Save to history
             calculationHistory.push({ expression: lastExpression, result: currentInput });
             if (calculationHistory.length > 20) calculationHistory.shift();
             localStorage.setItem('calcHistory', JSON.stringify(calculationHistory));
@@ -309,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'equals':
                 handleCalculation();
-                return; // Prevent display update from here
+                return;
             case 'operator':
             case 'function':
             case 'decimal':
@@ -332,36 +340,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Theme Switcher ---
-    const setTema = (theme) => {
+    const setTheme = (theme) => {
         body.dataset.theme = theme;
         localStorage.setItem('calculatorTheme', theme);
     };
     
     themeSwitcher.addEventListener('click', () => {
         const currentTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
-        setTema(currentTheme);
+        setTheme(currentTheme);
     });
     
-    // Load saved theme
     const savedTheme = localStorage.getItem('calculatorTheme') || 'light';
-    setTema(savedTheme);
+    setTheme(savedTheme);
 
-    // --- Keyboard Support ---
     document.addEventListener('keydown', (e) => {
-        e.preventDefault();
-        if (e.key >= '0' && e.key <= '9') currentInput += e.key;
-        if (['+', '-', '*', '/', '.', '(', ')'].includes(e.key)) currentInput += e.key;
-        if (e.key === 'Enter' || e.key === '=') handleCalculation();
-        if (e.key === 'Backspace') currentInput = currentInput.slice(0, -1);
-        if (e.key === 'Escape') {
-            currentInput = '';
-            lastExpression = '';
+        let keyProcessed = false;
+        if (e.key >= '0' && e.key <= '9') { currentInput += e.key; keyProcessed = true; }
+        if (['+', '-', '*', '/', '.', '(', ')'].includes(e.key)) { currentInput += e.key; keyProcessed = true; }
+        if (e.key === 'Enter' || e.key === '=') { handleCalculation(); keyProcessed = true; }
+        if (e.key === 'Backspace') { currentInput = currentInput.slice(0, -1); keyProcessed = true; }
+        if (e.key === 'Escape') { currentInput = ''; lastExpression = ''; keyProcessed = true; }
+
+        if(keyProcessed) {
+            e.preventDefault();
+            updateDisplay();
         }
-        updateDisplay();
     });
 
-    // Initial Load
     updateHistory();
     updateDisplay();
 });
