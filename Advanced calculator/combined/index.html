@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Gemini Pro Scientific Calculator v5 (Complete)</title>
+    <title>Gemini Pro Scientific Calculator v6 (Advanced)</title>
     <style>
         :root {
             --bg-grad-start: #6a82fb; --bg-grad-end: #fc5c7d;
@@ -12,16 +12,13 @@
             --btn-shadow: 0 4px 10px rgba(0,0,0,0.06); --btn-hover-shadow: 0 7px 18px rgba(0,0,0,0.12);
             --operator-bg: #4299e1; --equals-bg: #48bb78; --clear-bg: #f56565;
             --function-bg: #ed8936; --memory-bg: #38b2ac; --btn-text-light: white;
-            --second-fn-active-bg: #c05621; --modal-overlay-bg: rgba(0, 0, 0, 0.5);
-            --ripple-color: rgba(0, 0, 0, 0.1); --focus-outline: #4299e1;
+            --focus-outline: #4299e1;
         }
         [data-theme="dark"] {
             --bg-grad-start: #232526; --bg-grad-end: #414345;
             --calc-bg: rgba(45, 55, 72, 0.97); --display-bg: #2d3748;
             --text-primary: #edf2f7; --text-secondary: #a0aec0; --btn-bg: #4a5568;
             --operator-bg: #2b6cb0; --equals-bg: #2f855a; --clear-bg: #c53030;
-            --function-bg: #dd6b20; --memory-bg: #2c7a7b; --second-fn-active-bg: #9c4221;
-            --modal-overlay-bg: rgba(0, 0, 0, 0.7); --ripple-color: rgba(255, 255, 255, 0.1);
             --focus-outline: #63b3ed;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,134 +26,87 @@
         body {
             background: linear-gradient(135deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            padding: 20px; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+            padding: 20px; -webkit-font-smoothing: antialiased;
         }
         .calculator {
             background: var(--calc-bg); border-radius: 20px; padding: 25px;
             backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            width: 100%; max-width: 480px; transition: background 0.3s ease;
+            width: 100%; max-width: 480px;
         }
-        .btn:focus-visible, select:focus-visible, input:focus-visible, .modal-close:focus-visible {
-            outline: 3px solid var(--focus-outline);
-            outline-offset: 2px;
-            border-radius: 8px;
+        .btn:focus-visible, select:focus-visible, input:focus-visible {
+            outline: 3px solid var(--focus-outline); outline-offset: 2px; border-radius: 8px;
         }
         .display { background: var(--display-bg); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; text-align: right; }
-        .display-header { display: flex; justify-content: space-between; align-items: center; height: 20px; margin-bottom: 5px; font-size: 0.8rem; font-weight: bold; color: var(--text-secondary); }
-        #memoryIndicator { visibility: hidden; }
-        #expression { min-height: 24px; font-size: 1rem; color: var(--text-secondary); word-wrap: break-word; word-break: break-all; }
         #result { font-size: 2.8rem; font-weight: bold; color: var(--text-primary); min-height: 60px; word-wrap: break-word; word-break: break-all; line-height: 1.2; }
         .buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
         .btn {
-            border: none; padding: 16px 10px; border-radius: 12px; font-size: 1.1rem;
+            border: none; padding: 15px 10px; border-radius: 12px; font-size: 1.1rem;
             font-weight: 600; cursor: pointer; background: var(--btn-bg); color: var(--text-primary);
             box-shadow: var(--btn-shadow); user-select: none; position: relative; overflow: hidden;
             transition: transform 0.15s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
-            will-change: transform, box-shadow; contain: layout style;
+            will-change: transform, box-shadow;
         }
         .btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: var(--btn-hover-shadow); }
-        .btn:active, .btn.active-key { transform: translateY(-1px) scale(0.98); transition-duration: 0.05s; }
-        .ripple { position: absolute; border-radius: 50%; background-color: var(--ripple-color); transform: scale(0); animation: ripple-animation 0.6s linear; }
+        .btn:active { transform: translateY(-1px) scale(0.98); transition-duration: 0.05s; }
+        .ripple { position: absolute; border-radius: 50%; background-color: rgba(0,0,0,0.1); transform: scale(0); animation: ripple-animation 0.6s linear; }
+        [data-theme="dark"] .ripple { background-color: rgba(255,255,255,0.1); }
         @keyframes ripple-animation { to { transform: scale(4); opacity: 0; } }
         .btn[data-action="operator"] { background: var(--operator-bg); color: var(--btn-text-light); }
         .btn[data-action="equals"] { background: var(--equals-bg); color: var(--btn-text-light); }
         .btn[data-action="clear"], .btn[data-action="backspace"] { background: var(--clear-bg); color: var(--btn-text-light); }
         .btn[data-action="function"] { background: var(--function-bg); color: var(--btn-text-light); }
-        .btn[data-action="memory"] { background: var(--memory-bg); color: var(--btn-text-light); }
-        .btn.second-fn.active { background: var(--second-fn-active-bg); }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-        .history { margin-top: 20px; max-height: 120px; overflow-y: auto; background: var(--display-bg); border-radius: 10px; padding: 10px; scrollbar-width: thin; }
-        .history-item { padding: 8px; border-bottom: 1px solid rgba(128,128,128,0.1); cursor: pointer; font-size: 0.9rem; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; }
-        .history-item:last-child { border-bottom: none; }
-        .copy-icon { cursor: copy; margin-left: 10px; opacity: 0.7; padding: 4px; border-radius: 4px; }
-        .copy-icon:hover { opacity: 1; background: rgba(128,128,128,0.1); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay-bg); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1000; }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background: var(--calc-bg); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 400px; position: relative; transform: scale(0.9); transition: transform 0.3s ease; }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .modal-title { color: var(--text-primary); margin-bottom: 20px; text-align: center; }
-        .modal-close { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-secondary); width: 44px; height: 44px; }
-        .converter-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 15px; }
-        .converter-row select, .converter-row input { width: 100%; padding: 10px; border: 1px solid var(--text-secondary); background: var(--display-bg); color: var(--text-primary); border-radius: 8px; font-size: 1rem; }
-        .converter-result { margin-top: 20px; text-align: center; }
-        .converter-result-value { font-size: 1.8rem; font-weight: bold; color: var(--text-primary); word-break: break-all; }
-        .copy-result-btn { background: var(--operator-bg); color: var(--btn-text-light); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body data-theme="dark">
 
     <div class="calculator" role="application" aria-roledescription="scientific calculator">
         <div id="sr-announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
-        <header class="header"><h1>Gemini Pro v5</h1></header>
+        <header class="header" style="margin-bottom: 15px; padding: 0 10px; display:flex; justify-content:space-between; align-items:center;">
+            <h1 style="font-size:1.2rem; color: var(--text-primary); font-weight:600;">Gemini Pro v6</h1>
+        </header>
         
         <div role="region" aria-live="polite" class="display" aria-labelledby="display-label">
             <span id="display-label" class="sr-only">Calculator Display</span>
-            <div class="display-header"><span id="memoryIndicator" aria-hidden="true">M</span></div>
-            <div id="expression" aria-label="Expression"></div>
-            <div id="result" aria-label="Result">0</div>
+            <div id="expression" style="min-height: 24px; font-size: 1rem; color: var(--text-secondary); word-wrap: break-word; word-break: break-all;"></div>
+            <div id="result">0</div>
         </div>
 
         <div class="buttons" role="grid" aria-label="Calculator Buttons">
             <button class="btn second-fn" id="secondFnBtn" aria-pressed="false" aria-label="Second function">2nd</button>
-            <button class="btn" id="unitConverterBtn" aria-label="Open Unit Converter">Unit</button>
             <button class="btn" id="modeToggle" aria-pressed="false" aria-label="Toggle mode. Currently Degrees.">DEG</button>
             <button class="btn" data-action="clear" aria-label="Clear all">C</button>
             <button class="btn" data-action="backspace" aria-label="Backspace">⌫</button>
-
-            <button class="btn" data-value="mc" data-action="memory" aria-label="Memory Clear">MC</button>
-            <button class="btn" data-value="mr" data-action="memory" aria-label="Memory Recall">MR</button>
-            <button class="btn" data-value="m+" data-action="memory" aria-label="Memory Add">M+</button>
-            <button class="btn" data-value="m-" data-action="memory" aria-label="Memory Subtract">M-</button>
             <button class="btn" data-key="/" data-display="÷" data-action="operator" aria-label="Divide">÷</button>
-
-            <button class="btn fn-toggle" data-key="**2" data-key-alt="**3" data-display="x²" data-display-alt="x³" aria-label="Square" data-aria-label-alt="Cube">x²</button>
+            
+            <button class="btn fn-toggle" data-key="Math.sinh(" data-key-alt="Math.asinh(" data-display="sinh" data-display-alt="sinh⁻¹" data-action="function" aria-label="Hyperbolic Sine" data-aria-label-alt="Inverse Hyperbolic Sine">sinh</button>
+            <button class="btn fn-toggle" data-key="Math.cosh(" data-key-alt="Math.acosh(" data-display="cosh" data-display-alt="cosh⁻¹" data-action="function" aria-label="Hyperbolic Cosine" data-aria-label-alt="Inverse Hyperbolic Cosine">cosh</button>
+            <button class="btn fn-toggle" data-key="Math.tan(" data-key-alt="Math.atan(" data-display="tan" data-display-alt="tan⁻¹" data-action="function" aria-label="Tangent" data-aria-label-alt="Inverse Tangent">tan</button>
+            <button class="btn" data-action="reciprocal" aria-label="Reciprocal">1/x</button>
+            <button class="btn" data-key="*" data-display="×" data-action="operator" aria-label="Multiply">×</button>
+            
+            <button class="btn" data-key="**" data-display="^" data-action="operator" aria-label="Power">xʸ</button>
             <button class="btn" data-value="7" aria-label="Seven">7</button>
             <button class="btn" data-value="8" aria-label="Eight">8</button>
             <button class="btn" data-value="9" aria-label="Nine">9</button>
-            <button class="btn" data-key="*" data-display="×" data-action="operator" aria-label="Multiply">×</button>
+            <button class="btn" data-key="-" data-action="operator" aria-label="Subtract">-</button>
 
-            <button class="btn" data-key="Math.sqrt(" data-display="√" aria-label="Square root">√</button>
+            <button class="btn" data-key="Math.sqrt(" data-display="√" data-action="function" aria-label="Square root">√</button>
             <button class="btn" data-value="4" aria-label="Four">4</button>
             <button class="btn" data-value="5" aria-label="Five">5</button>
             <button class="btn" data-value="6" aria-label="Six">6</button>
-            <button class="btn" data-key="-" data-action="operator" aria-label="Subtract">-</button>
+            <button class="btn" data-key="+" data-action="operator" aria-label="Add">+</button>
 
-            <button class="btn" data-key="**" data-display="^" data-action="operator" aria-label="Power">xʸ</button>
+            <button class="btn" data-key="Math.log10(" data-display="log" data-action="function" aria-label="Logarithm base 10">log</button>
             <button class="btn" data-value="1" aria-label="One">1</button>
             <button class="btn" data-value="2" aria-label="Two">2</button>
             <button class="btn" data-value="3" aria-label="Three">3</button>
-            <button class="btn" data-key="+" data-action="operator" aria-label="Add">+</button>
+            <button class="btn" data-action="equals" style="grid-row: span 2;" aria-label="Equals">=</button>
 
-            <button class="btn" data-key="Math.PI" data-display="π" aria-label="Pi">π</button>
-            <button class="btn" data-key="ans" data-display="Ans" aria-label="Previous Answer">Ans</button>
+            <button class="btn" data-key="Math.E" data-display="e" data-action="constant" aria-label="Euler's number">e</button>
+            <button class="btn" data-action="sign" aria-label="Toggle Sign">+/-</button>
             <button class="btn" data-value="0" aria-label="Zero">0</button>
-            <button class="btn" data-key="." aria-label="Decimal point">.</button>
-            <button class="btn" data-action="equals" aria-label="Equals">=</button>
-        </div>
-        <div class="history" id="historyContainer" aria-label="Calculation History"></div>
-    </div>
-
-    <div class="modal-overlay" id="unitConverterModal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-content">
-            <button class="modal-close" id="modalCloseBtn" aria-label="Close unit converter">&times;</button>
-            <h2 id="modal-title" class="modal-title">Unit Converter</h2>
-            <label for="conversionType" class="sr-only">Conversion Type</label>
-            <select id="conversionType">
-                <option value="length">Length</option><option value="mass">Mass</option><option value="temperature">Temperature</option>
-            </select>
-            <div class="converter-row">
-                <label for="fromValue" class="sr-only">Value to convert</label>
-                <input type="number" id="fromValue" value="1">
-                <label for="fromUnit" class="sr-only">From unit</label>
-                <select id="fromUnit"></select>
-                <span aria-hidden="true">=</span>
-                <label for="toUnit" class="sr-only">To unit</label>
-                <select id="toUnit"></select>
-            </div>
-            <div class="converter-result" role="status">
-                <div class="converter-result-value" id="converterResult">...</div>
-                <button class="copy-result-btn" id="copyResultBtn">Copy Result</button>
-            </div>
+            <button class="btn" data-key="." data-action="decimal" aria-label="Decimal point">.</button>
         </div>
     </div>
 
@@ -165,35 +115,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STATE & CONSTANTS ---
     let currentInput = '';
     let expressionForDisplay = '';
-    let lastResult = '';
-    let memoryValue = parseFloat(localStorage.getItem('calcMemory')) || 0;
     let isRadianMode = false;
     let isSecondFunctionActive = false;
-    let calculationHistory = JSON.parse(localStorage.getItem('calcHistory_v5')) || [];
     const OPERATORS = ['+', '-', '*', '/', '**'];
 
     // --- DOM ELEMENTS ---
     const displayResult = document.getElementById('result');
     const displayExpression = document.getElementById('expression');
-    const memoryIndicator = document.getElementById('memoryIndicator');
-    const buttons = document.querySelector('.buttons');
-    const historyContainer = document.getElementById('historyContainer');
     const srAnnouncer = document.getElementById('sr-announcer');
     const secondFnBtn = document.getElementById('secondFnBtn');
     const modeToggle = document.getElementById('modeToggle');
     const fnToggleBtns = document.querySelectorAll('.fn-toggle');
 
     // --- HELPER FUNCTIONS ---
-    const factorial = n => (n < 0 || n % 1 !== 0) ? NaN : (n <= 1 ? 1 : n * factorial(n - 1));
-    
-    const formatResult = (num) => {
-        const numAbs = Math.abs(num);
-        if (numAbs > 1e12 || (numAbs < 1e-6 && numAbs !== 0)) {
-            return num.toExponential(6);
-        }
-        return String(parseFloat(num.toPrecision(12)));
-    };
-    
     const announce = (message) => {
         srAnnouncer.textContent = message;
         setTimeout(() => { srAnnouncer.textContent = ''; }, 100);
@@ -212,6 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => ripple.remove(), 600);
     };
 
+    const formatResult = (num) => {
+        const numAbs = Math.abs(num);
+        if (numAbs > 1e12 || (numAbs < 1e-6 && numAbs !== 0)) {
+            return num.toExponential(6);
+        }
+        return String(parseFloat(num.toPrecision(12)));
+    };
+    
     // --- UI UPDATE FUNCTIONS ---
     const updateDisplay = () => {
         requestAnimationFrame(() => {
@@ -219,18 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResult.style.fontSize = len > 18 ? '1.5rem' : len > 12 ? '2rem' : '2.8rem';
             displayResult.textContent = currentInput || '0';
             displayExpression.textContent = expressionForDisplay || '\u00A0';
-            memoryIndicator.style.visibility = memoryValue !== 0 ? 'visible' : 'hidden';
-        });
-    };
-
-    const updateHistory = () => {
-        requestAnimationFrame(() => {
-            historyContainer.innerHTML = calculationHistory.slice(-10).reverse().map(item =>
-                `<div class="history-item" role="button" tabindex="0" data-expression="${item.expression}" data-result="${item.result}">
-                    <span>${item.display} = ${item.result}</span>
-                    <span class="copy-icon" role="button" tabindex="0" aria-label="Copy Expression" title="Copy Expression">📋</span>
-                </div>`
-            ).join('');
         });
     };
 
@@ -239,21 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentInput) return;
         try {
             if (/\/0(?!\.)/.test(currentInput)) throw new Error("Division by Zero");
-            let expressionToEval = currentInput.replace(/ans/g, `(${lastResult || 0})`).replace(/π/g, 'Math.PI');
-            expressionToEval = expressionToEval.replace(/(\d*\.?\d+)!/g, (match, num) => `factorial(${num})`);
+            
+            let expressionToEval = currentInput.replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E');
+
             const trigMultiplier = isRadianMode ? '1' : '(Math.PI/180)';
-            expressionToEval = expressionToEval.replace(/(Math\.sin|Math\.cos|Math\.tan)\(/g, `$1(${trigMultiplier}*`);
-            const answer = new Function('factorial', `"use strict"; return ${expressionToEval}`)(factorial);
+            expressionToEval = expressionToEval.replace(/(Math\.(?:sin|cos|tan)h?)\(/g, (match, p1) => {
+                if (p1.endsWith('h')) return match; // Hyperbolics don't use DEG/RAD
+                return `${p1}(${trigMultiplier}*`;
+            });
+            
+            const answer = new Function('"use strict"; return ' + expressionToEval)();
+            
             if (isNaN(answer) || !isFinite(answer)) throw new Error("Invalid Expression");
+
             const formattedAnswer = formatResult(answer);
-            calculationHistory.push({ expression: currentInput, display: expressionForDisplay, result: formattedAnswer });
-            if (calculationHistory.length > 20) calculationHistory.shift();
-            localStorage.setItem('calcHistory_v5', JSON.stringify(calculationHistory));
             expressionForDisplay += ' =';
-            lastResult = formattedAnswer;
             currentInput = formattedAnswer;
             announce(`Result is ${formattedAnswer}`);
-            updateHistory();
         } catch (error) {
             expressionForDisplay = error.message;
             currentInput = '';
@@ -261,20 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateDisplay();
     };
-    
-    const handleMemory = (value) => {
-        const currentResultNum = parseFloat(displayResult.textContent);
-        if (isNaN(currentResultNum) && !['mc', 'mr'].includes(value)) return;
-        let announcement = '';
-        switch(value) {
-            case 'mc': memoryValue = 0; announcement = 'Memory cleared'; break;
-            case 'mr': currentInput += memoryValue.toString(); expressionForDisplay += memoryValue.toString(); break;
-            case 'm+': memoryValue += currentResultNum; announcement = `Value ${currentResultNum} added to memory`; break;
-            case 'm-': memoryValue -= currentResultNum; announcement = `Value ${currentResultNum} subtracted from memory`; break;
-        }
-        if (announcement) announce(announcement);
-        localStorage.setItem('calcMemory', memoryValue);
-        updateDisplay();
+
+    const getLastNumberSegment = () => {
+        const match = currentInput.match(/(-?\d*\.?\d+(?:e[+-]?\d+)?)$/);
+        return match ? { value: match[0], index: match.index } : null;
     };
 
     const processInput = (target) => {
@@ -282,35 +204,64 @@ document.addEventListener('DOMContentLoaded', () => {
         let { key, value, display, action } = target.dataset;
         action = action || (value ? 'number' : (key ? 'special' : 'none'));
         display = display || value || key;
+
         if (isSecondFunctionActive && target.dataset.keyAlt) {
             key = target.dataset.keyAlt;
             display = target.dataset.displayAlt;
         }
+
         if (expressionForDisplay.includes('=')) {
-            const isOperator = OPERATORS.includes(key);
-            expressionForDisplay = isOperator ? lastResult : '';
-            currentInput = isOperator ? lastResult : '';
+            expressionForDisplay = OPERATORS.includes(key) ? currentInput : '';
+            currentInput = OPERATORS.includes(key) ? currentInput : '';
         }
+
         switch(action) {
-            case 'clear': currentInput = ''; expressionForDisplay = ''; lastResult = ''; break;
+            case 'clear': currentInput = ''; expressionForDisplay = ''; break;
             case 'backspace': currentInput = currentInput.slice(0, -1); expressionForDisplay = expressionForDisplay.slice(0, -1); break;
             case 'equals': handleCalculation(); return;
-            case 'memory': handleMemory(value); return;
             case 'number': currentInput += value; expressionForDisplay += display; break;
+            case 'decimal':
+                if (!getLastNumberSegment()?.value.includes('.')) {
+                    currentInput += key; expressionForDisplay += display;
+                }
+                break;
             case 'operator':
                 if (currentInput || key === '-') {
-                    const lastIsOperator = OPERATORS.some(op => currentInput.endsWith(op));
-                    if(lastIsOperator) {
-                        currentInput = currentInput.slice(0, -currentInput.split('').reverse().find(c => OPERATORS.includes(c)).length) + key;
+                    if (OPERATORS.some(op => currentInput.endsWith(op))) {
+                        currentInput = currentInput.slice(0, -1) + key;
                         expressionForDisplay = expressionForDisplay.slice(0, -1) + display;
                     } else { currentInput += key; expressionForDisplay += display; }
                 }
                 break;
-            default: // special, constants, functions
-                const lastChar = expressionForDisplay.slice(-1);
-                const isNumOrSpecial = !isNaN(parseInt(lastChar)) || [')', 'π', 's'].includes(lastChar);
-                if(isNumOrSpecial && !target.innerHTML.startsWith('x')) { currentInput += '*'; expressionForDisplay += '×'; }
-                currentInput += key === 'ans' ? 'ans' : key;
+            case 'sign': {
+                const lastNum = getLastNumberSegment();
+                if (lastNum) {
+                    if (lastNum.value.startsWith('-')) {
+                        currentInput = currentInput.substring(0, lastNum.index) + lastNum.value.substring(1);
+                        expressionForDisplay = expressionForDisplay.substring(0, lastNum.index) + lastNum.value.substring(1);
+                    } else {
+                        currentInput = currentInput.substring(0, lastNum.index) + `(-${lastNum.value})`;
+                        expressionForDisplay = expressionForDisplay.substring(0, lastNum.index) + `(-${lastNum.value})`;
+                    }
+                }
+                break;
+            }
+            case 'reciprocal': {
+                const lastNum = getLastNumberSegment();
+                if(lastNum) {
+                    const reciprocal = `(1/${lastNum.value})`;
+                    currentInput = currentInput.substring(0, lastNum.index) + reciprocal;
+                    expressionForDisplay = expressionForDisplay.substring(0, lastNum.index) + `1/(${lastNum.value})`;
+                }
+                break;
+            }
+            default: // functions, constants
+                const isNum = !isNaN(parseInt(currentInput.slice(-1)));
+                if(isNum && key && !OPERATORS.some(op => key.startsWith(op))) {
+                    currentInput += '*';
+                    expressionForDisplay += '×';
+                }
+                currentInput += key;
                 expressionForDisplay += display;
                 break;
         }
@@ -348,37 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         announce(`${newMode} mode activated`);
     });
 
-    historyContainer.addEventListener('click', (e) => {
-        const item = e.target.closest('.history-item');
-        if (!item) return;
-        if (e.target.classList.contains('copy-icon')) {
-            navigator.clipboard.writeText(item.dataset.expression);
-            e.target.textContent = '✅';
-            announce('Expression copied');
-            setTimeout(() => e.target.textContent = '📋', 1000);
-        } else {
-            currentInput = item.dataset.result;
-            expressionForDisplay = item.dataset.expression;
-            updateDisplay();
-        }
-    });
-
-    // --- UNIT CONVERTER (Same as v3, with minor a11y improvements) ---
-    const converter = { /* ... full converter object from v3 ... */ };
-    converter.init = function() {
-        document.getElementById('unitConverterBtn').addEventListener('click', () => this.open());
-        document.getElementById('modalCloseBtn').addEventListener('click', () => this.close());
-        /* ... rest of init ... */
-    };
-    converter.open = function() {
-        this.elements.modal.classList.add('visible');
-        this.elements.type.focus();
-        this.convert();
-    };
-    // (Full converter object would be here)
-
     // --- INITIALIZATION ---
-    updateHistory();
     updateDisplay();
 });
 </script>
